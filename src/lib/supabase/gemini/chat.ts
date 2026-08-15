@@ -18,12 +18,13 @@ REGLAS ESTRICTAS:
 4. Si la respuesta no está en el contexto, indicá explícitamente: "Esta información no está en el apunte cargado".
 5. Cada afirmación basada en contexto lleva cita [Pág. X] al final de la frase.`
 
+const MODEL_FALLBACK_CHAIN = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-1.5-flash']
+
 export async function generateSocraticResponse(
   userQuery: string,
   history: ChatMessageInput[],
   contextChunks: RetrievedChunk[]
 ): Promise<string> {
-  // Limitar fragmentos a los 3 mejores para optimizar tokens y evitar rate limits (429)
   const topChunks = contextChunks.slice(0, 3)
 
   const contextBlock = topChunks.length > 0
@@ -35,7 +36,6 @@ export async function generateSocraticResponse(
         .join('\n\n')
     : 'No hay fragmentos bibliográficos disponibles para esta consulta.'
 
-  // Truncar historial a los últimos 2 mensajes para ahorrar cuota de tokens
   const trimmedHistory = history
     .slice(-2)
     .map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content.slice(0, 250)}`)
@@ -51,16 +51,32 @@ ${trimmedHistory}
 Consulta del alumno: ${userQuery}`
 
   return callWithRetry(async () => {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: fullPrompt,
-      config: {
-        systemInstruction: SOCRATIC_SYSTEM_PROMPT,
-        temperature: 0.3,
-      },
-    })
+    let lastError: any = null
 
-    return response.text ?? 'No se pudo generar una respuesta.'
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: fullPrompt,
+          config: {
+            systemInstruction: SOCRATIC_SYSTEM_PROMPT,
+            temperature: 0.3,
+          },
+        })
+
+        if (response.text) {
+          return response.text
+        }
+      } catch (err: any) {
+        lastError = err
+        console.warn(
+          `Modelo ${modelName} tuvo límite de cuota (429/500). Reintentando con modelo alternativo...`,
+          err?.status || err?.code || err?.message
+        )
+      }
+    }
+
+    throw lastError || new Error('No se pudo obtener respuesta de la IA de Google.')
   })
 }
 
@@ -95,13 +111,27 @@ ${trimmedHistory}
 Consulta del alumno: ${userQuery}`
 
   return callWithRetry(async () => {
-    return await ai.models.generateContentStream({
-      model: 'gemini-3.6-flash',
-      contents: fullPrompt,
-      config: {
-        systemInstruction: SOCRATIC_SYSTEM_PROMPT,
-        temperature: 0.3,
-      },
-    })
+    let lastError: any = null
+
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        return await ai.models.generateContentStream({
+          model: modelName,
+          contents: fullPrompt,
+          config: {
+            systemInstruction: SOCRATIC_SYSTEM_PROMPT,
+            temperature: 0.3,
+          },
+        })
+      } catch (err: any) {
+        lastError = err
+        console.warn(
+          `Stream model ${modelName} falló. Intentando con modelo alternativo...`,
+          err?.status || err?.code || err?.message
+        )
+      }
+    }
+
+    throw lastError || new Error('No se pudo obtener stream de IA de Google.')
   })
 }
