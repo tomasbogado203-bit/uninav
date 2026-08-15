@@ -8,6 +8,7 @@ import {
   IconTrash,
   IconBook,
   IconChart,
+  IconLightbulb,
 } from '@/components/icons'
 
 interface Citation {
@@ -184,17 +185,17 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
     }
   }
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || loading) return
+  const handleSend = async (e?: React.FormEvent, customText?: string) => {
+    if (e) e.preventDefault()
+    const textToSend = customText || input
+    if (!textToSend.trim() || loading) return
 
-    const userText = input.trim()
     setInput('')
 
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: userText,
+      content: textToSend.trim(),
     }
 
     const updatedWithUser = [...messages, userMsg]
@@ -206,7 +207,7 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
         .filter((m) => m.id !== 'welcome')
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const res = await askSocraticTutor(subjectId, userText, historyForApi)
+      const res = await askSocraticTutor(subjectId, textToSend.trim(), historyForApi)
 
       const modelMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -275,7 +276,6 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
     const match = pageTagStr?.match(/\d+/)
     const pageNum = match ? parseInt(match[0], 10) : 1
 
-    // Buscar en las citas recibidas en el mensaje actual
     const foundCitation = messageCitations?.find((c) => c.page_number === pageNum) || messageCitations?.[0]
 
     if (foundCitation && foundCitation.content) {
@@ -287,7 +287,6 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
       return
     }
 
-    // Si no está cargada en memoria, consultar al backend vía Server Action
     setActiveCitationModal({
       page_number: pageNum,
       content: 'Cargando fragmento de la bibliografía...',
@@ -428,6 +427,32 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
           </div>
         ))}
 
+        {/* Starter Prompts al iniciar conversación */}
+        {messages.length === 1 && !loading && (
+          <div className="my-2 flex flex-col gap-2 p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 animate-in fade-in">
+            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+              <IconLightbulb className="w-4 h-4 text-indigo-600" />
+              Sugerencias de estudio rápido (1 clic para consultar):
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {[
+                '💡 Explicame los conceptos clave de los apuntes',
+                '❓ ¿Qué preguntas típicas de parcial pueden surgir?',
+                '📐 Armá una guía de repaso estructurada',
+              ].map((promptText, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleSend(undefined, promptText)}
+                  className="text-xs font-semibold text-indigo-800 bg-white hover:bg-indigo-600 hover:text-white border border-indigo-200 px-3.5 py-2 rounded-xl transition-all shadow-2xs cursor-pointer text-left active:scale-95"
+                >
+                  {promptText}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading && (
           <div className="self-start bg-white text-slate-600 rounded-2xl p-4 text-xs border border-slate-200/80 shadow-sm animate-pulse flex items-center gap-2.5 font-medium">
             <span className="h-2.5 w-2.5 rounded-full bg-indigo-600 animate-ping"></span>
@@ -439,14 +464,14 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
       </div>
 
       {/* Formulario de Entrada */}
-      <form onSubmit={handleSend} className="p-3.5 border-t border-slate-200/80 bg-white flex gap-2">
+      <form onSubmit={(e) => handleSend(e)} className="p-3.5 border-t border-slate-200/80 bg-white flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribí tu duda o pregunta sobre el tema..."
           disabled={loading}
-          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+          className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-900"
         />
         <button
           type="submit"

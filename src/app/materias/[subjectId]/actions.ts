@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { extractTextByPage } from '@/lib/supabase/pdf/extract'
 import { chunkPages } from '@/lib/supabase/rag/chunk'
 import { embedText } from '@/lib/supabase/gemini/embeddings'
+import { extractTopicsFromPdf } from '@/lib/supabase/gemini/chat'
 
 export async function uploadDocument(subjectId: string, formData: FormData) {
   const supabase = await createClient()
@@ -48,9 +49,7 @@ export async function uploadDocument(subjectId: string, formData: FormData) {
 
   if (insertError) throw new Error(insertError.message)
 
-  // Chunking + embeddings, sincrónico (aceptable para hackathon — el alumno
-  // espera unos segundos en el submit). Si falla, el documento queda subido
-  // igual; no rompemos la UX de upload por un error de la IA.
+  // Chunking + embeddings + auto-extracción de temas de estudio
   try {
     const pages = await extractTextByPage(buffer)
     const chunks = chunkPages(pages)
@@ -69,11 +68,42 @@ export async function uploadDocument(subjectId: string, formData: FormData) {
         console.error('Error guardando chunk:', chunkError.message)
       }
     }
+
+    // Auto-generación de temas de estudio al subir un apunte (no aplica a exámenes viejos)
+    if (!isExamenViejo && pages.length > 0) {
+      try {
+        const detectedTopics = await extractTopicsFromPdf(pages)
+
+        if (detectedTopics && detectedTopics.length > 0) {
+          // Obtener temas existentes para evitar duplicados
+          const { data: existingThreads } = await supabase
+            .from('chat_threads')
+            .select('title')
+            .eq('subject_id', subjectId)
+
+          const existingTitles = new Set(
+            (existingThreads || []).map((t) => t.title.toLowerCase().trim())
+          )
+
+          for (const topicTitle of detectedTopics) {
+            if (!existingTitles.has(topicTitle.toLowerCase().trim())) {
+              await supabase.from('chat_threads').insert({
+                subject_id: subjectId,
+                title: topicTitle,
+              })
+            }
+          }
+        }
+      } catch (topicErr) {
+        console.error('Error auto-detectando temas del PDF:', topicErr)
+      }
+    }
   } catch (err) {
     console.error('Error procesando embeddings del documento:', err)
   }
 
   revalidatePath(`/materias/${subjectId}`)
+  revalidatePath(`/materias/${subjectId}/temas`)
 }
 
 export async function deleteDocument(subjectId: string, documentId: string) {
@@ -112,4 +142,5 @@ export async function deleteDocument(subjectId: string, documentId: string) {
   }
 
   revalidatePath(`/materias/${subjectId}`)
+  revalidatePath(`/materias/${subjectId}/temas`)
 }

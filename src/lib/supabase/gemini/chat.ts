@@ -20,6 +20,57 @@ REGLAS ESTRICTAS:
 
 const MODEL_FALLBACK_CHAIN = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-1.5-flash']
 
+export async function extractTopicsFromPdf(
+  pages: { page?: number; text?: string; content?: string }[]
+): Promise<string[]> {
+  if (pages.length === 0) return []
+
+  const sampleText = pages
+    .slice(0, 5)
+    .map((p) => `[Pág. ${p.page || 1}] ${(p.text || p.content || '').slice(0, 800)}`)
+    .join('\n\n')
+
+  const prompt = `Analizá el inicio de este documento bibliográfico universitario y extraé entre 2 y 4 temas de estudio o unidades temáticas principales presentes en el texto.
+Ejemplos de respuesta: ["Unidad 1 - Atributos de Calidad", "Patrones Arquitectónicos MVC", "Casos de Uso UML"]
+
+TEXTO DEL DOCUMENTO:
+${sampleText}
+
+Respondé ÚNICAMENTE con un JSON array de strings válido:
+["Tema 1", "Tema 2", "Tema 3"]`
+
+  return callWithRetry(async () => {
+    let lastError: any = null
+
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        })
+
+        const jsonText = response.text ?? '[]'
+        try {
+          const parsed = JSON.parse(jsonText)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((t: any) => String(t).trim()).filter(Boolean)
+          }
+        } catch {
+          // Si no es JSON puro, intentar parsear
+        }
+      } catch (err: any) {
+        lastError = err
+      }
+    }
+
+    return []
+  })
+}
+
 export async function generateSocraticResponse(
   userQuery: string,
   history: ChatMessageInput[],
