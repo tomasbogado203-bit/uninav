@@ -23,21 +23,30 @@ export async function generateSocraticResponse(
   history: ChatMessageInput[],
   contextChunks: RetrievedChunk[]
 ): Promise<string> {
-  const contextBlock = contextChunks.length > 0
-    ? contextChunks
+  // Limitar fragmentos a los 3 mejores para optimizar tokens y evitar rate limits (429)
+  const topChunks = contextChunks.slice(0, 3)
+
+  const contextBlock = topChunks.length > 0
+    ? topChunks
         .map(
           (c) =>
-            `[Pág. ${c.page_number ?? 'N/A'}] ${c.content}`
+            `[Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 1000)}`
         )
         .join('\n\n')
     : 'No hay fragmentos bibliográficos disponibles para esta consulta.'
+
+  // Truncar historial a los últimos 2 mensajes para ahorrar cuota de tokens
+  const trimmedHistory = history
+    .slice(-2)
+    .map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content.slice(0, 250)}`)
+    .join('\n')
 
   const fullPrompt = `<CONTEXTO_BIBLIOGRAFICO>
 ${contextBlock}
 </CONTEXTO_BIBLIOGRAFICO>
 
-Historial previo:
-${history.slice(-4).map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content}`).join('\n')}
+Historial reciente:
+${trimmedHistory}
 
 Consulta del alumno: ${userQuery}`
 
@@ -60,21 +69,28 @@ export async function generateSocraticResponseStream(
   history: ChatMessageInput[],
   contextChunks: RetrievedChunk[]
 ) {
-  const contextBlock = contextChunks.length > 0
-    ? contextChunks
+  const topChunks = contextChunks.slice(0, 3)
+
+  const contextBlock = topChunks.length > 0
+    ? topChunks
         .map(
           (c) =>
-            `[Pág. ${c.page_number ?? 'N/A'}] ${c.content}`
+            `[Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 1000)}`
         )
         .join('\n\n')
     : 'No hay fragmentos bibliográficos disponibles para esta consulta.'
+
+  const trimmedHistory = history
+    .slice(-2)
+    .map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content.slice(0, 250)}`)
+    .join('\n')
 
   const fullPrompt = `<CONTEXTO_BIBLIOGRAFICO>
 ${contextBlock}
 </CONTEXTO_BIBLIOGRAFICO>
 
-Historial previo:
-${history.slice(-4).map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content}`).join('\n')}
+Historial reciente:
+${trimmedHistory}
 
 Consulta del alumno: ${userQuery}`
 
@@ -89,5 +105,3 @@ Consulta del alumno: ${userQuery}`
     })
   })
 }
-
-
