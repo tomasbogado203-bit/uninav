@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createThread } from './actions'
 import SocraticChatView from './SocraticChatView'
@@ -33,51 +32,19 @@ export default async function TemasPage({
   const createThreadWithSubject = createThread.bind(null, subjectId)
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      {/* Encabezado */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-600">Workspace Materia</span>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{subject?.name}</h1>
-        </div>
-        <Link
-          href="/materias"
-          className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
-        >
-          ← Volver a materias
-        </Link>
-      </div>
-
-      {/* Tabs de la materia */}
-      <div className="mb-8 flex border-b border-slate-200/80 gap-2">
-        <Link
-          href={`/materias/${subjectId}`}
-          className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          📄 Apuntes
-        </Link>
-        <Link
-          href={`/materias/${subjectId}/temas`}
-          className="border-b-2 border-indigo-600 px-4 py-2.5 text-sm font-semibold text-indigo-600"
-        >
-          💬 Temas (Chat RAG)
-        </Link>
-        <Link
-          href={`/materias/${subjectId}/simulador`}
-          className="border-b-2 border-transparent px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          📝 Simulador
-        </Link>
-        <span className="px-4 py-2.5 text-sm font-medium text-slate-300 cursor-not-allowed">
-          📅 Calendario
+    <div className="mx-auto max-w-[96rem] p-6 md:p-8">
+      {/* Título de la Pestaña */}
+      <div className="mb-6 border-b border-slate-200/80 pb-4">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
+          Tutor Socrático RAG
         </span>
-        <span className="px-4 py-2.5 text-sm font-medium text-slate-300 cursor-not-allowed">
-          📷 Pizarra
-        </span>
+        <h1 className="text-xl font-bold tracking-tight text-slate-900">
+          💬 Conversaciones y Temas de Estudio ({subject?.name})
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Sidebar de hilos de conversación */}
+        {/* Sidebar interna de hilos de conversación */}
         <div className="md:col-span-1 border-r border-slate-200/80 pr-4 flex flex-col gap-4">
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">

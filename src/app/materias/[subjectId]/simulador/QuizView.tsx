@@ -2,6 +2,12 @@
 
 import { useState } from 'react'
 import { createQuizAction, submitQuizAttemptAction } from './actions'
+import {
+  IconQuiz,
+  IconDocument,
+  IconBook,
+  IconSearch,
+} from '@/components/icons'
 
 interface Thread {
   id: string
@@ -37,8 +43,8 @@ interface QuizViewProps {
 
 export default function QuizView({
   subjectId,
-  threads,
-  examDocuments,
+  threads = [],
+  examDocuments = [],
 }: QuizViewProps) {
   const [loading, setLoading] = useState(false)
   const [activeQuiz, setActiveQuiz] = useState<{
@@ -59,7 +65,6 @@ export default function QuizView({
 
     try {
       await createQuizAction(subjectId, formData)
-      // Recargar vista para ver el quiz generado o notificar
       window.location.reload()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al generar el examen.')
@@ -113,7 +118,10 @@ export default function QuizView({
         /* Formulario de Configuración de Examen */
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
           <div className="mb-4">
-            <h2 className="text-base font-bold text-slate-900">Generar nuevo examen simulado</h2>
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <IconQuiz className="w-5 h-5 text-indigo-600" />
+              Generar nuevo examen simulado
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Personalizá el formato de evaluación basado en la bibliografía cargada en tu materia.
             </p>
@@ -126,7 +134,7 @@ export default function QuizView({
                 1. Tipo de preguntas
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3 bg-slate-50 hover:bg-slate-100/80 cursor-pointer">
+                <label className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3 bg-slate-50 hover:bg-slate-100/80 cursor-pointer transition-colors">
                   <input type="radio" name="quiz_type" value="multiple_choice" defaultChecked className="text-indigo-600" />
                   <div>
                     <span className="text-xs font-semibold text-slate-800 block">Multiple Choice</span>
@@ -134,7 +142,7 @@ export default function QuizView({
                   </div>
                 </label>
 
-                <label className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3 bg-slate-50 hover:bg-slate-100/80 cursor-pointer">
+                <label className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-3 bg-slate-50 hover:bg-slate-100/80 cursor-pointer transition-colors">
                   <input type="radio" name="quiz_type" value="desarrollo" className="text-indigo-600" />
                   <div>
                     <span className="text-xs font-semibold text-slate-800 block">Preguntas de Desarrollo</span>
@@ -153,34 +161,35 @@ export default function QuizView({
                 {threads.map((t) => (
                   <label key={t.id} className="flex items-center gap-2 text-xs text-slate-700 hover:text-slate-900 cursor-pointer">
                     <input type="checkbox" name="thread_ids" value={t.id} defaultChecked className="rounded text-indigo-600" />
-                    <span>💬 {t.title}</span>
+                    <span>Tema: {t.title}</span>
                   </label>
                 ))}
                 {threads.length === 0 && (
-                  <p className="text-xs text-slate-400 italic">No hay temas creados. Creá un tema en la pestaña "Temas" primero.</p>
+                  <p className="text-xs text-slate-400 italic">No hay temas creados. Creá un tema en la pestaña &quot;Temas&quot; primero.</p>
                 )}
               </div>
             </div>
 
-            {/* Referencia de Examen Anterior (Regla 5) */}
-            {examDocuments.length > 0 && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+            {/* Referencia de Examen Anterior (Regla 5: Banco de Exámenes Viejos) */}
+            {examDocuments?.length > 0 && (
+              <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+                <label className="block text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
+                  <IconDocument className="w-4 h-4 text-indigo-600" />
                   3. Referencia de estilo (Opcional - Examen anterior)
                 </label>
                 <select
                   name="style_reference_document_id"
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="w-full rounded-xl border border-indigo-200 px-3 py-2 text-xs bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">Sin referencia (Formato estándar UniNav)</option>
                   {examDocuments.map((doc) => (
                     <option key={doc.id} value={doc.id}>
-                      📜 Examen anterior: {doc.title}
+                      Examen anterior: {doc.title}
                     </option>
                   ))}
                 </select>
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Se utilizará la estructura y estilo de redacción como guía (Regla 5: sin copiar texto).
+                <span className="text-[10px] text-indigo-800/80 mt-1.5 block">
+                  Regla 5: La IA imitará el nivel de exigencia y formato del examen anterior sin copiar su contenido ni contaminar la bibliografía de estudio.
                 </span>
               </div>
             )}
@@ -188,9 +197,9 @@ export default function QuizView({
             <button
               type="submit"
               disabled={loading || threads.length === 0}
-              className="rounded-xl bg-indigo-600 px-5 py-3 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 transition-all"
+              className="rounded-xl bg-indigo-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50 transition-all"
             >
-              {loading ? 'Generando examen con IA...' : '🎯 Generar Examen Simulado'}
+              {loading ? 'Generando examen con IA...' : 'Generar Examen Simulado'}
             </button>
           </form>
         </div>
@@ -270,7 +279,10 @@ export default function QuizView({
 
                     {/* Criterios de Autoevaluación (Regla 4) */}
                     <div className="rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 text-xs text-amber-900">
-                      <span className="font-semibold block mb-1">🔍 Criterios clave para autoevaluación (Respuesta esperada):</span>
+                      <span className="font-semibold block mb-1 flex items-center gap-1">
+                        <IconSearch className="w-3.5 h-3.5 text-amber-700" />
+                        Criterios clave para autoevaluación (Respuesta esperada):
+                      </span>
                       <p className="whitespace-pre-wrap text-[11px] leading-relaxed text-amber-900/90">{q.correct_answer}</p>
 
                       <div className="mt-3 pt-2 border-t border-amber-200/60 flex flex-wrap items-center gap-2">
@@ -331,8 +343,8 @@ export default function QuizView({
               <div className="text-3xl font-extrabold text-emerald-900">{finalScore} / 100</div>
               <p className="text-xs text-emerald-800">
                 {finalScore! >= 60
-                  ? '🎉 ¡Aprobaste el simulacro! Buen dominio de los conceptos bibliográficos.'
-                  : '📖 Te sugerimos revisar las citas de los temas para reforzar tu comprensión.'}
+                  ? '¡Aprobaste el simulacro! Buen dominio de los conceptos bibliográficos.'
+                  : 'Te sugerimos revisar las citas de los temas para reforzar tu comprensión.'}
               </p>
               <button
                 type="button"

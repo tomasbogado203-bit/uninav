@@ -1,0 +1,136 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+import { generateFlashcardsFromChunks } from '@/lib/supabase/gemini/flashcards'
+
+export async function generateFlashcardsAction(subjectId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  // 1. Obtener los documentos tipo 'apunte' de la materia
+  const { data: docs } = await supabase
+    .from('documents')
+    .select('id')
+    .eq('subject_id', subjectId)
+    .eq('document_type', 'apunte')
+
+  if (!docs || docs.length === 0) {
+    throw new Error('Debés cargar al menos un apunte PDF en la biblioteca para generar tarjetas didácticas.')
+  }
+
+  const docIds = docs.map((d) => d.id)
+
+  // 2. Traer un muestreo representativo de fragmentos (chunks)
+  const { data: chunks } = await supabase
+    .from('document_chunks')
+    .select('id, document_id, content, page_number')
+    .in('document_id', docIds)
+    .limit(10)
+
+  if (!chunks || chunks.length === 0) {
+    throw new Error('No se encontraron fragmentos indexados en los PDFs de esta materia.')
+  }
+
+  // 3. Generar tarjetas con Gemini
+  const generated = await generateFlashcardsFromChunks(chunks)
+
+  if (!generated || generated.length === 0) {
+    throw new Error('Ocurrió un inconveniente al procesar las tarjetas con IA.')
+  }
+
+  // 4. Intentar guardar en Supabase con fallback seguro
+  const savedCards = []
+
+  for (let i = 0; i < generated.length; i++) {
+    const fc = generated[i]
+    const fallbackId = `fc_${Date.now()}_${i}`
+
+    try {
+      const { data: inserted, error: dbErr } = await supabase
+        .from('flashcards')
+        .insert({
+          subject_id: subjectId,
+          front_text: fc.front_text,
+          back_text: fc.back_text,
+          source_page: fc.source_page || null,
+          mastered: false,
+        })
+        .select('id, subject_id, front_text, back_text, source_page, mastered')
+        .single()
+
+      if (!dbErr && inserted) {
+        savedCards.push(inserted)
+      } else {
+        savedCards.push({
+          id: fallbackId,
+          subject_id: subjectId,
+          front_text: fc.front_text,
+          back_text: fc.back_text,
+          source_page: fc.source_page || null,
+          mastered: false,
+        })
+      }
+    } catch {
+      savedCards.push({
+        id: fallbackId,
+        subject_id: subjectId,
+        front_text: fc.front_text,
+        back_text: fc.back_text,
+        source_page: fc.source_page || null,
+        mastered: false,
+      })
+    }
+  }
+
+  revalidatePath(`/materias/${subjectId}/tarjetas`)
+  return savedCards
+}
+
+export async function toggleMasteredAction(subjectId: string, flashcardId: string, currentStatus: boolean) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  try {
+    await supabase
+      .from('flashcards')
+      .update({ mastered: !currentStatus })
+      .eq('id', flashcardId)
+  } catch {
+    // Ignorar si no existe la tabla
+  }
+
+  revalidatePath(`/materias/${subjectId}/tarjetas`)
+}
+
+export async function deleteFlashcardAction(subjectId: string, flashcardId: string) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  try {
+    await supabase
+      .from('flashcards')
+      .delete()
+      .eq('id', flashcardId)
+  } catch {
+    // Ignorar si no existe la tabla
+  }
+
+  revalidatePath(`/materias/${subjectId}/tarjetas`)
+}

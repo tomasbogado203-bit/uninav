@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import type { RetrievedChunk } from '@/lib/supabase/rag/retrieve'
+import { callWithRetry } from './retry'
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
@@ -40,14 +41,53 @@ ${history.slice(-4).map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.c
 
 Consulta del alumno: ${userQuery}`
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3.6-flash',
-    contents: fullPrompt,
-    config: {
-      systemInstruction: SOCRATIC_SYSTEM_PROMPT,
-      temperature: 0.3,
-    },
-  })
+  return callWithRetry(async () => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents: fullPrompt,
+      config: {
+        systemInstruction: SOCRATIC_SYSTEM_PROMPT,
+        temperature: 0.3,
+      },
+    })
 
-  return response.text ?? 'No se pudo generar una respuesta.'
+    return response.text ?? 'No se pudo generar una respuesta.'
+  })
 }
+
+export async function generateSocraticResponseStream(
+  userQuery: string,
+  history: ChatMessageInput[],
+  contextChunks: RetrievedChunk[]
+) {
+  const contextBlock = contextChunks.length > 0
+    ? contextChunks
+        .map(
+          (c) =>
+            `[Pág. ${c.page_number ?? 'N/A'}] ${c.content}`
+        )
+        .join('\n\n')
+    : 'No hay fragmentos bibliográficos disponibles para esta consulta.'
+
+  const fullPrompt = `<CONTEXTO_BIBLIOGRAFICO>
+${contextBlock}
+</CONTEXTO_BIBLIOGRAFICO>
+
+Historial previo:
+${history.slice(-4).map((m) => `${m.role === 'user' ? 'Alumno' : 'Tutor'}: ${m.content}`).join('\n')}
+
+Consulta del alumno: ${userQuery}`
+
+  return callWithRetry(async () => {
+    return await ai.models.generateContentStream({
+      model: 'gemini-3.6-flash',
+      contents: fullPrompt,
+      config: {
+        systemInstruction: SOCRATIC_SYSTEM_PROMPT,
+        temperature: 0.3,
+      },
+    })
+  })
+}
+
+
