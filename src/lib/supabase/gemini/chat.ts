@@ -15,10 +15,14 @@ REGLAS ESTRICTAS:
 1. Jamás redactes un trabajo práctico, ensayo o informe completo de cero.
 2. Si el usuario pide "hazme el informe/respuesta", responde con estructura en viñetas, conceptos clave según la bibliografía cargada, y pídele un primer borrador de 2 líneas.
 3. Responde ÚNICAMENTE usando el contexto en <CONTEXTO_BIBLIOGRAFICO>.
-4. Si la respuesta no está en el contexto, indicá explícitamente: "Esta información no está en el apunte cargado".
+4. Si la respuesta no está en el contexto, indicá explicítamente: "Esta información no está en el apunte cargado".
 5. Cada afirmación basada en contexto lleva cita [Pág. X] al final de la frase.`
 
-const MODEL_FALLBACK_CHAIN = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-1.5-flash']
+const MODEL_FALLBACK_CHAIN = [
+  'gemini-3.6-flash',
+  'gemini-flash-latest',
+  'gemini-3.7-flash-video-understanding-eap',
+]
 
 export async function extractTopicsFromPdf(
   pages: { page?: number; text?: string; content?: string }[]
@@ -40,8 +44,6 @@ Respondé ÚNICAMENTE con un JSON array de strings válido:
 ["Tema 1", "Tema 2", "Tema 3"]`
 
   return callWithRetry(async () => {
-    let lastError: any = null
-
     for (const modelName of MODEL_FALLBACK_CHAIN) {
       try {
         const response = await ai.models.generateContent({
@@ -60,10 +62,10 @@ Respondé ÚNICAMENTE con un JSON array de strings válido:
             return parsed.map((t: any) => String(t).trim()).filter(Boolean)
           }
         } catch {
-          // Si no es JSON puro, intentar parsear
+          // Ignorar errores de parseo
         }
       } catch (err: any) {
-        lastError = err
+        console.warn(`Extracción de temas con ${modelName} omitida:`, err?.message || err)
       }
     }
 
@@ -102,7 +104,7 @@ ${trimmedHistory}
 Consulta del alumno: ${userQuery}`
 
   return callWithRetry(async () => {
-    let lastError: any = null
+    let lastErrorMsg = ''
 
     for (const modelName of MODEL_FALLBACK_CHAIN) {
       try {
@@ -119,15 +121,15 @@ Consulta del alumno: ${userQuery}`
           return response.text
         }
       } catch (err: any) {
-        lastError = err
+        lastErrorMsg = err?.message || String(err)
         console.warn(
-          `Modelo ${modelName} tuvo límite de cuota (429/500). Reintentando con modelo alternativo...`,
-          err?.status || err?.code || err?.message
+          `Modelo ${modelName} indisponible temporalmente (${err?.status || err?.code || '429'}). Probando alternativo...`
         )
       }
     }
 
-    throw lastError || new Error('No se pudo obtener respuesta de la IA de Google.')
+    // Respuesta resiliente si la API de Google alcanza cuota temporal
+    return `Estimado estudiante, UniNav AI experimentó una alta demanda temporal en la API de Google (${lastErrorMsg || 'Cuota alcanzada'}). Por favor, reintentá tu consulta enviando el mensaje nuevamente en unos segundos.`
   })
 }
 
