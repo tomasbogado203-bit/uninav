@@ -9,6 +9,9 @@ import {
   IconBook,
   IconChart,
   IconLightbulb,
+  IconClipboard,
+  IconDownload,
+  IconPrinter,
 } from '@/components/icons'
 
 interface Citation {
@@ -29,6 +32,40 @@ interface SocraticChatViewProps {
   subjectId: string
   threadId?: string
   threadTitle?: string
+}
+
+function buildStudySummaryMarkdown(threadTitle: string, messages: Message[]): string {
+  const actualMessages = messages.filter((m) => !m.id.startsWith('welcome'))
+  const dateStr = new Date().toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
+  let md = `# 📋 Ficha Resumen de Estudio: ${threadTitle || 'Tema General'}\n`
+  md += `*Generado con UniNav AI Tutor Socrático • ${dateStr}*\n\n`
+  md += `---\n\n`
+
+  md += `## 💡 Intercambios y Conceptos Clave de la Cátedra\n\n`
+
+  actualMessages.forEach((msg) => {
+    if (msg.role === 'user') {
+      md += `### ❓ Pregunta del Estudiante\n> ${msg.content}\n\n`
+    } else {
+      md += `### 🎓 Explicación Socrática (Tutor AI)\n${msg.content}\n\n`
+      if (msg.citations && msg.citations.length > 0) {
+        md += `**Citas Bibliográficas:** `
+        md += msg.citations.map((c) => `[Pág. ${c.page_number ?? 'N/A'}]`).join(', ') + `\n\n`
+      }
+      if (msg.mermaid_code) {
+        md += `\`\`\`mermaid\n${msg.mermaid_code}\n\`\`\`\n\n`
+      }
+    }
+  })
+
+  md += `---\n`
+  md += `*UniNav — Plataforma de Acompañamiento Académico Universitario*\n`
+  return md
 }
 
 function renderTextWithHighlights(
@@ -158,6 +195,8 @@ export default function SocraticChatView({
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [generatingDiagramId, setGeneratingDiagramId] = useState<string | null>(null)
+  const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [copiedSummary, setCopiedSummary] = useState(false)
 
   const [activeCitationModal, setActiveCitationModal] = useState<{
     page_number: number | null
@@ -223,7 +262,6 @@ export default function SocraticChatView({
         .filter((m) => !m.id.startsWith('welcome'))
         .map((m) => ({ role: m.role, content: m.content }))
 
-      // Enriquecer la consulta con el tema si está definido
       const contextualQuery =
         threadTitle && threadTitle !== 'General'
           ? `[Tema: ${threadTitle}] ${textToSend.trim()}`
@@ -331,6 +369,27 @@ export default function SocraticChatView({
     }
   }
 
+  const handleCopySummary = () => {
+    const md = buildStudySummaryMarkdown(threadTitle, messages)
+    navigator.clipboard.writeText(md)
+    setCopiedSummary(true)
+    setTimeout(() => setCopiedSummary(false), 2500)
+  }
+
+  const handleDownloadSummary = () => {
+    const md = buildStudySummaryMarkdown(threadTitle, messages)
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const safeTitle = (threadTitle || 'Tema').replace(/[^a-zA-Z0-9_-]/g, '_')
+    link.href = url
+    link.download = `Ficha_Resumen_${safeTitle}.md`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const hasConversations = messages.filter((m) => !m.id.startsWith('welcome')).length > 0
+
   return (
     <div className="flex flex-col h-[650px] border border-slate-200/80 rounded-2xl bg-white shadow-sm overflow-hidden relative">
       {/* Header del Chat */}
@@ -355,6 +414,19 @@ export default function SocraticChatView({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Botón de Exportar Ficha Resumen */}
+          {hasConversations && (
+            <button
+              type="button"
+              onClick={() => setShowSummaryModal(true)}
+              className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors px-2.5 py-1 rounded-lg flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+              title="Exportar ficha resumen de estudio de este tema"
+            >
+              <IconClipboard className="w-3.5 h-3.5" />
+              Ficha Resumen
+            </button>
+          )}
+
           {messages.length > 1 && (
             <button
               type="button"
@@ -366,6 +438,7 @@ export default function SocraticChatView({
               Limpiar tema
             </button>
           )}
+
           <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-semibold">
             ● Activo
           </span>
@@ -510,7 +583,81 @@ export default function SocraticChatView({
         </button>
       </form>
 
-      {/* Modal Desplegable de Cita Bibliográfica (z-[9999] Fixed Fullscreen Modal) */}
+      {/* Modal Desplegable de Ficha Resumen de Estudio */}
+      {showSummaryModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in"
+          onClick={() => setShowSummaryModal(false)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95 max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold">
+                  <IconClipboard className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                    Ficha Resumen de Estudio
+                  </h3>
+                  <span className="text-[11px] font-semibold text-indigo-600">
+                    Tema: {threadTitle || 'General'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSummaryModal(false)}
+                className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Vista Previa del Resumen */}
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-xs text-slate-800 leading-relaxed overflow-y-auto max-h-96 shadow-inner font-mono whitespace-pre-wrap select-all">
+              {buildStudySummaryMarkdown(threadTitle, messages)}
+            </div>
+
+            {/* Botones de Acción */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <IconPrinter className="w-3.5 h-3.5 text-slate-500" />
+                Imprimir / PDF
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadSummary}
+                  className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <IconDownload className="w-3.5 h-3.5 text-indigo-600" />
+                  Descargar (.md)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopySummary}
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <IconClipboard className="w-3.5 h-3.5" />
+                  {copiedSummary ? '¡Copiado al portapapeles! ✓' : 'Copiar Ficha Markdown'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Desplegable de Cita Bibliográfica */}
       {activeCitationModal && (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in"
