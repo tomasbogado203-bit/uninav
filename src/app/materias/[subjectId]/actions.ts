@@ -102,7 +102,7 @@ export async function uploadDocument(subjectId: string, formData: FormData) {
     console.error('Error procesando embeddings del documento:', err)
   }
 
-  revalidatePath(`/materias/${subjectId}`)
+  revalidatePath(`/materias/${subjectId}`, 'layout')
   revalidatePath(`/materias/${subjectId}/temas`)
 }
 
@@ -152,6 +152,6 @@ export async function deleteDocument(subjectId: string, documentId: string) {
     await supabase.from('chat_threads').delete().eq('subject_id', subjectId)
   }
 
-  revalidatePath(`/materias/${subjectId}`)
+  revalidatePath(`/materias/${subjectId}`, 'layout')
   revalidatePath(`/materias/${subjectId}/temas`)
 }

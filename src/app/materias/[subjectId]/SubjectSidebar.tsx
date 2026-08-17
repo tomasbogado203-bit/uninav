@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -51,6 +51,10 @@ export default function SubjectSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [threads, setThreads] = useState<ChatThread[]>(initialThreads)
+
+  useEffect(() => {
+    setThreads(initialThreads)
+  }, [initialThreads])
 
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null)
   const [editTitleInput, setEditTitleInput] = useState('')
