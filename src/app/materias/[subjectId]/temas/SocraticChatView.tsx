@@ -12,6 +12,7 @@ import {
   IconClipboard,
   IconDownload,
   IconPrinter,
+  IconDocument,
 } from '@/components/icons'
 
 interface Citation {
@@ -34,6 +35,17 @@ interface SocraticChatViewProps {
   threadTitle?: string
 }
 
+function cleanConversationalChatter(text: string): string {
+  let cleaned = text
+    // Eliminar saludos típicos de inicio
+    .replace(/^([¡!]?Hola[!.]?|[¡!]?Buenas[!.]?|[¡!]?Buenos días[!.]?|[¡!]?Buenas tardes[!.]?|Estimado estudiante[,:]?|Vamos a revisar los conceptos clave que presenta el material respecto a.*?:\s*)/gim, '')
+    // Eliminar preguntas de cierre conversacionales
+    .replace(/(\n*(¿?En qué tema te gustaría que empecemos a trabajar hoy\??|¿?Contame qué duda tenés.*?|¿?Qué punto querés revisar\??|¡?Contame con qué querés arrancar!?|¿?Te gustaría que profundicemos en algún punto específico\??).*)$/gim, '')
+    .trim()
+
+  return cleaned || text
+}
+
 function buildStudySummaryMarkdown(threadTitle: string, messages: Message[]): string {
   const actualMessages = messages.filter((m) => !m.id.startsWith('welcome'))
   const dateStr = new Date().toLocaleDateString('es-AR', {
@@ -43,23 +55,27 @@ function buildStudySummaryMarkdown(threadTitle: string, messages: Message[]): st
   })
 
   let md = `# 📋 Ficha Resumen de Estudio: ${threadTitle || 'Tema General'}\n`
-  md += `*Generado con UniNav AI Tutor Socrático • ${dateStr}*\n\n`
+  md += `*Generado con UniNav AI • ${dateStr}*\n\n`
   md += `---\n\n`
 
-  md += `## 💡 Intercambios y Conceptos Clave de la Cátedra\n\n`
+  md += `## 💡 Conceptos Clave y Desarrollo Académico\n\n`
 
+  let conceptCount = 1
   actualMessages.forEach((msg) => {
-    if (msg.role === 'user') {
-      md += `### ❓ Pregunta del Estudiante\n> ${msg.content}\n\n`
-    } else {
-      md += `### 🎓 Explicación Socrática (Tutor AI)\n${msg.content}\n\n`
+    if (msg.role === 'model') {
+      const cleanContent = cleanConversationalChatter(msg.content)
+      md += `### ${conceptCount}. Síntesis del Contenido\n${cleanContent}\n\n`
+
       if (msg.citations && msg.citations.length > 0) {
         md += `**Citas Bibliográficas:** `
         md += msg.citations.map((c) => `[Pág. ${c.page_number ?? 'N/A'}]`).join(', ') + `\n\n`
       }
+
       if (msg.mermaid_code) {
         md += `\`\`\`mermaid\n${msg.mermaid_code}\n\`\`\`\n\n`
       }
+
+      conceptCount += 1
     }
   })
 
@@ -196,6 +212,7 @@ export default function SocraticChatView({
   const [loading, setLoading] = useState(false)
   const [generatingDiagramId, setGeneratingDiagramId] = useState<string | null>(null)
   const [showSummaryModal, setShowSummaryModal] = useState(false)
+  const [summaryViewMode, setSummaryViewMode] = useState<'preview' | 'raw'>('preview')
   const [copiedSummary, setCopiedSummary] = useState(false)
 
   const [activeCitationModal, setActiveCitationModal] = useState<{
@@ -595,9 +612,9 @@ export default function SocraticChatView({
           >
             {/* Header del Modal */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold">
-                  <IconClipboard className="w-4 h-4" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold">
+                  <IconClipboard className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">
@@ -608,18 +625,94 @@ export default function SocraticChatView({
                   </span>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowSummaryModal(false)}
-                className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer"
-              >
-                ✕
-              </button>
+
+              {/* Selector de Vistas y Botón Cerrar */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setSummaryViewMode('preview')}
+                    className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                      summaryViewMode === 'preview'
+                        ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Lectura
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSummaryViewMode('raw')}
+                    className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                      summaryViewMode === 'raw'
+                        ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Markdown
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSummaryModal(false)}
+                  className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
-            {/* Vista Previa del Resumen */}
-            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-xs text-slate-800 leading-relaxed overflow-y-auto max-h-96 shadow-inner font-mono whitespace-pre-wrap select-all">
-              {buildStudySummaryMarkdown(threadTitle, messages)}
+            {/* Vista Previa del Resumen (con selección de texto natural libre) */}
+            <div className="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-xs text-slate-800 leading-relaxed overflow-y-auto max-h-96 shadow-inner select-text">
+              {summaryViewMode === 'preview' ? (
+                <div className="flex flex-col gap-4">
+                  <div className="border-b border-slate-200/80 pb-2">
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">
+                      UniNav AI • Ficha Académica
+                    </span>
+                    <h2 className="text-base font-bold text-slate-900">
+                      {threadTitle || 'Tema General'}
+                    </h2>
+                  </div>
+
+                  {messages
+                    .filter((m) => !m.id.startsWith('welcome') && m.role === 'model')
+                    .map((msg, idx) => {
+                      const cleanText = cleanConversationalChatter(msg.content)
+                      return (
+                        <div
+                          key={msg.id || idx}
+                          className="bg-white rounded-xl p-4 border border-slate-200/80 shadow-2xs flex flex-col gap-2"
+                        >
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            Punto Clave #{idx + 1}
+                          </span>
+                          <FormattedChatMessage content={cleanText} />
+
+                          {msg.citations && msg.citations.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-indigo-700 font-semibold flex-wrap">
+                              <IconBook className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Citas:</span>
+                              {msg.citations.map((c, i) => (
+                                <span
+                                  key={i}
+                                  className="bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded text-[10px]"
+                                >
+                                  Pág. {c.page_number ?? 'N/A'}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                </div>
+              ) : (
+                <pre className="font-mono text-[11px] whitespace-pre-wrap select-text text-slate-700">
+                  {buildStudySummaryMarkdown(threadTitle, messages)}
+                </pre>
+              )}
             </div>
 
             {/* Botones de Acción */}
@@ -649,7 +742,7 @@ export default function SocraticChatView({
                   className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <IconClipboard className="w-3.5 h-3.5" />
-                  {copiedSummary ? '¡Copiado al portapapeles! ✓' : 'Copiar Ficha Markdown'}
+                  {copiedSummary ? '¡Ficha copiada! ✓' : 'Copiar Ficha Completa'}
                 </button>
               </div>
             </div>
