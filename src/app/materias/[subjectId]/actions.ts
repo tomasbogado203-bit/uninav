@@ -141,6 +141,17 @@ export async function deleteDocument(subjectId: string, documentId: string) {
     throw new Error(error.message)
   }
 
+  // 4. Si no quedan más documentos en la materia, limpiar los temas asociados
+  const { count: remainingDocsCount } = await supabase
+    .from('documents')
+    .select('id', { count: 'exact', head: true })
+    .eq('subject_id', subjectId)
+    .eq('user_id', user.id)
+
+  if (!remainingDocsCount || remainingDocsCount === 0) {
+    await supabase.from('chat_threads').delete().eq('subject_id', subjectId)
+  }
+
   revalidatePath(`/materias/${subjectId}`)
   revalidatePath(`/materias/${subjectId}/temas`)
 }
