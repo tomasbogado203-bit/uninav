@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import SocraticChatView from './SocraticChatView'
-import ThreadManager from './ThreadManager'
+import TemasWorkspace from './TemasWorkspace'
 
 export default async function TemasPage({
   params,
@@ -41,17 +40,11 @@ export default async function TemasPage({
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Sidebar interna de gestor de temas */}
-        <div className="md:col-span-1 border-r border-slate-200/80 pr-4">
-          <ThreadManager subjectId={subjectId} initialThreads={threads || []} />
-        </div>
-
-        {/* Panel del Chat Socrático */}
-        <div className="md:col-span-3">
-          <SocraticChatView subjectId={subjectId} />
-        </div>
-      </div>
+      <TemasWorkspace
+        subjectId={subjectId}
+        subjectName={subject?.name || 'Materia'}
+        initialThreads={threads || []}
+      />
     </div>
   )
 }

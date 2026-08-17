@@ -378,7 +378,7 @@ export default function SubjectSidebar({
                       ) : (
                         <>
                           <Link
-                            href={`/materias/${subjectId}/temas`}
+                            href={`/materias/${subjectId}/temas?threadId=${thread.id}`}
                             className="flex items-center gap-1.5 truncate flex-1 min-w-0"
                             title={thread.title}
                           >

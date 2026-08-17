@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createThread, renameThreadAction, deleteThreadAction } from './actions'
 import { IconChat, IconTrash, IconSparkles } from '@/components/icons'
 
@@ -32,6 +32,16 @@ export default function ThreadManager({
   const [editTitle, setEditTitle] = useState('')
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    setThreads(initialThreads)
+  }, [initialThreads])
+
+  useEffect(() => {
+    if (activeThreadId) {
+      setSelectedId(activeThreadId)
+    }
+  }, [activeThreadId])
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim() || loading) return
@@ -45,6 +55,7 @@ export default function ThreadManager({
     const updated = [tempThread, ...threads]
     setThreads(updated)
     setSelectedId(tempId)
+    onSelectThread?.(tempId)
 
     try {
       const formData = new FormData()
@@ -55,6 +66,7 @@ export default function ThreadManager({
           prev.map((t) => (t.id === tempId ? { ...t, id: realId } : t))
         )
         setSelectedId(realId)
+        onSelectThread?.(realId)
       }
     } catch {
       // Fallback local completado
@@ -97,9 +109,9 @@ export default function ThreadManager({
     setThreads(updated)
 
     if (selectedId === threadId) {
-      const nextActive = updated[0]?.id
+      const nextActive = updated[0]?.id || 'general'
       setSelectedId(nextActive)
-      if (nextActive) onSelectThread?.(nextActive)
+      onSelectThread?.(nextActive)
     }
 
     try {

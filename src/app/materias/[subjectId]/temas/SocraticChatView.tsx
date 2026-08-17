@@ -25,11 +25,10 @@ interface Message {
   mermaid_code?: string | null
 }
 
-const DEFAULT_WELCOME: Message = {
-  id: 'welcome',
-  role: 'model',
-  content:
-    '¡Hola! Soy UniNav AI, tu tutor socrático. Hacé tu consulta sobre la materia y te guiaré analizando los apuntes cargados.',
+interface SocraticChatViewProps {
+  subjectId: string
+  threadId?: string
+  threadTitle?: string
 }
 
 function renderTextWithHighlights(
@@ -139,8 +138,23 @@ function FormattedChatMessage({
   )
 }
 
-export default function SocraticChatView({ subjectId }: { subjectId: string }) {
-  const [messages, setMessages] = useState<Message[]>([DEFAULT_WELCOME])
+export default function SocraticChatView({
+  subjectId,
+  threadId = 'general',
+  threadTitle = 'General',
+}: SocraticChatViewProps) {
+  const storageKey = `uninav_chat_${subjectId}_${threadId}`
+
+  const defaultWelcome: Message = {
+    id: `welcome_${threadId}`,
+    role: 'model',
+    content:
+      threadTitle && threadTitle !== 'General'
+        ? `¡Hola! Soy UniNav AI, tu tutor socrático para el tema **${threadTitle}**. Hacé tu consulta y te guiaré analizando los apuntes cargados.`
+        : '¡Hola! Soy UniNav AI, tu tutor socrático. Hacé tu consulta sobre la materia y te guiaré analizando los apuntes cargados.',
+  }
+
+  const [messages, setMessages] = useState<Message[]>([defaultWelcome])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [generatingDiagramId, setGeneratingDiagramId] = useState<string | null>(null)
@@ -160,17 +174,19 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(`uninav_chat_${subjectId}`)
+      const saved = localStorage.getItem(storageKey)
       if (saved) {
         const parsed = JSON.parse(saved)
         if (Array.isArray(parsed) && parsed.length > 0) {
           setMessages(parsed)
+          return
         }
       }
+      setMessages([defaultWelcome])
     } catch {
-      // Ignorar errores
+      setMessages([defaultWelcome])
     }
-  }, [subjectId])
+  }, [storageKey, threadId])
 
   useEffect(() => {
     scrollToBottom('auto')
@@ -179,7 +195,7 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
   const saveMessagesToStorage = (newMessages: Message[]) => {
     setMessages(newMessages)
     try {
-      localStorage.setItem(`uninav_chat_${subjectId}`, JSON.stringify(newMessages))
+      localStorage.setItem(storageKey, JSON.stringify(newMessages))
     } catch {
       // Ignorar errores
     }
@@ -204,10 +220,16 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
 
     try {
       const historyForApi = updatedWithUser
-        .filter((m) => m.id !== 'welcome')
+        .filter((m) => !m.id.startsWith('welcome'))
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const res = await askSocraticTutor(subjectId, textToSend.trim(), historyForApi)
+      // Enriquecer la consulta con el tema si está definido
+      const contextualQuery =
+        threadTitle && threadTitle !== 'General'
+          ? `[Tema: ${threadTitle}] ${textToSend.trim()}`
+          : textToSend.trim()
+
+      const res = await askSocraticTutor(subjectId, contextualQuery, historyForApi)
 
       const modelMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -233,8 +255,8 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
   }
 
   const handleClearChat = () => {
-    localStorage.removeItem(`uninav_chat_${subjectId}`)
-    setMessages([DEFAULT_WELCOME])
+    localStorage.removeItem(storageKey)
+    setMessages([defaultWelcome])
   }
 
   const handleGenerateDiagram = async (targetMsgId: string) => {
@@ -247,7 +269,7 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
       const startIdx = Math.max(0, targetIndex - 3)
       const turns = messages
         .slice(startIdx, targetIndex + 1)
-        .filter((m) => m.id !== 'welcome')
+        .filter((m) => !m.id.startsWith('welcome'))
         .map((m) => ({ role: m.role, content: m.content }))
 
       if (turns.length === 0) {
@@ -271,7 +293,6 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
     }
   }
 
-  // Abrir visor de cita bibliográfica
   const handleOpenCitationModal = async (messageCitations?: Citation[], pageTagStr?: string) => {
     const match = pageTagStr?.match(/\d+/)
     const pageNum = match ? parseInt(match[0], 10) : 1
@@ -314,28 +335,35 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
     <div className="flex flex-col h-[650px] border border-slate-200/80 rounded-2xl bg-white shadow-sm overflow-hidden relative">
       {/* Header del Chat */}
       <div className="border-b border-slate-200/80 px-5 py-3.5 bg-slate-50/80 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs">
+        <div className="flex items-center gap-2.5 truncate">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs shrink-0">
             <IconSparkles className="w-4 h-4" />
           </div>
-          <div>
-            <h2 className="text-xs font-bold text-slate-800 tracking-tight">Tutor Socrático RAG</h2>
-            <p className="text-[11px] text-slate-500">
-              Consultas basadas exclusivamente en la bibliografía de tu materia.
+          <div className="truncate">
+            <div className="flex items-center gap-2 truncate">
+              <h2 className="text-xs font-bold text-slate-800 tracking-tight">Tutor Socrático RAG</h2>
+              {threadTitle && threadTitle !== 'General' && (
+                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full border border-indigo-200 truncate">
+                  {threadTitle}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 truncate">
+              Respuestas fundamentadas exclusivamente en la bibliografía de tu materia.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {messages.length > 1 && (
             <button
               type="button"
               onClick={handleClearChat}
               className="text-[11px] font-medium text-slate-500 hover:text-rose-600 transition-colors px-2 py-1 rounded-md hover:bg-rose-50 flex items-center gap-1 cursor-pointer"
-              title="Borrar conversación y reiniciar"
+              title="Borrar conversación y reiniciar este tema"
             >
               <IconTrash className="w-3.5 h-3.5" />
-              Limpiar chat
+              Limpiar tema
             </button>
           )}
           <span className="text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-0.5 rounded-full font-semibold">
@@ -409,7 +437,7 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
             )}
 
             {/* Botón para generar diagrama */}
-            {m.role === 'model' && m.id !== 'welcome' && (
+            {m.role === 'model' && !m.id.startsWith('welcome') && (
               <button
                 type="button"
                 disabled={generatingDiagramId === m.id}
@@ -432,13 +460,13 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
           <div className="my-2 flex flex-col gap-2 p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 animate-in fade-in">
             <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
               <IconLightbulb className="w-4 h-4 text-indigo-600" />
-              Sugerencias de estudio rápido (1 clic para consultar):
+              Sugerencias de estudio para {threadTitle || 'este tema'}:
             </span>
             <div className="flex flex-wrap gap-2">
               {[
-                '💡 Explicame los conceptos clave de los apuntes',
-                '❓ ¿Qué preguntas típicas de parcial pueden surgir?',
-                '📐 Armá una guía de repaso estructurada',
+                `💡 Conceptos clave de ${threadTitle || 'este tema'}`,
+                `❓ ¿Qué preguntas de examen surgen de este apunte?`,
+                `📐 Armá una guía de estudio estructurada`,
               ].map((promptText, i) => (
                 <button
                   key={i}
@@ -469,7 +497,7 @@ export default function SocraticChatView({ subjectId }: { subjectId: string }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribí tu duda o pregunta sobre el tema..."
+          placeholder={`Escribí tu duda sobre ${threadTitle || 'el tema'}...`}
           disabled={loading}
           className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs sm:text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-slate-900"
         />
