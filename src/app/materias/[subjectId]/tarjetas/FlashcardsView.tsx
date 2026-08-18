@@ -120,6 +120,11 @@ export default function FlashcardsView({
           setExpandedCardIndex((prev) =>
             prev !== null && prev > 0 ? prev - 1 : activeCards.length - 1
           )
+        } else if (e.key === 'm' || e.key === 'M') {
+          if (expandedCard) {
+            e.preventDefault()
+            handleToggleMastered(expandedCard.id, expandedCard.mastered)
+          }
         }
         return
       }
@@ -144,7 +149,7 @@ export default function FlashcardsView({
         }
       }
     },
-    [viewMode, activeCards.length, currentCard, expandedCardIndex]
+    [viewMode, activeCards.length, currentCard, expandedCardIndex, expandedCard]
   )
 
   useEffect(() => {
@@ -592,7 +597,7 @@ export default function FlashcardsView({
           >
             {/* Header del Modal */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-slate-800">
                   Tarjeta {expandedCardIndex + 1} de {activeCards.length}
                 </span>
@@ -604,6 +609,9 @@ export default function FlashcardsView({
                   }`}
                 >
                   {expandedCard.mastered ? '⭐ Dominada' : '● En repaso'}
+                </span>
+                <span className="hidden sm:inline text-[11px] text-slate-400 ml-2">
+                  Atajos: <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">Espacio</kbd> • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">←/→</kbd> • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">M</kbd>
                 </span>
               </div>
 
