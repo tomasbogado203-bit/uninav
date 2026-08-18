@@ -13,6 +13,7 @@ import {
   IconSparkles,
   IconLightbulb,
   IconChevronRight,
+  IconUsers,
 } from '@/components/icons'
 
 export default async function DashboardPage() {
@@ -110,6 +111,14 @@ export default async function DashboardPage() {
 
           <div className="flex items-center gap-2.5 flex-wrap">
             <Link
+              href="/comunidad"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-500/30 hover:bg-indigo-500/40 border border-indigo-400/40 px-4 py-2.5 text-xs font-bold text-white transition-colors backdrop-blur-xs shadow-2xs"
+            >
+              <IconUsers className="w-3.5 h-3.5 text-indigo-300" />
+              <span>Banco Comunitario</span>
+            </Link>
+
+            <Link
               href="/recursos"
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-2.5 text-xs font-bold text-white transition-colors backdrop-blur-xs shadow-2xs"
             >
@@ -125,6 +134,7 @@ export default async function DashboardPage() {
               <IconChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
+
         </div>
       </div>
 

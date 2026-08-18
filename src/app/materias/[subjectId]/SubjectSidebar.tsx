@@ -30,7 +30,9 @@ import {
   IconCheck,
   IconPlus,
   IconArrowsExchange,
+  IconUsers,
 } from '@/components/icons'
+
 
 interface ChatThread {
   id: string
@@ -172,11 +174,18 @@ export default function SubjectSidebar({
       exact: false,
     },
     {
+      label: 'Banco Comunitario',
+      icon: IconUsers,
+      href: '/comunidad',
+      exact: false,
+    },
+    {
       label: 'Calendario General',
       icon: IconCalendar,
       href: '/calendario',
       exact: true,
     },
+
   ]
 
   const navItems = [
