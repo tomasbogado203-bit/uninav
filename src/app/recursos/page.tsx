@@ -197,7 +197,14 @@ const DEFAULT_GLOSSARY_TERMS = [
   },
 ]
 
-export default async function RecursosPage() {
+export default async function RecursosPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>
+}) {
+  const resolvedParams = searchParams ? await searchParams : {}
+  const initialTab = resolvedParams.tab === 'glosario' ? 'glosario' : 'herramientas'
+
   const supabase = await createClient()
 
   const {
@@ -214,27 +221,40 @@ export default async function RecursosPage() {
 
   const userCareerName = (profile?.careers as unknown as { name: string } | null)?.name
 
-  const { data: resourcesData } = await supabase
-    .from('career_resources')
-    .select('*')
-    .order('display_order', { ascending: true })
+  let combinedResources = DEFAULT_CAREER_RESOURCES
+  try {
+    const { data: resourcesData } = await supabase
+      .from('career_resources')
+      .select('*')
+      .order('display_order', { ascending: true })
 
-  const { data: glossaryData } = await supabase
-    .from('glossary_terms')
-    .select('*')
-    .order('term', { ascending: true })
+    if (resourcesData && resourcesData.length > 0) {
+      combinedResources = resourcesData
+    }
+  } catch {
+    combinedResources = DEFAULT_CAREER_RESOURCES
+  }
 
-  const combinedResources =
-    resourcesData && resourcesData.length > 0 ? resourcesData : DEFAULT_CAREER_RESOURCES
+  let combinedGlossary = DEFAULT_GLOSSARY_TERMS
+  try {
+    const { data: glossaryData } = await supabase
+      .from('glossary_terms')
+      .select('*')
+      .order('term', { ascending: true })
 
-  const combinedGlossary =
-    glossaryData && glossaryData.length > 0 ? glossaryData : DEFAULT_GLOSSARY_TERMS
+    if (glossaryData && glossaryData.length > 0) {
+      combinedGlossary = glossaryData
+    }
+  } catch {
+    combinedGlossary = DEFAULT_GLOSSARY_TERMS
+  }
 
   return (
     <RecursosView
       userCareerName={userCareerName}
       resources={combinedResources}
       glossary={combinedGlossary}
+      initialTab={initialTab}
     />
   )
 }

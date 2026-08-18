@@ -10,7 +10,6 @@ import {
   IconSparkles,
   IconClipboard,
   IconChevronRight,
-  IconCheck,
 } from '@/components/icons'
 
 export interface CareerResource {
@@ -36,6 +35,7 @@ interface RecursosViewProps {
   userCareerName?: string
   resources: CareerResource[]
   glossary: GlossaryTerm[]
+  initialTab?: 'herramientas' | 'glosario'
 }
 
 interface TermExplanationData {
@@ -49,8 +49,9 @@ export default function RecursosView({
   userCareerName,
   resources = [],
   glossary = [],
+  initialTab = 'herramientas',
 }: RecursosViewProps) {
-  const [activeTab, setActiveTab] = useState<'herramientas' | 'glosario'>('herramientas')
+  const [activeTab, setActiveTab] = useState<'herramientas' | 'glosario'>(initialTab)
   const [selectedCategory, setSelectedCategory] = useState<string>('todas')
   const [glossarySearch, setGlossarySearch] = useState<string>('')
   const [selectedLetter, setSelectedLetter] = useState<string>('todas')
@@ -126,14 +127,14 @@ export default function RecursosView({
           </div>
         </div>
 
-        {/* Pestañas Principales */}
-        <div className="mt-5 flex gap-2 border-t border-slate-800/80 pt-4">
+        {/* Pestañas Principales Visibles y Destacadas */}
+        <div className="mt-5 flex flex-wrap gap-2.5 border-t border-slate-800/80 pt-4">
           <button
             type="button"
             onClick={() => setActiveTab('herramientas')}
-            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`rounded-xl px-4 py-2.5 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
               activeTab === 'herramientas'
-                ? 'bg-indigo-600 text-white shadow-md'
+                ? 'bg-indigo-600 text-white ring-2 ring-indigo-400'
                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -143,9 +144,9 @@ export default function RecursosView({
           <button
             type="button"
             onClick={() => setActiveTab('glosario')}
-            className={`rounded-xl px-4 py-2 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`rounded-xl px-4 py-2.5 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
               activeTab === 'glosario'
-                ? 'bg-indigo-600 text-white shadow-md'
+                ? 'bg-indigo-600 text-white ring-2 ring-indigo-400'
                 : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
           >
@@ -293,7 +294,7 @@ export default function RecursosView({
                 key={letter}
                 type="button"
                 onClick={() => setSelectedLetter(letter)}
-                className={`rounded-lg px-2 py-1 text-xs font-bold transition-all cursor-pointer ${
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                   selectedLetter === letter
                     ? 'bg-indigo-600 text-white shadow-2xs'
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
