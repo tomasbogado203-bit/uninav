@@ -179,13 +179,6 @@ export default function SubjectSidebar({
       href: '/comunidad',
       exact: false,
     },
-    {
-      label: 'Calendario General',
-      icon: IconCalendar,
-      href: '/calendario',
-      exact: true,
-    },
-
   ]
 
   const navItems = [
