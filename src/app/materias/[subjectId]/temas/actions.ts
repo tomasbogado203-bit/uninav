@@ -4,7 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { retrieveChunks } from '@/lib/supabase/rag/retrieve'
-import { generateSocraticResponse, type ChatMessageInput } from '@/lib/supabase/gemini/chat'
+import {
+  generateSocraticResponse,
+  generateFollowUpSuggestions,
+  type ChatMessageInput,
+} from '@/lib/supabase/gemini/chat'
 import { generateMermaidDiagram } from '@/lib/supabase/gemini/diagrams'
 
 export async function createThread(subjectId: string, formData: FormData) {
@@ -108,8 +112,12 @@ export async function askSocraticTutor(
   // 2. Generación socrática con Gemini Flash
   const aiResponse = await generateSocraticResponse(userMessage.trim(), history, chunks)
 
+  // 3. Sugerencias de repregunta dinámica (Smart follow-up pills)
+  const followUps = await generateFollowUpSuggestions(aiResponse)
+
   return {
     response: aiResponse,
+    follow_ups: followUps,
     citations: chunks.map((c) => ({
       document_id: c.document_id,
       page_number: c.page_number,

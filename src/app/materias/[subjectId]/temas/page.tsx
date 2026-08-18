@@ -32,17 +32,7 @@ export default async function TemasPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="mx-auto max-w-[96rem] p-6 md:p-8">
-      {/* Título de la Pestaña */}
-      <div className="mb-6 border-b border-slate-200/80 pb-4">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-          Tutor Socrático RAG
-        </span>
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-          Conversaciones y Temas de Estudio ({subject?.name || 'Materia'})
-        </h1>
-      </div>
-
+    <div className="mx-auto max-w-[96rem] p-4 md:p-6">
       <TemasWorkspace
         subjectId={subjectId}
         subjectName={subject?.name || 'Materia'}

@@ -73,6 +73,51 @@ Respondé ÚNICAMENTE con un JSON array de strings válido:
   })
 }
 
+export async function generateFollowUpSuggestions(
+  lastResponse: string,
+  topicTitle?: string
+): Promise<string[]> {
+  const prompt = `A partir de la siguiente respuesta explicativa del tutor universitario sobre el tema "${topicTitle || 'General'}":
+
+"${lastResponse.slice(0, 700)}"
+
+Generá exactamente 3 repreguntas socráticas o preguntas de profundización cortas (máximo 6 a 8 palabras) que el estudiante podría hacer para seguir aprendiendo.
+Ejemplos:
+- "¿Cómo se evalúa esto en un parcial?"
+- "Dame un ejemplo práctico cotidiano"
+- "Desafíame con una pregunta sobre esto"
+
+Respondé ÚNICAMENTE con un JSON array de 3 strings válido:
+["Pregunta 1", "Pregunta 2", "Pregunta 3"]`
+
+  for (const modelName of MODEL_FALLBACK_CHAIN) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.3,
+        },
+      })
+
+      const jsonText = response.text ?? '[]'
+      const parsed = JSON.parse(jsonText)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.slice(0, 3).map((s: any) => String(s).trim())
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  return [
+    '¿Cómo se evalúa esto en un parcial?',
+    'Dame un ejemplo práctico aplicado',
+    'Desafíame con una pregunta sobre este tema',
+  ]
+}
+
 export async function generateSocraticResponse(
   userQuery: string,
   history: ChatMessageInput[],
@@ -128,7 +173,6 @@ Consulta del alumno: ${userQuery}`
       }
     }
 
-    // Respuesta resiliente si la API de Google alcanza cuota temporal
     return `Estimado estudiante, UniNav AI experimentó una alta demanda temporal en la API de Google (${lastErrorMsg || 'Cuota alcanzada'}). Por favor, reintentá tu consulta enviando el mensaje nuevamente en unos segundos.`
   })
 }
