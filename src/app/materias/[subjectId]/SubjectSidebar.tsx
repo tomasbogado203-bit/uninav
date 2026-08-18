@@ -179,7 +179,14 @@ export default function SubjectSidebar({
       href: '/comunidad',
       exact: false,
     },
+    {
+      label: 'Lámpara IoT',
+      icon: IconSparkles,
+      href: '/iot',
+      exact: false,
+    },
   ]
+
 
   const navItems = [
     {

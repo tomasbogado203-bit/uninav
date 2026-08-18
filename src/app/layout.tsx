@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import { StudyTimerProvider } from '@/context/StudyTimerContext'
+import StudyTimerCapsule from '@/components/StudyTimerCapsule'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,7 +30,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-        <main className="flex-1">{children}</main>
+        <StudyTimerProvider>
+          {/* Cápsula Flotante de Productividad Pomodoro / IoT en el Top */}
+          <div className="fixed top-3 right-4 sm:right-6 z-50 pointer-events-auto">
+            <StudyTimerCapsule />
+          </div>
+
+          <main className="flex-1">{children}</main>
+        </StudyTimerProvider>
       </body>
     </html>
   )
