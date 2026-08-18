@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import ThreadManager from './ThreadManager'
 import SocraticChatView from './SocraticChatView'
 
@@ -15,20 +15,20 @@ interface TemasWorkspaceProps {
   subjectId: string
   subjectName: string
   initialThreads: Thread[]
+  initialThreadId?: string
 }
 
 export default function TemasWorkspace({
   subjectId,
   subjectName,
   initialThreads,
+  initialThreadId,
 }: TemasWorkspaceProps) {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const paramThreadId = searchParams.get('threadId')
 
   const [threads, setThreads] = useState<Thread[]>(initialThreads)
   const [activeThreadId, setActiveThreadId] = useState<string>(
-    paramThreadId || initialThreads[0]?.id || 'general'
+    initialThreadId || initialThreads[0]?.id || 'general'
   )
 
   useEffect(() => {
@@ -36,10 +36,10 @@ export default function TemasWorkspace({
   }, [initialThreads])
 
   useEffect(() => {
-    if (paramThreadId) {
-      setActiveThreadId(paramThreadId)
+    if (initialThreadId) {
+      setActiveThreadId(initialThreadId)
     }
-  }, [paramThreadId])
+  }, [initialThreadId])
 
   const activeThread =
     threads.find((t) => t.id === activeThreadId) || {

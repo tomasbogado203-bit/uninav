@@ -4,10 +4,13 @@ import TemasWorkspace from './TemasWorkspace'
 
 export default async function TemasPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ subjectId: string }>
+  searchParams: Promise<{ threadId?: string }>
 }) {
   const { subjectId } = await params
+  const { threadId } = await searchParams
   const supabase = await createClient()
 
   const {
@@ -44,6 +47,7 @@ export default async function TemasPage({
         subjectId={subjectId}
         subjectName={subject?.name || 'Materia'}
         initialThreads={threads || []}
+        initialThreadId={threadId}
       />
     </div>
   )
