@@ -69,17 +69,7 @@ export default async function PizarraPage({
   }
 
   return (
-    <div className="mx-auto max-w-[96rem] p-6 md:p-8">
-      {/* Título de la Pestaña */}
-      <div className="mb-6 border-b border-slate-200/80 pb-4">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-          OCR & Visión Inteligente
-        </span>
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-          📷 Fotos de Pizarra y Avisos ({subject?.name})
-        </h1>
-      </div>
-
+    <div className="mx-auto max-w-[96rem] p-4 md:p-6">
       {/* Vista Principal de Pizarra */}
       <PizarraView
         subjectId={subjectId}
