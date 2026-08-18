@@ -51,6 +51,10 @@ export default function FlashcardsView({
   // Selector de tema para generar
   const [selectedTopic, setSelectedTopic] = useState<string>('Todas las unidades')
 
+  // Estado para tarjeta ampliada en modal (Modo Mazo)
+  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(null)
+  const [expandedCardFlipped, setExpandedCardFlipped] = useState(false)
+
   // Cargar y combinar tarjetas persistidas en localStorage como fallback seguro
   useEffect(() => {
     try {
@@ -88,13 +92,39 @@ export default function FlashcardsView({
   })
 
   const currentCard = activeCards[currentIndex]
+  const expandedCard = expandedCardIndex !== null ? activeCards[expandedCardIndex] : null
 
   // Atajos de teclado para repaso activo ultra rápido
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (viewMode !== 'study' || activeCards.length === 0) return
       // Ignorar si el usuario está escribiendo en un input
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return
+
+      if (expandedCardIndex !== null) {
+        // Atajos dentro del modal de tarjeta ampliada
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          setExpandedCardIndex(null)
+        } else if (e.code === 'Space' || e.key === ' ') {
+          e.preventDefault()
+          setExpandedCardFlipped((prev) => !prev)
+        } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+          e.preventDefault()
+          setExpandedCardFlipped(false)
+          setExpandedCardIndex((prev) =>
+            prev !== null && prev < activeCards.length - 1 ? prev + 1 : 0
+          )
+        } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          e.preventDefault()
+          setExpandedCardFlipped(false)
+          setExpandedCardIndex((prev) =>
+            prev !== null && prev > 0 ? prev - 1 : activeCards.length - 1
+          )
+        }
+        return
+      }
+
+      if (viewMode !== 'study' || activeCards.length === 0) return
 
       if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault()
@@ -114,7 +144,7 @@ export default function FlashcardsView({
         }
       }
     },
-    [viewMode, activeCards.length, currentCard]
+    [viewMode, activeCards.length, currentCard, expandedCardIndex]
   )
 
   useEffect(() => {
@@ -167,6 +197,7 @@ export default function FlashcardsView({
       setCurrentIndex(Math.max(0, activeCards.length - 2))
     }
     setIsFlipped(false)
+    if (expandedCardIndex !== null) setExpandedCardIndex(null)
 
     try {
       await deleteFlashcardAction(subjectId, cardId)
@@ -488,27 +519,40 @@ export default function FlashcardsView({
           {activeCards.map((card, idx) => (
             <div
               key={card.id || idx}
-              className={`rounded-2xl border p-4 shadow-xs flex flex-col justify-between gap-3 transition-all ${
+              onClick={() => {
+                setExpandedCardIndex(idx)
+                setExpandedCardFlipped(false)
+              }}
+              className={`rounded-2xl border p-4 shadow-xs flex flex-col justify-between gap-3 transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 group relative ${
                 card.mastered
                   ? 'bg-emerald-50/40 border-emerald-200/80'
-                  : 'bg-white border-slate-200/80'
+                  : 'bg-white border-slate-200/80 hover:border-indigo-300'
               }`}
+              title="Hacé clic para agrandar y ver en detalle"
             >
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[10px] font-bold">
                   <span className="text-indigo-600">Tarjeta #{idx + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleMastered(card.id, card.mastered)}
-                    className="cursor-pointer"
-                  >
-                    {card.mastered ? '⭐ Dominada' : '● En repaso'}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity font-semibold">
+                      🔍 Agrandar
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleMastered(card.id, card.mastered)
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {card.mastered ? '⭐ Dominada' : '● En repaso'}
+                    </button>
+                  </div>
                 </div>
                 <h4 className="text-xs font-bold text-slate-900 leading-tight">
                   {card.front_text}
                 </h4>
-                <p className="text-[11px] text-slate-600 leading-relaxed pt-2 border-t border-slate-100">
+                <p className="text-[11px] text-slate-600 leading-relaxed pt-2 border-t border-slate-100 line-clamp-3">
                   {card.back_text}
                 </p>
               </div>
@@ -521,14 +565,162 @@ export default function FlashcardsView({
                 )}
                 <button
                   type="button"
-                  onClick={() => handleDelete(card.id)}
-                  className="text-slate-400 hover:text-rose-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(card.id)
+                  }}
+                  className="text-slate-400 hover:text-rose-600 transition-colors p-1 rounded hover:bg-rose-50 cursor-pointer"
+                  title="Eliminar tarjeta"
                 >
-                  Eliminar
+                  <IconTrash className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* MODAL DE TARJETA AMPLIADA (ZOOM EN MODO MAZO) */}
+      {expandedCard && expandedCardIndex !== null && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4 animate-in fade-in"
+          onClick={() => setExpandedCardIndex(null)}
+        >
+          <div
+            className="w-full max-w-2xl rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 flex flex-col justify-between gap-6 animate-in zoom-in-95 min-h-[420px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-800">
+                  Tarjeta {expandedCardIndex + 1} de {activeCards.length}
+                </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    expandedCard.mastered
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-indigo-50 text-indigo-700'
+                  }`}
+                >
+                  {expandedCard.mastered ? '⭐ Dominada' : '● En repaso'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentIndex(expandedCardIndex)
+                    setViewMode('study')
+                    setExpandedCardIndex(null)
+                  }}
+                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 transition-colors cursor-pointer"
+                  title="Pasar al modo estudio individual en esta tarjeta"
+                >
+                  🎴 Abrir en Estudio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExpandedCardIndex(null)}
+                  className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 text-xs font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Tarjeta 3D Ampliada Interactiva */}
+            <div
+              onClick={() => setExpandedCardFlipped(!expandedCardFlipped)}
+              className="w-full min-h-[220px] cursor-pointer rounded-2xl border-2 border-indigo-200/80 bg-slate-50/50 p-6 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between select-none relative group"
+            >
+              {!expandedCardFlipped ? (
+                <div className="flex flex-col justify-between h-full gap-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+                    ❓ Pregunta / Desafío (Hacé clic para ver respuesta ↺)
+                  </span>
+                  <h3 className="text-base sm:text-xl font-bold text-slate-900 leading-relaxed text-center my-auto">
+                    {expandedCard.front_text}
+                  </h3>
+                  <div className="text-[11px] text-slate-400 flex items-center justify-between">
+                    {expandedCard.source_page ? (
+                      <span>Página {expandedCard.source_page}</span>
+                    ) : (
+                      <span />
+                    )}
+                    <span>Haz clic para voltear ↺</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col justify-between h-full gap-4 bg-slate-900 text-white -m-6 p-6 rounded-2xl animate-in fade-in">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    🎓 Respuesta & Explicación
+                  </span>
+                  <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-sans text-center whitespace-pre-wrap my-auto">
+                    {expandedCard.back_text}
+                  </p>
+                  <div className="text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-800 pt-2">
+                    <span>Fundamentado en bibliografía oficial</span>
+                    <span className="text-emerald-400 font-bold">✓ Verificada</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer con Navegación Anterior / Siguiente dentro del Modal */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={expandedCardIndex === 0}
+                  onClick={() => {
+                    setExpandedCardFlipped(false)
+                    setExpandedCardIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : 0))
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  ← Anterior
+                </button>
+
+                <button
+                  type="button"
+                  disabled={expandedCardIndex === activeCards.length - 1}
+                  onClick={() => {
+                    setExpandedCardFlipped(false)
+                    setExpandedCardIndex((prev) =>
+                      prev !== null && prev < activeCards.length - 1 ? prev + 1 : prev
+                    )
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  Siguiente →
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleMastered(expandedCard.id, expandedCard.mastered)}
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                    expandedCard.mastered
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                  }`}
+                >
+                  {expandedCard.mastered ? '✓ Dominada' : '⭐ Marcar como dominada'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setExpandedCardIndex(null)}
+                  className="rounded-xl bg-slate-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
