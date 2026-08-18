@@ -204,3 +204,17 @@ Estas decisiones ya se tomaron con el usuario. Un agente NO debe revertirlas sin
 ## 8. Si algo de este documento queda desactualizado
 
 Este archivo se debe actualizar cada vez que se cierre una decisión de producto o se complete un módulo. Si el código diverge de lo que dice acá, el código real manda — pero avisá al usuario de la inconsistencia en vez de asumir en silencio cuál versión es la correcta.
+
+---
+
+## 9. Roadmap IoT — Lámpara Semáforo de Concentración (Hardware Companion)
+
+Requisito de ecosistema IoT para el Hackathon:
+1. **Captura:** Activación de bloques de estudio Pomodoro (ej: 30 min estudio / 10 min descanso) desde la web o botón físico en el dispositivo.
+2. **Procesamiento:** UniNav en la nube (Supabase) gestiona la sesión, suma tiempo a la racha diaria de estudio y dispara el estado a los clientes.
+3. **Acción / Actuador Físico:** Lámpara de escritorio inteligente basada en microcontrolador (ESP32/ESP8266 + LEDs NeoPixel WS2812B) que cambia de color:
+   - 🔴 **Rojo (Modo Concentración / Estudio):** Señaliza al entorno del estudiante (familia, compañeros) que no debe ser interrumpido.
+   - 🟡 **Amarillo:** Transición / últimos minutos de bloque.
+   - 🟢 **Verde (Modo Descanso):** Estado libre para pausas y consultas.
+   - **Enfoque Open Hardware / DIY:** Planos de circuito esquemático y firmware libre para que estudiantes de ingeniería puedan ensamblar su propio hardware a bajo costo (~$3 a $5 USD).
+
