@@ -7,6 +7,16 @@ import { extractTextByPage } from '@/lib/supabase/pdf/extract'
 import { chunkPages } from '@/lib/supabase/rag/chunk'
 import { embedText } from '@/lib/supabase/gemini/embeddings'
 import { extractTopicsFromPdf } from '@/lib/supabase/gemini/chat'
+import { GoogleGenAI } from '@google/genai'
+import { callWithRetry } from '@/lib/supabase/gemini/retry'
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+
+const MODEL_FALLBACK_CHAIN = [
+  'gemini-3.6-flash',
+  'gemini-flash-latest',
+  'gemini-3.7-flash-video-understanding-eap',
+]
 
 export async function uploadDocument(subjectId: string, formData: FormData) {
   const supabase = await createClient()
@@ -75,7 +85,6 @@ export async function uploadDocument(subjectId: string, formData: FormData) {
         const detectedTopics = await extractTopicsFromPdf(pages)
 
         if (detectedTopics && detectedTopics.length > 0) {
-          // Obtener temas existentes para evitar duplicados
           const { data: existingThreads } = await supabase
             .from('chat_threads')
             .select('title')
@@ -154,4 +163,89 @@ export async function deleteDocument(subjectId: string, documentId: string) {
 
   revalidatePath(`/materias/${subjectId}`, 'layout')
   revalidatePath(`/materias/${subjectId}/temas`)
+}
+
+export async function generateDocumentSummaryAction(
+  subjectId: string,
+  documentId: string
+) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const { data: document } = await supabase
+    .from('documents')
+    .select('title')
+    .eq('id', documentId)
+    .single()
+
+  const { data: chunks } = await supabase
+    .from('document_chunks')
+    .select('content, page_number')
+    .eq('document_id', documentId)
+    .limit(10)
+
+  if (!chunks || chunks.length === 0) {
+    throw new Error('No hay fragmentos indexados suficientes para generar el resumen.')
+  }
+
+  const sampleContext = chunks
+    .map((c) => `[Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 600)}`)
+    .join('\n\n')
+
+  const prompt = `Sos un tutor universitario de élite. Analizá los siguientes fragmentos de la bibliografía oficial del apunte "${document?.title || 'Apunte'}":
+
+<FRAGMENTOS>
+${sampleContext}
+</FRAGMENTOS>
+
+CONSIGNA:
+Generá un resumen ejecutivo estructurado para estudiantes universitarios con:
+1. "summary": Síntesis conceptual clara y concisa (1 a 2 párrafos).
+2. "key_takeaways": Array de 3 a 5 conclusiones o ideas centrales que el alumno debe saber.
+3. "exam_topics": Array de 2 a 3 temas o preguntas típicas que los profesores evalúan sobre este texto.
+
+Respondé ÚNICAMENTE con un JSON válido estructurado como:
+{
+  "summary": "...",
+  "key_takeaways": ["Punto 1...", "Punto 2..."],
+  "exam_topics": ["Pregunta 1...", "Pregunta 2..."]
+}`
+
+  return callWithRetry(async () => {
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        })
+
+        const jsonText = response.text ?? '{}'
+        const parsed = JSON.parse(jsonText)
+        return {
+          title: document?.title || 'Resumen del Apunte',
+          summary: parsed.summary || 'Resumen no disponible.',
+          key_takeaways: Array.isArray(parsed.key_takeaways) ? parsed.key_takeaways : [],
+          exam_topics: Array.isArray(parsed.exam_topics) ? parsed.exam_topics : [],
+        }
+      } catch (err) {
+        console.warn(`Resumen con ${modelName} omitido:`, err)
+      }
+    }
+
+    return {
+      title: document?.title || 'Resumen del Apunte',
+      summary: 'No se pudo generar el resumen con IA en este momento.',
+      key_takeaways: [],
+      exam_topics: [],
+    }
+  })
 }
