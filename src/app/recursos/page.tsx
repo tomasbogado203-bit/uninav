@@ -1,6 +1,108 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import RecursosView from './RecursosView'
+import RecursosView, { CareerResource } from './RecursosView'
+
+const DEFAULT_CAREER_RESOURCES: CareerResource[] = [
+  {
+    id: 'cr1',
+    tool_name: 'Overleaf & LaTeX',
+    category: 'software',
+    tag: '100% Gratis',
+    description:
+      'Editor online colaborativo en tiempo real para redactar informes, fórmulas matemáticas, tesis y trabajos prácticos con formato profesional estándar IEEE / APA.',
+    quickstart_url: 'https://es.overleaf.com/learn',
+    download_url: 'https://www.overleaf.com/',
+    display_order: 1,
+  },
+  {
+    id: 'cr2',
+    tool_name: 'Visual Studio Code',
+    category: 'software',
+    tag: 'Open Source',
+    description:
+      'El editor de código estándar en la industria. Imprescindible para carreras de programación, informática, ciencia de datos e ingeniería.',
+    quickstart_url: 'https://code.visualstudio.com/docs',
+    download_url: 'https://code.visualstudio.com/',
+    display_order: 2,
+  },
+  {
+    id: 'cr3',
+    tool_name: 'GeoGebra Suite',
+    category: 'software',
+    tag: '100% Gratis',
+    description:
+      'Calculadora gráfica interactiva 2D y 3D, álgebra lineal, cálculo diferencial y geometría dinámica. Clave para Matemática 1, Análisis Matemático y Álgebra.',
+    quickstart_url: 'https://www.geogebra.org/learn',
+    download_url: 'https://www.geogebra.org/download',
+    display_order: 3,
+  },
+  {
+    id: 'cr4',
+    tool_name: 'Zotero',
+    category: 'software',
+    tag: 'Open Source',
+    description:
+      'Asistente personal de investigación y gestor de citas bibliográficas gratuito. Recolecta fuentes, genera citas en formato APA/IEEE con 1 clic en Word o Google Docs.',
+    quickstart_url: 'https://www.zotero.org/support/quick_start_guide',
+    download_url: 'https://www.zotero.org/download/',
+    display_order: 4,
+  },
+  {
+    id: 'cr5',
+    tool_name: 'Obsidian',
+    category: 'software',
+    tag: '100% Gratis',
+    description:
+      'Base de conocimiento personal basada en archivos Markdown locales y mapas mentales interconectados. Ideal para toma de apuntes estructurados por materia.',
+    quickstart_url: 'https://help.obsidian.md/',
+    download_url: 'https://obsidian.md/download',
+    display_order: 5,
+  },
+  {
+    id: 'cr6',
+    tool_name: 'GitHub Student Developer Pack',
+    category: 'plantilla',
+    tag: 'Plan Estudiantil',
+    description:
+      'Paquete gratuito con beneficios valorados en miles de dólares para estudiantes (GitHub Copilot gratis, Canva Pro, dominios gratis y créditos cloud).',
+    quickstart_url: 'https://education.github.com/pack',
+    download_url: 'https://education.github.com/pack',
+    display_order: 6,
+  },
+  {
+    id: 'cr7',
+    tool_name: 'Anki Flashcards',
+    category: 'software',
+    tag: 'Open Source',
+    description:
+      'Software de repetición espaciada (SRS) y tarjetas didácticas para memorizar definiciones, teoremas, fórmulas y anatomía con retención a largo plazo.',
+    quickstart_url: 'https://docs.ankiweb.net/',
+    download_url: 'https://apps.ankiweb.net/',
+    display_order: 7,
+  },
+  {
+    id: 'cr8',
+    tool_name: 'Desmos Graphing Calculator',
+    category: 'software',
+    tag: 'Web Gratis',
+    description:
+      'Graficadora online ultra rápida para graficar funciones, derivadas, integrales y tablas de valores de manera visual y didáctica.',
+    quickstart_url: 'https://www.desmos.com/calculator',
+    download_url: 'https://www.desmos.com/calculator',
+    display_order: 8,
+  },
+  {
+    id: 'cr9',
+    tool_name: 'Draw.io / Diagrams.net',
+    category: 'plantilla',
+    tag: 'Open Source',
+    description:
+      'Herramienta gratuita para diagramas de flujo, arquitectura de software, diagramas UML, circuitos y mapas conceptuales.',
+    quickstart_url: 'https://www.drawio.com/doc/',
+    download_url: 'https://app.diagrams.net/',
+    display_order: 9,
+  },
+]
 
 const DEFAULT_GLOSSARY_TERMS = [
   {
@@ -11,9 +113,9 @@ const DEFAULT_GLOSSARY_TERMS = [
   },
   {
     id: 'g2',
-    term: 'Promoción',
+    term: 'Promoción Directa',
     definition:
-      'Régimen de aprobación directa de una materia sin necesidad de rendir examen final. Se obtiene alcanzando una nota alta (habitualmente 7 o más) en los exámenes parciales y trabajos prácticos.',
+      'Régimen de aprobación de una materia sin necesidad de rendir examen final. Se obtiene alcanzando una nota alta (habitualmente 7 o más) en los exámenes parciales y trabajos prácticos.',
   },
   {
     id: 'g3',
@@ -31,13 +133,13 @@ const DEFAULT_GLOSSARY_TERMS = [
     id: 'g5',
     term: 'Cátedra',
     definition:
-      'Equipo docente a cargo del dictado de una materia, encabezado por un Profesor Titular y acompañado por adjuntos y jefes de trabajos prácticos (JTP).',
+      'Equipo docente a cargo del dictado de una materia, encabezado por un Profesor Titular y acompañado por profesores adjuntos y jefes de trabajos prácticos (JTP).',
   },
   {
     id: 'g6',
     term: 'Régimen de Cursada',
     definition:
-      'Conjunto de reglas específicas de una materia sobre asistencias requeridas, fechas de parciales, recuperatorios y condiciones de aprobación.',
+      'Conjunto de reglas específicas de una materia sobre porcentaje de asistencias requeridas, fechas de parciales, recuperatorios y condiciones de aprobación.',
   },
   {
     id: 'g7',
@@ -55,7 +157,7 @@ const DEFAULT_GLOSSARY_TERMS = [
     id: 'g9',
     term: 'Mesa de Examen',
     definition:
-      'Período o fecha específica fijada por la facultad en las llamadas "fechas de finales" (Febrero/Marzo, Julio/Agosto, Diciembre) para rendir examen final.',
+      'Período o fecha específica fijada por la facultad en los turnos de exámenes finales (Febrero/Marzo, Julio/Agosto, Diciembre) para rendir examen final.',
   },
   {
     id: 'g10',
@@ -73,19 +175,19 @@ const DEFAULT_GLOSSARY_TERMS = [
     id: 'g12',
     term: 'SIU Guaraní',
     definition:
-      'Sistema de gestión académica utilizado por la mayoría de las universidades nacionales argentinas para inscribirse a materias, exámenes finales y consultar la historia académica.',
+      'Sistema de gestión académica utilizado por la mayoría de las universidades nacionales argentinas para inscribirse a materias, exámenes finales y consultar la historia académica oficial.',
   },
   {
     id: 'g13',
-    term: 'Libre (Alumno Libre)',
+    term: 'Libre (Condición Libre)',
     definition:
-      'Condición del estudiante que desaprobó los parciales o no cumplió con la asistencia requerida. En algunas materias permite rendir un examen libre (escrito + oral integrador).',
+      'Condición del estudiante que desaprobó los parciales o no cumplió con la asistencia requerida. En algunas materias permite rendir un examen libre (escrito eliminatorio + oral integrador).',
   },
   {
     id: 'g14',
     term: 'Plan de Estudios',
     definition:
-      'Estructura curricular oficial de la carrera que detalla las asignaturas por año/cuatrimestre, su carga horaria y el régimen de correlatividades.',
+      'Estructura curricular oficial de la carrera que detalla las asignaturas por año/cuatrimestre, su carga horaria y el régimen de correlatividades obligatorias.',
   },
   {
     id: 'g15',
@@ -122,13 +224,16 @@ export default async function RecursosPage() {
     .select('*')
     .order('term', { ascending: true })
 
+  const combinedResources =
+    resourcesData && resourcesData.length > 0 ? resourcesData : DEFAULT_CAREER_RESOURCES
+
   const combinedGlossary =
     glossaryData && glossaryData.length > 0 ? glossaryData : DEFAULT_GLOSSARY_TERMS
 
   return (
     <RecursosView
       userCareerName={userCareerName}
-      resources={resourcesData || []}
+      resources={combinedResources}
       glossary={combinedGlossary}
     />
   )
