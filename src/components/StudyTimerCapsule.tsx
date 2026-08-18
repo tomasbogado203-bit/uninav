@@ -175,6 +175,23 @@ export default function StudyTimerCapsule() {
 
   // Estilo visual del modo actual
   const getModeTheme = () => {
+    if (!isRunning) {
+      if (mode === 'idle') {
+        return {
+          label: 'LISTO PARA FOCO',
+          dotColor: 'bg-indigo-400',
+          textColor: 'text-indigo-300',
+          borderColor: 'border-slate-800',
+        }
+      }
+      return {
+        label: 'EN PAUSA',
+        dotColor: 'bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.8)]',
+        textColor: 'text-indigo-300',
+        borderColor: 'border-indigo-500/40',
+      }
+    }
+
     switch (mode) {
       case 'study':
         return {
@@ -240,7 +257,7 @@ export default function StudyTimerCapsule() {
         }}
         className={`flex items-center rounded-full bg-slate-950/95 backdrop-blur-md border ${
           theme.borderColor
-        } px-4 sm:px-5 py-2 shadow-2xl transition-shadow gap-3 sm:gap-6 text-white text-xs font-sans ${
+        } px-4 sm:px-5 py-2 shadow-2xl transition-all gap-3 sm:gap-6 text-white text-xs font-sans ${
           isDragging ? 'cursor-grabbing scale-[1.02] ring-2 ring-indigo-500/50' : 'cursor-grab hover:border-slate-700'
         }`}
         title="Arrastrá para reposicionar en la pantalla"

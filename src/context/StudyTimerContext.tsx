@@ -17,8 +17,8 @@ export const TIMER_PRESETS: TimerPreset[] = [
   { id: '50_10', label: '50m / 10m (Intensivo)', studyMinutes: 50, breakMinutes: 10 },
 ]
 
-interface LampPayload {
-  state: 'IDLE' | 'STUDY' | 'WARNING' | 'BREAK'
+export interface LampPayload {
+  state: 'IDLE' | 'STUDY' | 'WARNING' | 'BREAK' | 'PAUSED'
   color: 'BLUE' | 'RED' | 'YELLOW' | 'GREEN'
   hex: string
   r: number
@@ -82,54 +82,69 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
   // Sincronizar estado con API local / endpoint de lámpara IoT
   const syncLampState = useCallback((currentMode: TimerMode, remainingSecs: number, active: boolean) => {
     let payload: LampPayload
-    switch (currentMode) {
-      case 'study':
-        payload = {
-          state: 'STUDY',
-          color: 'RED',
-          hex: '#EF4444',
-          r: 239,
-          g: 68,
-          b: 68,
-          time_remaining_seconds: remainingSecs,
-          is_active: active,
-        }
-        break
-      case 'warning':
-        payload = {
-          state: 'WARNING',
-          color: 'YELLOW',
-          hex: '#F59E0B',
-          r: 245,
-          g: 158,
-          b: 11,
-          time_remaining_seconds: remainingSecs,
-          is_active: active,
-        }
-        break
-      case 'break':
-        payload = {
-          state: 'BREAK',
-          color: 'GREEN',
-          hex: '#10B981',
-          r: 16,
-          g: 185,
-          b: 129,
-          time_remaining_seconds: remainingSecs,
-          is_active: active,
-        }
-        break
-      default:
-        payload = {
-          state: 'IDLE',
-          color: 'BLUE',
-          hex: '#6366F1',
-          r: 99,
-          g: 102,
-          b: 241,
-          time_remaining_seconds: remainingSecs,
-          is_active: false,
-        }
+
+    if (!active) {
+      // Si está en pausa o inactivo, la lámpara se pone en color azul / espera
+      payload = {
+        state: currentMode === 'idle' ? 'IDLE' : 'PAUSED',
+        color: 'BLUE',
+        hex: '#6366F1',
+        r: 99,
+        g: 102,
+        b: 241,
+        time_remaining_seconds: remainingSecs,
+        is_active: false,
+      }
+    } else {
+      switch (currentMode) {
+        case 'study':
+          payload = {
+            state: 'STUDY',
+            color: 'RED',
+            hex: '#EF4444',
+            r: 239,
+            g: 68,
+            b: 68,
+            time_remaining_seconds: remainingSecs,
+            is_active: true,
+          }
+          break
+        case 'warning':
+          payload = {
+            state: 'WARNING',
+            color: 'YELLOW',
+            hex: '#F59E0B',
+            r: 245,
+            g: 158,
+            b: 11,
+            time_remaining_seconds: remainingSecs,
+            is_active: true,
+          }
+          break
+        case 'break':
+          payload = {
+            state: 'BREAK',
+            color: 'GREEN',
+            hex: '#10B981',
+            r: 16,
+            g: 185,
+            b: 129,
+            time_remaining_seconds: remainingSecs,
+            is_active: true,
+          }
+          break
+        default:
+          payload = {
+            state: 'IDLE',
+            color: 'BLUE',
+            hex: '#6366F1',
+            r: 99,
+            g: 102,
+            b: 241,
+            time_remaining_seconds: remainingSecs,
+            is_active: false,
+          }
+      }
     }
 
     try {
@@ -255,6 +270,19 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
   }
 
   const lampStatus: LampPayload = (() => {
+    if (!isRunning) {
+      return {
+        state: mode === 'idle' ? 'IDLE' : 'PAUSED',
+        color: 'BLUE',
+        hex: '#6366F1',
+        r: 99,
+        g: 102,
+        b: 241,
+        time_remaining_seconds: timeRemaining,
+        is_active: false,
+      }
+    }
+
     switch (mode) {
       case 'study':
         return {
@@ -265,7 +293,7 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
           g: 68,
           b: 68,
           time_remaining_seconds: timeRemaining,
-          is_active: isRunning,
+          is_active: true,
         }
       case 'warning':
         return {
@@ -276,7 +304,7 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
           g: 158,
           b: 11,
           time_remaining_seconds: timeRemaining,
-          is_active: isRunning,
+          is_active: true,
         }
       case 'break':
         return {
@@ -287,7 +315,7 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
           g: 185,
           b: 129,
           time_remaining_seconds: timeRemaining,
-          is_active: isRunning,
+          is_active: true,
         }
       default:
         return {

@@ -143,6 +143,9 @@ export default function IoTCompanionView() {
 
   // Estilo visual de la lámpara simulada
   const getGlowColor = () => {
+    if (!isRunning) {
+      return 'rgba(99, 102, 241, 0.8)'
+    }
     switch (mode) {
       case 'study':
         return 'rgba(239, 68, 68, 0.9)'
@@ -154,6 +157,7 @@ export default function IoTCompanionView() {
         return 'rgba(99, 102, 241, 0.8)'
     }
   }
+
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 flex flex-col gap-6 select-none">
