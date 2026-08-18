@@ -39,13 +39,14 @@ export async function uploadCommunityContributionAction(formData: FormData) {
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-  const path = `community/${profile.career_id}/${Date.now()}-${safeFileName}`
+  const path = `${user.id}/community/${Date.now()}-${safeFileName}.pdf`
 
   const { error: uploadError } = await supabase.storage
     .from('apuntes')
     .upload(path, buffer, { contentType: 'application/pdf' })
 
   if (uploadError) throw new Error(uploadError.message)
+
 
   const { data: contribution, error: insertError } = await supabase
     .from('community_contributions')

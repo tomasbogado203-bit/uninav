@@ -36,6 +36,10 @@ DROP POLICY IF EXISTS "Users can create their own contributions" ON community_co
 CREATE POLICY "Users can create their own contributions" ON community_contributions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update contributions" ON community_contributions;
+CREATE POLICY "Users can update contributions" ON community_contributions
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
 DROP POLICY IF EXISTS "Users can delete their own contributions" ON community_contributions;
 CREATE POLICY "Users can delete their own contributions" ON community_contributions
   FOR DELETE USING (auth.uid() = user_id);
