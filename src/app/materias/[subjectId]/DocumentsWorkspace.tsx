@@ -12,6 +12,7 @@ import {
   IconChat,
   IconQuiz,
   IconClipboard,
+  IconCheck,
 } from '@/components/icons'
 
 export interface DocumentItem {
@@ -149,11 +150,12 @@ export default function DocumentsWorkspace({
                     <p className="mt-1 text-xs text-slate-500 flex items-center gap-2">
                       {doc.chunk_count > 0 ? (
                         <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                          ✓ {doc.chunk_count} fragmentos indexados en pgvector
+                          <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{doc.chunk_count} fragmentos indexados en pgvector</span>
                         </span>
                       ) : (
                         <span className="text-amber-700 font-medium">
-                          ⏳ Procesando fragmentos...
+                          Procesando fragmentos...
                         </span>
                       )}
                     </p>
@@ -179,9 +181,9 @@ export default function DocumentsWorkspace({
                       href={doc.signed_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <span>👁️</span>
+                      <IconDocument className="w-3.5 h-3.5 text-slate-500" />
                       <span>Ver PDF</span>
                     </a>
                   )}
@@ -191,7 +193,7 @@ export default function DocumentsWorkspace({
                     <a
                       href={doc.signed_url}
                       download={`${doc.title}.pdf`}
-                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                      className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
                       <IconDownload className="w-3.5 h-3.5 text-slate-500" />
                       <span>Descargar</span>
@@ -303,9 +305,7 @@ export default function DocumentsWorkspace({
                 onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
               />
 
-              <span className="text-3xl">
-                {selectedFile ? '📄' : '📤'}
-              </span>
+              <IconDocument className="w-8 h-8 text-indigo-500" />
 
               {selectedFile ? (
                 <div>
@@ -406,7 +406,7 @@ export default function DocumentsWorkspace({
               {/* Síntesis */}
               <div className="rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4">
                 <span className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] block mb-1">
-                  📌 Síntesis Conceptual:
+                  Síntesis Conceptual:
                 </span>
                 <p className="leading-relaxed text-slate-800">{activeSummaryModal.summary}</p>
               </div>
@@ -415,7 +415,7 @@ export default function DocumentsWorkspace({
               {activeSummaryModal.key_takeaways.length > 0 && (
                 <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4">
                   <span className="font-bold text-slate-900 uppercase tracking-wider text-[10px] block mb-2">
-                    💡 Puntos Centrales que Debés Saber:
+                    Puntos Centrales que Debés Saber:
                   </span>
                   <ul className="flex flex-col gap-1.5">
                     {activeSummaryModal.key_takeaways.map((takeaway, tIdx) => (
@@ -432,12 +432,12 @@ export default function DocumentsWorkspace({
               {activeSummaryModal.exam_topics.length > 0 && (
                 <div className="rounded-2xl bg-amber-50/70 border border-amber-200/80 p-4">
                   <span className="font-bold text-amber-950 uppercase tracking-wider text-[10px] block mb-2">
-                    🎯 Preguntas Frecuentes en Parciales:
+                    Preguntas Frecuentes en Parciales:
                   </span>
                   <ul className="flex flex-col gap-1.5">
                     {activeSummaryModal.exam_topics.map((topic, topIdx) => (
                       <li key={topIdx} className="flex items-start gap-2 text-amber-950">
-                        <span className="text-amber-600 font-bold">✓</span>
+                        <IconCheck className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
                         <span>{topic}</span>
                       </li>
                     ))}
@@ -454,7 +454,7 @@ export default function DocumentsWorkspace({
                 className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <IconClipboard className="w-3.5 h-3.5" />
-                {copiedSummary ? '¡Copiado! ✓' : 'Copiar Resumen'}
+                {copiedSummary ? '¡Copiado!' : 'Copiar Resumen'}
               </button>
 
               <button

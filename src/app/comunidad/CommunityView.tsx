@@ -145,7 +145,7 @@ export default function CommunityView({
     try {
       await importContributionToSubjectAction(importingItem.id, selectedSubjectId)
       setImportSuccessMsg(
-        `¡"${importingItem.title}" fue importado con éxito! Tu Tutor Socrático RAG ya lo aprendió.`
+        `"${importingItem.title}" fue importado con éxito. Tu Tutor Socrático RAG ya lo aprendió.`
       )
       setTimeout(() => {
         setImportSuccessMsg(null)
@@ -266,8 +266,8 @@ export default function CommunityView({
             onChange={(e) => setSortBy(e.target.value as 'top' | 'recent')}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:outline-none cursor-pointer"
           >
-            <option value="top">🔥 Más Votados</option>
-            <option value="recent">⏱️ Más Recientes</option>
+            <option value="top">Más Votados</option>
+            <option value="recent">Más Recientes</option>
           </select>
         </div>
       </div>
@@ -339,7 +339,7 @@ export default function CommunityView({
                         className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
                         title="Ver PDF en el navegador"
                       >
-                        👁️
+                        <IconDocument className="w-3.5 h-3.5 text-slate-600" />
                       </a>
                     )}
 
@@ -369,14 +369,14 @@ export default function CommunityView({
                   </div>
                 </div>
 
-                {/* BOTÓN KILLER: Importar a mi materia en 1 clic */}
+                {/* Importar a mi materia en 1 clic */}
                 <button
                   type="button"
                   onClick={() => setImportingItem(item)}
                   className="w-full rounded-xl bg-indigo-50 border border-indigo-200/90 hover:bg-indigo-600 hover:text-white text-indigo-700 px-3 py-2 text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                 >
                   <IconSparkles className="w-3.5 h-3.5" />
-                  <span>⚡ Importar a Mi Materia</span>
+                  <span>Importar a Mi Materia</span>
                 </button>
               </div>
             </div>
@@ -393,7 +393,7 @@ export default function CommunityView({
                 Aún no hay aportes en esta categoría
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
-                ¡Sé el primero en compartir un apunte o parcial para salvar a tus compañeros de carrera!
+                Compartí un apunte o parcial para ayudar a tus compañeros de carrera.
               </p>
             </div>
             <button
@@ -563,7 +563,7 @@ export default function CommunityView({
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                 />
 
-                <span className="text-2xl">{selectedFile ? '📄' : '📤'}</span>
+                <IconDocument className="w-8 h-8 text-indigo-500" />
 
                 {selectedFile ? (
                   <div>
@@ -617,10 +617,10 @@ export default function CommunityView({
                   name="resource_type"
                   className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-800 focus:outline-none"
                 >
-                  <option value="apunte">📄 Apunte Teórico / Práctico</option>
-                  <option value="parcial_resuelto">📝 Parcial / Final Resuelto</option>
-                  <option value="receta_formulas">🧪 Receta de Fórmulas / Cheat Sheet</option>
-                  <option value="resumen">💡 Resumen de Cursada</option>
+                  <option value="apunte">Apunte Teórico / Práctico</option>
+                  <option value="parcial_resuelto">Parcial / Final Resuelto</option>
+                  <option value="receta_formulas">Receta de Fórmulas / Cheat Sheet</option>
+                  <option value="resumen">Resumen de Cursada</option>
                 </select>
               </div>
 

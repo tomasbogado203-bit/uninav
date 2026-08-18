@@ -426,7 +426,7 @@ export default function RecursosView({
               {/* Definición directa */}
               <div className="rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4">
                 <span className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] block mb-1">
-                  📌 ¿Qué significa en la facultad?
+                  ¿Qué significa en la facultad?
                 </span>
                 <p className="text-slate-800 leading-relaxed font-sans">
                   {activeExplanation.simple_definition}
@@ -437,7 +437,7 @@ export default function RecursosView({
               {activeExplanation.practical_example && (
                 <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4">
                   <span className="font-bold text-slate-900 uppercase tracking-wider text-[10px] block mb-1">
-                    💡 Caso Práctico Cotidiano:
+                    Caso Práctico Cotidiano:
                   </span>
                   <p className="text-slate-700 leading-relaxed font-sans">
                     {activeExplanation.practical_example}
@@ -449,7 +449,7 @@ export default function RecursosView({
               {activeExplanation.pro_tip && (
                 <div className="rounded-2xl bg-amber-50/70 border border-amber-200/80 p-4">
                   <span className="font-bold text-amber-950 uppercase tracking-wider text-[10px] block mb-1">
-                    🎯 Consejo Clave para el Estudiante:
+                    Consejo Clave para el Estudiante:
                   </span>
                   <p className="text-amber-950 leading-relaxed font-sans">
                     {activeExplanation.pro_tip}
@@ -466,8 +466,9 @@ export default function RecursosView({
                 className="rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
                 <IconClipboard className="w-3.5 h-3.5" />
-                {copiedExplanation ? '¡Copiado! ✓' : 'Copiar Explicación'}
+                {copiedExplanation ? '¡Copiado!' : 'Copiar Explicación'}
               </button>
+
 
               <button
                 type="button"
