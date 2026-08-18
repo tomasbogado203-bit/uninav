@@ -17,28 +17,29 @@ export async function createAcademicEventAction(
 
   if (!user) redirect('/login')
 
+  const targetSubjectId = (formData.get('subject_id') as string) || subjectId
   const title = formData.get('title') as string
   const eventType = (formData.get('event_type') as 'parcial' | 'entrega_tp' | 'final') || 'parcial'
   const eventDate = formData.get('event_date') as string
 
-  if (!title || !eventDate) {
-    throw new Error('El título y la fecha son obligatorios.')
+  if (!title || !eventDate || !targetSubjectId) {
+    throw new Error('El título, la fecha y la materia son obligatorios.')
   }
 
   // 1. Obtener lista de temas para contextualizar la IA
   const { data: threads } = await supabase
     .from('chat_threads')
     .select('title')
-    .eq('subject_id', subjectId)
+    .eq('subject_id', targetSubjectId)
 
   const topics = threads?.map((t) => t.title) || []
 
-  // 2. Generar hoja de ruta (roadmap) con Gemini 3.6 Flash
+  // 2. Generar hoja de ruta (roadmap) con Gemini
   const roadmap = await generateStudyRoadmap(title, eventDate, eventType, topics)
 
-  // 3. Registrar evento en academic_events (con fallback si title no estuviera aún en el schema)
+  // 3. Registrar evento en academic_events
   const { error } = await supabase.from('academic_events').insert({
-    subject_id: subjectId,
+    subject_id: targetSubjectId,
     title: title.trim(),
     event_type: eventType,
     event_date: eventDate,
@@ -48,7 +49,7 @@ export async function createAcademicEventAction(
   if (error) {
     if (error.message.includes('title')) {
       const { error: fallbackError } = await supabase.from('academic_events').insert({
-        subject_id: subjectId,
+        subject_id: targetSubjectId,
         event_type: eventType,
         event_date: eventDate,
         study_roadmap: roadmap,
@@ -59,7 +60,8 @@ export async function createAcademicEventAction(
     }
   }
 
-  revalidatePath(`/materias/${subjectId}/calendario`)
+  revalidatePath(`/materias/${targetSubjectId}/calendario`)
+  revalidatePath('/calendario')
 }
 
 export async function deleteAcademicEventAction(
@@ -78,13 +80,15 @@ export async function deleteAcademicEventAction(
     .from('academic_events')
     .delete()
     .eq('id', eventId)
-    .eq('subject_id', subjectId)
 
   if (error) {
     throw new Error(error.message)
   }
 
-  revalidatePath(`/materias/${subjectId}/calendario`)
+  if (subjectId) {
+    revalidatePath(`/materias/${subjectId}/calendario`)
+  }
+  revalidatePath('/calendario')
 }
 
 export async function createStickyNoteAction(
@@ -99,13 +103,14 @@ export async function createStickyNoteAction(
 
   if (!user) redirect('/login')
 
+  const targetSubjectId = (formData.get('subject_id') as string) || subjectId
   const title = (formData.get('title') as string) || 'Nota'
   const content = formData.get('content') as string
   const color = (formData.get('color') as 'yellow' | 'blue' | 'green' | 'pink' | 'purple') || 'yellow'
   const eventDate = (formData.get('event_date') as string) || null
 
   const { error } = await supabase.from('academic_notes').insert({
-    subject_id: subjectId,
+    subject_id: targetSubjectId,
     user_id: user.id,
     title: title.trim(),
     content: content ? content.trim() : '',
@@ -117,7 +122,8 @@ export async function createStickyNoteAction(
     throw new Error(error.message)
   }
 
-  revalidatePath(`/materias/${subjectId}/calendario`)
+  revalidatePath(`/materias/${targetSubjectId}/calendario`)
+  revalidatePath('/calendario')
 }
 
 export async function deleteStickyNoteAction(
@@ -142,5 +148,8 @@ export async function deleteStickyNoteAction(
     throw new Error(error.message)
   }
 
-  revalidatePath(`/materias/${subjectId}/calendario`)
+  if (subjectId) {
+    revalidatePath(`/materias/${subjectId}/calendario`)
+  }
+  revalidatePath('/calendario')
 }

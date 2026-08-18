@@ -7,6 +7,13 @@ import {
   createStickyNoteAction,
   deleteStickyNoteAction,
 } from './actions'
+import {
+  IconCalendar,
+  IconSparkles,
+  IconTrash,
+  IconDocument,
+  IconBook,
+} from '@/components/icons'
 
 interface RoadmapStep {
   day_offset: number
@@ -15,16 +22,21 @@ interface RoadmapStep {
   activity: string
 }
 
-interface AcademicEvent {
+export interface AcademicEvent {
   id: string
+  subject_id?: string
+  subject_name?: string
+  subject_color?: string
   event_type: 'parcial' | 'entrega_tp' | 'final'
   title: string
   event_date: string
   study_roadmap?: RoadmapStep[] | null
 }
 
-interface StickyNote {
+export interface StickyNote {
   id: string
+  subject_id?: string
+  subject_name?: string
   title: string
   content: string
   color: 'yellow' | 'blue' | 'green' | 'pink' | 'purple'
@@ -32,8 +44,16 @@ interface StickyNote {
   created_at?: string
 }
 
+export interface SubjectOption {
+  id: string
+  name: string
+  color?: string
+}
+
 interface CalendarViewProps {
-  subjectId: string
+  subjectId?: string
+  currentSubjectName?: string
+  allSubjects?: SubjectOption[]
   events: AcademicEvent[]
   notes: StickyNote[]
   criticalWeeksCount: number
@@ -55,15 +75,17 @@ const MONTH_NAMES = [
 ]
 
 const NOTE_COLOR_STYLES = {
-  yellow: 'bg-amber-200/90 border-amber-300 text-amber-950 shadow-amber-200/50',
-  blue: 'bg-sky-200/90 border-sky-300 text-sky-950 shadow-sky-200/50',
-  green: 'bg-emerald-200/90 border-emerald-300 text-emerald-950 shadow-emerald-200/50',
-  pink: 'bg-rose-200/90 border-rose-300 text-rose-950 shadow-rose-200/50',
-  purple: 'bg-purple-200/90 border-purple-300 text-purple-950 shadow-purple-200/50',
+  yellow: 'bg-amber-100 border-amber-300 text-amber-950 shadow-2xs',
+  blue: 'bg-sky-100 border-sky-300 text-sky-950 shadow-2xs',
+  green: 'bg-emerald-100 border-emerald-300 text-emerald-950 shadow-2xs',
+  pink: 'bg-rose-100 border-rose-300 text-rose-950 shadow-2xs',
+  purple: 'bg-purple-100 border-purple-300 text-purple-950 shadow-2xs',
 }
 
 export default function CalendarView({
   subjectId,
+  currentSubjectName,
+  allSubjects = [],
   events,
   notes,
   criticalWeeksCount,
@@ -72,11 +94,19 @@ export default function CalendarView({
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
 
-  // Estado de filtro simplificado: 'all' | 'event' | 'note'
+  // Modo de alcance: 'current' (esta materia) o 'all' (todas las materias)
+  const [scopeMode, setScopeMode] = useState<'current' | 'all'>(
+    subjectId ? 'all' : 'all'
+  )
+
+  // Filtro de visualización: 'all' | 'event' | 'note'
   const [filterType, setFilterType] = useState<'all' | 'event' | 'note'>('all')
 
   // Estado para creación de evaluación
   const [eventType, setEventType] = useState<'parcial' | 'entrega_tp' | 'final'>('parcial')
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>(
+    subjectId || allSubjects[0]?.id || ''
+  )
 
   // Estado para creación por fecha seleccionada
   const [selectedDateStr, setSelectedDateStr] = useState<string>(
@@ -93,8 +123,19 @@ export default function CalendarView({
 
   const todayStr = today.toISOString().split('T')[0]
 
-  // Próximo evento para la cuenta regresiva
-  const upcomingEvents = events
+  // Filtrar eventos y notas según el alcance seleccionado
+  const filteredEvents =
+    scopeMode === 'current' && subjectId
+      ? events.filter((e) => e.subject_id === subjectId)
+      : events
+
+  const filteredNotes =
+    scopeMode === 'current' && subjectId
+      ? notes.filter((n) => n.subject_id === subjectId)
+      : notes
+
+  // Próximos eventos para la cuenta regresiva
+  const upcomingEvents = filteredEvents
     .filter((e) => e.event_date >= todayStr)
     .sort((a, b) => a.event_date.localeCompare(b.event_date))
 
@@ -133,7 +174,7 @@ export default function CalendarView({
     setSelectedDateStr(today.toISOString().split('T')[0])
   }
 
-  // Generación de los días del mes
+  // Generación de celdas del calendario
   const getCalendarDays = () => {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
@@ -190,8 +231,9 @@ export default function CalendarView({
     e.preventDefault()
     setLoadingEvent(true)
     const formData = new FormData(e.currentTarget)
+    const targetSubject = (formData.get('subject_id') as string) || subjectId || selectedSubjectId
     try {
-      await createAcademicEventAction(subjectId, formData)
+      await createAcademicEventAction(targetSubject, formData)
       window.location.reload()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al agendar evento.')
@@ -199,576 +241,546 @@ export default function CalendarView({
     }
   }
 
+  const handleDeleteEvent = async (targetSubId: string | undefined, eventId: string) => {
+    if (!confirm('¿Eliminar esta evaluación del calendario?')) return
+    try {
+      await deleteAcademicEventAction(targetSubId || subjectId || '', eventId)
+      window.location.reload()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al eliminar evento.')
+    }
+  }
+
   const handleCreateNote = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoadingNote(true)
     const formData = new FormData(e.currentTarget)
-    formData.set('color', selectedColor)
+    const targetSubject = (formData.get('subject_id') as string) || subjectId || selectedSubjectId
     try {
-      await createStickyNoteAction(subjectId, formData)
+      await createStickyNoteAction(targetSubject, formData)
       window.location.reload()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al guardar la nota.')
+      alert(err instanceof Error ? err.message : 'Error al crear nota.')
       setLoadingNote(false)
     }
   }
 
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('¿Eliminar esta evaluación del calendario?')) return
+  const handleDeleteNote = async (targetSubId: string | undefined, noteId: string) => {
     try {
-      await deleteAcademicEventAction(subjectId, eventId)
+      await deleteStickyNoteAction(targetSubId || subjectId || '', noteId)
       window.location.reload()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al borrar evento.')
-    }
-  }
-
-  const handleDeleteNote = async (noteId: string) => {
-    try {
-      await deleteStickyNoteAction(subjectId, noteId)
-      window.location.reload()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al borrar la nota.')
+      alert(err instanceof Error ? err.message : 'Error al eliminar nota.')
     }
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      {/* COLUMNA IZQUIERDA: CALENDARIO MENSUAL COMPACTO (8 columnas) */}
-      <div className="lg:col-span-8 flex flex-col gap-4">
-        {/* MICRO-BANNER DE CUENTA REGRESIVA AL PRÓXIMO EXAMEN (COMPACTO) */}
-        {nextEvent && (
-          <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 px-3.5 py-2 text-white shadow-xs flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400 text-slate-950 font-black text-sm shrink-0">
-                🔥
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-white truncate max-w-[240px] sm:max-w-[320px]">
-                  {nextEvent.title}
-                </span>
-                <span className="text-[10px] text-indigo-300 font-mono">
-                  ({nextEvent.event_date})
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-black text-amber-300 bg-indigo-900/80 px-2 py-0.5 rounded-md border border-indigo-700/60">
-                {getDaysDiff(nextEvent.event_date) === 0
-                  ? '¡HOY! 🎯'
-                  : `Faltan ${getDaysDiff(nextEvent.event_date)} días`}
-              </span>
-            </div>
+    <div className="flex flex-col gap-6">
+      {/* Banner Superior: Selector Multi-Materia y Alerta de Semanas Críticas */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
+        {/* Selector de Alcance (Esta Materia vs Todas las Materias) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Vista de Exámenes:
+          </span>
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold">
+            {subjectId && currentSubjectName && (
+              <button
+                type="button"
+                onClick={() => setScopeMode('current')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  scopeMode === 'current'
+                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                🔘 Solo {currentSubjectName}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setScopeMode('all')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                scopeMode === 'all'
+                  ? 'bg-white text-indigo-700 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              🌐 Todas mis Materias ({events.length} eventos)
+            </button>
           </div>
-        )}
+        </div>
 
-        {/* Alerta de Semanas Críticas Compacta */}
+        {/* Alerta de Semanas Críticas */}
         {criticalWeeksCount > 0 && (
-          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-amber-900 shadow-xs flex items-center gap-2.5 text-xs">
-            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xs shrink-0">
-              ⚠️
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-bold animate-in fade-in">
+            <span>⚠️</span>
+            <span>
+              {criticalWeeksCount} {criticalWeeksCount === 1 ? 'semana crítica' : 'semanas críticas'}{' '}
+              con 2+ exámenes solapados
             </span>
-            <p className="text-[11px] text-amber-800">
-              <span className="font-bold">¡Semana Crítica!</span> {criticalWeeksCount} semana(s) con 2+ evaluaciones solapadas.
-            </p>
           </div>
         )}
+      </div>
 
-        {/* ENCABEZADO DEL CALENDARIO VISUAL COMPACTO */}
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-          {/* Barra Superior con Navegación de Mes */}
-          <div className="bg-slate-900 px-4 py-2.5 flex items-center justify-between text-white">
+      {/* Tarjeta de Cuenta Regresiva al Próximo Examen */}
+      {nextEvent && (
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-500 to-indigo-700 p-5 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white font-bold backdrop-blur-xs text-xl shrink-0">
+              <IconCalendar className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">
+                  Próxima Evaluación
+                </span>
+                {nextEvent.subject_name && (
+                  <span className="text-[10px] font-bold bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full">
+                    {nextEvent.subject_name}
+                  </span>
+                )}
+              </div>
+              <h2 className="text-base sm:text-lg font-bold mt-1 leading-tight">
+                {nextEvent.title} ({nextEvent.event_type.toUpperCase().replace('_', ' ')})
+              </h2>
+              <p className="text-xs text-indigo-100 mt-0.5">
+                Fecha agendada: {nextEvent.event_date}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/15 px-4 py-2 rounded-xl text-right shrink-0 backdrop-blur-xs">
+            <span className="text-2xl font-black block leading-none">
+              {getDaysDiff(nextEvent.event_date)}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">
+              Días restantes
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Grid Principal: Calendario (Izquierda 8 Cols) y Panel de Agendado/Notas (Derecha 4 Cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Panel del Calendario */}
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          {/* Header del Calendario */}
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-2">
-              <span className="text-base">🗓️</span>
-              <h2 className="text-sm font-bold tracking-tight">
+              <h2 className="text-base font-bold text-slate-800">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </h2>
-            </div>
-
-            <div className="flex items-center gap-1">
               <button
-                onClick={handlePrevMonth}
-                className="rounded-md border border-slate-700 bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
-              >
-                ← Prev
-              </button>
-              <button
+                type="button"
                 onClick={handleToday}
-                className="rounded-md bg-indigo-600 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-2xs hover:bg-indigo-500 transition-colors"
+                className="text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200/60 transition-colors cursor-pointer"
               >
                 Hoy
               </button>
+            </div>
+
+            <div className="flex items-center gap-1.5">
               <button
-                onClick={handleNextMonth}
-                className="rounded-md border border-slate-700 bg-slate-800 px-2 py-0.5 text-[11px] font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold transition-colors cursor-pointer"
               >
-                Sig →
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold transition-colors cursor-pointer"
+              >
+                ›
               </button>
             </div>
           </div>
 
-          {/* BARRA DE FILTROS SIMPLIFICADA (Examen y Post-it) */}
-          <div className="px-3 py-1.5 bg-slate-800 border-t border-slate-700/80 flex items-center justify-between gap-2 overflow-x-auto">
-            <span className="text-[10px] text-slate-400 font-medium shrink-0">
-              Filtro:
-            </span>
-            <div className="flex items-center gap-1 shrink-0">
-              {[
-                { key: 'all', label: 'Todos' },
-                { key: 'event', label: '🎯 Exámenes' },
-                { key: 'note', label: '📌 Post-its' },
-              ].map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterType(f.key as any)}
-                  className={`px-3 py-0.5 rounded-md text-[10px] font-bold transition-all ${
-                    filterType === f.key
-                      ? 'bg-amber-400 text-slate-950 shadow-2xs'
-                      : 'bg-slate-700/70 text-slate-300 hover:bg-slate-700'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+          {/* Grilla de Días */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+            <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/80 text-center text-[11px] font-bold text-slate-500 py-2">
+              <span>Lun</span>
+              <span>Mar</span>
+              <span>Mié</span>
+              <span>Jue</span>
+              <span>Vie</span>
+              <span>Sáb</span>
+              <span>Dom</span>
             </div>
-          </div>
 
-          {/* Encabezado de Días de la Semana */}
-          <div className="grid grid-cols-7 border-b border-slate-200 bg-amber-400 text-slate-950 text-center font-bold text-[11px] py-1.5">
-            <div>Lu</div>
-            <div>Ma</div>
-            <div>Mi</div>
-            <div>Ju</div>
-            <div>Vi</div>
-            <div className="bg-amber-300">Sá</div>
-            <div className="bg-amber-300">Do</div>
-          </div>
+            <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100 text-xs">
+              {calendarDays.map((cell, idx) => {
+                const dayEvents = filteredEvents.filter((e) => e.event_date === cell.dateStr)
+                const dayNotes = filteredNotes.filter((n) => n.event_date === cell.dateStr)
+                const isSelected = selectedDateStr === cell.dateStr
+                const isToday = todayStr === cell.dateStr
 
-          {/* Malla Grilla del Calendario Mensual Compacta */}
-          <div className="grid grid-cols-7 border-collapse bg-slate-100/40">
-            {calendarDays.map((cell, idx) => {
-              const isToday = cell.dateStr === todayStr
-              const isSelected = cell.dateStr === selectedDateStr
-
-              const dayEvents = events
-                .filter((e) => e.event_date === cell.dateStr)
-                .filter(() => filterType === 'all' || filterType === 'event')
-
-              const dayNotes = notes
-                .filter((n) => n.event_date === cell.dateStr)
-                .filter(() => filterType === 'all' || filterType === 'note')
-
-              const hasItems = dayEvents.length > 0 || dayNotes.length > 0
-
-              return (
-                <div
-                  key={idx}
-                  onClick={() => setSelectedDateStr(cell.dateStr)}
-                  className={`min-h-[80px] sm:min-h-[92px] p-1 border-b border-r border-slate-200/80 transition-all flex flex-col justify-between cursor-pointer relative group ${
-                    !cell.isCurrentMonth
-                      ? 'bg-slate-100/50 text-slate-400'
-                      : isToday
-                      ? 'bg-indigo-50/60 text-slate-900 ring-2 ring-indigo-500 ring-inset'
-                      : 'bg-white text-slate-800 hover:bg-slate-50/90'
-                  } ${isSelected ? 'bg-amber-50/80 ring-2 ring-amber-400 ring-inset' : ''}`}
-                >
-                  {/* Encabezado de la celda: Número del día y Botones directos */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-[11px] font-bold px-1 py-0.2 rounded ${
-                        isToday
-                          ? 'bg-indigo-600 text-white shadow-2xs'
-                          : isSelected
-                          ? 'bg-amber-500 text-white'
-                          : cell.isCurrentMonth
-                          ? 'text-slate-700 group-hover:text-indigo-600'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {cell.dayNum}
-                    </span>
-
-                    {/* Botones de creación rápida directa sobre la celda */}
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedDateStr(cell.dateStr)
-                          setActiveTabForm('event')
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white text-[8px] font-bold px-1 py-0.2 rounded"
-                        title={`Agendar Examen para el ${cell.dateStr}`}
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setSelectedDateStr(cell.dateStr)}
+                    className={`min-h-[100px] p-2 flex flex-col gap-1 transition-all cursor-pointer select-none ${
+                      cell.isCurrentMonth ? 'bg-white' : 'bg-slate-50/50 text-slate-400'
+                    } ${isSelected ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30' : 'hover:bg-slate-50/80'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full ${
+                          isToday
+                            ? 'bg-indigo-600 text-white'
+                            : isSelected
+                            ? 'text-indigo-600 font-black'
+                            : 'text-slate-700'
+                        }`}
                       >
-                        +🎯
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedDateStr(cell.dateStr)
-                          setActiveTabForm('note')
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-amber-100 text-amber-900 hover:bg-amber-400 text-[8px] font-bold px-1 py-0.2 rounded"
-                        title={`Pegar Post-it para el ${cell.dateStr}`}
-                      >
-                        +📌
-                      </button>
-                      {hasItems && (
-                        <span className="text-[9px] text-amber-600 font-bold ml-0.5">
-                          {dayEvents.length > 0 ? '🎯' : '📌'}
-                        </span>
+                        {cell.dayNum}
+                      </span>
+
+                      {dayEvents.length > 1 && (
+                        <span
+                          className="h-2 w-2 rounded-full bg-amber-500"
+                          title="Semana / Día con múltiples eventos"
+                        />
                       )}
                     </div>
+
+                    {/* Pastillas de Eventos */}
+                    <div className="flex flex-col gap-1 mt-1 overflow-hidden">
+                      {dayEvents.map((evt) => (
+                        <div
+                          key={evt.id}
+                          className="rounded-md bg-indigo-600 text-white px-1.5 py-0.5 text-[10px] font-bold truncate flex items-center justify-between gap-1 shadow-2xs"
+                          title={`${evt.subject_name ? `[${evt.subject_name}] ` : ''}${evt.title}`}
+                        >
+                          <span className="truncate">
+                            {evt.subject_name && (
+                              <span className="text-indigo-200 mr-1 font-normal">
+                                [{evt.subject_name}]
+                              </span>
+                            )}
+                            {evt.title}
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Pastillas de Notas */}
+                      {dayNotes.map((note) => (
+                        <div
+                          key={note.id}
+                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold truncate border ${NOTE_COLOR_STYLES[note.color]}`}
+                          title={note.title}
+                        >
+                          📌 {note.title}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Panel Lateral: Formulario de Agendado y Lista de Evaluaciones */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* Tarjeta de Creación de Evento / Nota */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col gap-3.5">
+            {/* Selector de Pestañas del Formulario */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <span className="text-xs font-bold text-slate-800">
+                Fecha seleccionada: {selectedDateStr}
+              </span>
+              <div className="flex rounded-lg bg-slate-100 p-0.5 text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setActiveTabForm('event')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    activeTabForm === 'event'
+                      ? 'bg-white text-indigo-700 shadow-2xs'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  Examen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTabForm('note')}
+                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                    activeTabForm === 'note'
+                      ? 'bg-white text-indigo-700 shadow-2xs'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  Post-it
+                </button>
+              </div>
+            </div>
+
+            {/* Formulario de Evaluación con IA Roadmap */}
+            {activeTabForm === 'event' ? (
+              <form onSubmit={handleCreateEvent} className="flex flex-col gap-3">
+                {/* Selector de Materia si hay varias */}
+                {allSubjects.length > 0 && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                      Materia:
+                    </label>
+                    <select
+                      name="subject_id"
+                      value={selectedSubjectId}
+                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      {allSubjects.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Título de la Evaluación:
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    placeholder="Ej: Primer Parcial Teórico"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                      Tipo:
+                    </label>
+                    <select
+                      name="event_type"
+                      value={eventType}
+                      onChange={(e) =>
+                        setEventType(
+                          e.target.value as 'parcial' | 'entrega_tp' | 'final'
+                        )
+                      }
+                      className="w-full rounded-xl border border-slate-200 px-2.5 py-2 text-xs bg-slate-50 font-medium text-slate-800 focus:outline-none"
+                    >
+                      <option value="parcial">Parcial</option>
+                      <option value="entrega_tp">Entrega TP</option>
+                      <option value="final">Examen Final</option>
+                    </select>
                   </div>
 
-                  {/* Badges y Post-its en la celda */}
-                  <div className="flex flex-col gap-0.5 my-0.5 overflow-y-auto max-h-[60px] scrollbar-none">
-                    {dayEvents.map((evt) => (
-                      <div
-                        key={evt.id}
-                        onClick={(e) => {
-                          e.stopPropagation()
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                      Fecha:
+                    </label>
+                    <input
+                      type="date"
+                      name="event_date"
+                      required
+                      defaultValue={selectedDateStr}
+                      key={selectedDateStr}
+                      className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs bg-slate-50 font-medium text-slate-800 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loadingEvent}
+                  className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                >
+                  <IconSparkles className="w-3.5 h-3.5" />
+                  {loadingEvent ? 'Generando Roadmap IA...' : 'Agendar con Roadmap IA'}
+                </button>
+              </form>
+            ) : (
+              /* Formulario de Nota Adhesiva Post-it */
+              <form onSubmit={handleCreateNote} className="flex flex-col gap-3">
+                {allSubjects.length > 0 && (
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                      Materia:
+                    </label>
+                    <select
+                      name="subject_id"
+                      value={selectedSubjectId}
+                      onChange={(e) => setSelectedSubjectId(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 font-semibold text-slate-800 focus:outline-none"
+                    >
+                      {allSubjects.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Título del Post-it:
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    placeholder="Ej: Repasar Unidad 2..."
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 font-medium text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-slate-600 block mb-1">
+                    Contenido / Recordatorio:
+                  </label>
+                  <textarea
+                    name="content"
+                    rows={2}
+                    placeholder="Detalles o puntos clave a recordar..."
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs bg-slate-50 font-medium text-slate-800 focus:outline-none"
+                  />
+                </div>
+
+                <input type="hidden" name="event_date" value={selectedDateStr} />
+                <input type="hidden" name="color" value={selectedColor} />
+
+                {/* Selector de Color del Post-it */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-600">Color:</span>
+                  {(['yellow', 'blue', 'green', 'pink', 'purple'] as const).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setSelectedColor(c)}
+                      className={`h-5 w-5 rounded-full border-2 transition-transform cursor-pointer ${
+                        c === 'yellow'
+                          ? 'bg-amber-300'
+                          : c === 'blue'
+                          ? 'bg-sky-300'
+                          : c === 'green'
+                          ? 'bg-emerald-300'
+                          : c === 'pink'
+                          ? 'bg-rose-300'
+                          : 'bg-purple-300'
+                      } ${selectedColor === c ? 'scale-125 border-slate-800' : 'border-white'}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loadingNote}
+                  className="rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                >
+                  {loadingNote ? 'Guardando...' : 'Pegar Post-it en Calendario'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Lista de Evaluaciones Agendadas */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
+              <span>Evaluaciones ({filteredEvents.length})</span>
+              <span className="text-[10px] text-slate-400 font-semibold">
+                {scopeMode === 'all' ? 'Todas las materias' : currentSubjectName}
+              </span>
+            </h3>
+
+            <div className="flex flex-col gap-2.5 max-h-80 overflow-y-auto pr-1">
+              {filteredEvents.map((evt) => (
+                <div
+                  key={evt.id}
+                  className="rounded-xl border border-slate-200/80 p-3 flex flex-col gap-2 bg-slate-50/50 hover:bg-white transition-all shadow-2xs"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      {evt.subject_name && (
+                        <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md inline-block mb-1">
+                          {evt.subject_name}
+                        </span>
+                      )}
+                      <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                        {evt.title}
+                      </h4>
+                      <span className="text-[11px] text-slate-500 font-semibold block mt-0.5">
+                        📅 {evt.event_date} • {evt.event_type.toUpperCase().replace('_', ' ')}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteEvent(evt.subject_id, evt.id)}
+                      className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-colors"
+                      title="Eliminar evento"
+                    >
+                      <IconTrash className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Botón para desplegar Roadmap IA */}
+                  {evt.study_roadmap && evt.study_roadmap.length > 0 && (
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() =>
                           setExpandedRoadmapId(
                             expandedRoadmapId === evt.id ? null : evt.id
                           )
-                        }}
-                        className={`rounded px-1 py-0.2 text-[8px] font-bold border truncate shadow-2xs flex items-center justify-between transition-all ${
-                          evt.event_type === 'parcial'
-                            ? 'bg-rose-500 text-white border-rose-600 hover:bg-rose-600'
-                            : evt.event_type === 'final'
-                            ? 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700'
-                            : 'bg-sky-600 text-white border-sky-700 hover:bg-sky-700'
-                        }`}
-                        title={`${evt.title} (Clic para ver Plan IA)`}
+                        }
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline cursor-pointer"
                       >
-                        <span className="truncate">
-                          {evt.event_type === 'parcial'
-                            ? '📝'
-                            : evt.event_type === 'final'
-                            ? '🎓'
-                            : '📂'}{' '}
-                          {evt.title}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteEvent(evt.id)
-                          }}
-                          className="ml-1 opacity-70 hover:opacity-100 text-white font-normal"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+                        <IconSparkles className="w-3 h-3" />
+                        {expandedRoadmapId === evt.id
+                          ? 'Ocultar Roadmap de Estudio'
+                          : 'Ver Roadmap de Estudio IA'}
+                      </button>
 
-                    {dayNotes.map((note) => {
-                      const noteStyle =
-                        NOTE_COLOR_STYLES[note.color] || NOTE_COLOR_STYLES.yellow
-
-                      return (
-                        <div
-                          key={note.id}
-                          className={`rounded px-1 py-0.2 text-[8px] font-semibold border shadow-2xs transition-all ${noteStyle}`}
-                          title={note.content || note.title}
-                        >
-                          <div className="flex items-center justify-between gap-0.5">
-                            <span className="truncate font-bold">📌 {note.title}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleDeleteNote(note.id)
-                              }}
-                              className="opacity-40 hover:opacity-100 text-slate-900 font-normal"
-                            >
-                              ✕
-                            </button>
-                          </div>
+                      {expandedRoadmapId === evt.id && (
+                        <div className="mt-2 rounded-xl bg-indigo-50/80 p-3 border border-indigo-100 flex flex-col gap-2 animate-in fade-in">
+                          <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">
+                            Hoja de Ruta Sugerida:
+                          </span>
+                          <ul className="flex flex-col gap-1.5 text-xs text-slate-700">
+                            {evt.study_roadmap.map((step, sIdx) => (
+                              <li
+                                key={sIdx}
+                                className="flex items-start gap-1.5 bg-white p-2 rounded-lg border border-indigo-100/80"
+                              >
+                                <span className="font-bold text-indigo-700 shrink-0 text-[11px]">
+                                  {step.date_label || `Día -${step.day_offset}`}:
+                                </span>
+                                <div>
+                                  <span className="font-semibold text-slate-900 block leading-tight">
+                                    {step.topic}
+                                  </span>
+                                  <span className="text-[11px] text-slate-600 block mt-0.5">
+                                    {step.activity}
+                                  </span>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* COLUMNA DERECHA: PANEL COMPACTO DE ACCIONES Y POST-ITS (4 columnas) */}
-      <div className="lg:col-span-4 flex flex-col gap-4 sticky top-4">
-        {/* 1. Panel de Formulario Rápido para la Fecha Seleccionada */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between border-b pb-2 mb-3">
-            <div>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-600 block">
-                Fecha Seleccionada
-              </span>
-              <h3 className="text-xs font-bold text-slate-900">
-                {selectedDateStr === todayStr
-                  ? '📅 Hoy (' + selectedDateStr + ')'
-                  : '📅 ' + selectedDateStr}
-              </h3>
-            </div>
-
-            {/* Toggle entre Agendar Examen o Pegar Post-it */}
-            <div className="flex rounded-lg bg-slate-100 p-0.5 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTabForm('event')}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all ${
-                  activeTabForm === 'event'
-                    ? 'bg-white text-slate-900 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                🎯 Examen
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTabForm('note')}
-                className={`rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all ${
-                  activeTabForm === 'note'
-                    ? 'bg-amber-300 text-slate-950 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                📌 Post-it
-              </button>
-            </div>
-          </div>
-
-          {/* Formulario de Examen */}
-          {activeTabForm === 'event' && (
-            <form onSubmit={handleCreateEvent} className="flex flex-col gap-2.5">
-              <input type="hidden" name="event_date" value={selectedDateStr} />
-              <input type="hidden" name="event_type" value={eventType} />
-
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-700 mb-1">
-                  Tipo de Evaluación
-                </label>
-                <div className="grid grid-cols-3 gap-1">
-                  {[
-                    { value: 'parcial', label: '📝 Parcial', style: 'bg-rose-50 border-rose-300 text-rose-800' },
-                    { value: 'entrega_tp', label: '📂 TP', style: 'bg-sky-50 border-sky-300 text-sky-800' },
-                    { value: 'final', label: '🎓 Final', style: 'bg-purple-50 border-purple-300 text-purple-800' },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setEventType(opt.value as any)}
-                      className={`px-1.5 py-1.5 rounded-lg border text-[10px] font-bold text-center transition-all ${
-                        eventType === opt.value
-                          ? `${opt.style} ring-2 ring-indigo-600 shadow-2xs`
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-700 mb-0.5">
-                  Nombre / Título
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Ej: 1er Parcial Práctico"
-                  required
-                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loadingEvent}
-                className="mt-0.5 w-full rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-indigo-700 transition-all disabled:opacity-50"
-              >
-                {loadingEvent
-                  ? 'Agendando...'
-                  : `🎯 Agendar Examen para ${selectedDateStr}`}
-              </button>
-            </form>
-          )}
-
-          {/* Formulario de Post-it */}
-          {activeTabForm === 'note' && (
-            <form onSubmit={handleCreateNote} className="flex flex-col gap-2.5">
-              <input type="hidden" name="event_date" value={selectedDateStr} />
-
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-700 mb-0.5">
-                  Título del Post-it
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Ej: Borrador de entrega..."
-                  required
-                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold text-slate-700 mb-0.5">
-                  Detalle / Recordatorio
-                </label>
-                <input
-                  type="text"
-                  name="content"
-                  placeholder="Ej: Revisar ejercicios pendientes"
-                  className="w-full rounded-lg border border-slate-200 px-2.5 py-1 text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
-              </div>
-
-              {/* Color del Post-it */}
-              <div className="flex items-center justify-between py-0.5">
-                <span className="text-[10px] font-semibold text-slate-700">Color:</span>
-                <div className="flex items-center gap-1">
-                  {(['yellow', 'blue', 'green', 'pink', 'purple'] as const).map(
-                    (color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setSelectedColor(color)}
-                        className={`h-5 w-5 rounded-full border transition-all ${
-                          color === 'yellow'
-                            ? 'bg-amber-300 border-amber-400'
-                            : color === 'blue'
-                            ? 'bg-sky-300 border-sky-400'
-                            : color === 'green'
-                            ? 'bg-emerald-300 border-emerald-400'
-                            : color === 'pink'
-                            ? 'bg-rose-300 border-rose-400'
-                            : 'bg-purple-300 border-purple-400'
-                        } ${
-                          selectedColor === color
-                            ? 'scale-110 ring-2 ring-slate-900'
-                            : 'hover:scale-105'
-                        }`}
-                      />
-                    )
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
+              ))}
 
-              <button
-                type="submit"
-                disabled={loadingNote}
-                className="mt-0.5 w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-slate-800 transition-all disabled:opacity-50"
-              >
-                {loadingNote
-                  ? 'Pegando...'
-                  : `📌 Pegar Post-it en ${selectedDateStr}`}
-              </button>
-            </form>
-          )}
-        </div>
-
-        {/* 2. Hojas de Ruta IA (Roadmaps) en el Panel Lateral */}
-        {events.some((e) => e.study_roadmap && e.study_roadmap.length > 0) && (
-          <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 shadow-2xs">
-            <h3 className="text-xs font-bold text-indigo-900 flex items-center gap-1.5 mb-2">
-              <span>🧠</span> Hojas de Ruta de Repaso IA
-            </h3>
-
-            <div className="flex flex-col gap-2.5 max-h-[240px] overflow-y-auto pr-1">
-              {events
-                .filter((e) => e.study_roadmap && e.study_roadmap.length > 0)
-                .map((evt) => (
-                  <div
-                    key={evt.id}
-                    className="rounded-xl border border-indigo-200 bg-white p-2.5 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] font-bold text-slate-900 truncate">
-                        {evt.title} ({evt.event_date})
-                      </span>
-                      <span className="text-[8px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded shrink-0">
-                        {evt.event_type.toUpperCase()}
-                      </span>
-                    </div>
-
-                    <ul className="flex flex-col gap-1 border-t border-slate-100 pt-1.5">
-                      {evt.study_roadmap?.map((step, idx) => (
-                        <li key={idx} className="text-[10px] text-slate-800 flex items-start gap-1.5">
-                          <span className="bg-indigo-600 text-white font-bold text-[8px] px-1 py-0.2 rounded shrink-0 mt-0.5">
-                            {step.date_label || `Día -${step.day_offset}`}
-                          </span>
-                          <div>
-                            <span className="font-semibold text-slate-900">
-                              {step.topic}:{' '}
-                            </span>
-                            <span className="text-slate-600">{step.activity}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* 3. Panel de Todas las Notas Post-it */}
-        <div className="rounded-2xl border border-slate-200 bg-amber-50/50 p-4 shadow-sm flex flex-col gap-2.5">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">📌</span>
-            <h3 className="text-xs font-bold text-slate-900">Todas las Notas Post-it</h3>
-          </div>
-
-          <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-            {notes.map((note) => {
-              const noteStyle =
-                NOTE_COLOR_STYLES[note.color] || NOTE_COLOR_STYLES.yellow
-
-              return (
-                <div
-                  key={note.id}
-                  className={`rounded-xl border p-2.5 shadow-2xs transition-all flex flex-col justify-between relative ${noteStyle}`}
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-1">
-                      <h4 className="font-bold text-[11px]">{note.title}</h4>
-                      <button
-                        onClick={() => handleDeleteNote(note.id)}
-                        className="text-[9px] opacity-40 hover:opacity-100 p-0.5"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    {note.content && (
-                      <p className="mt-0.5 text-[10px] opacity-90 leading-relaxed whitespace-pre-wrap">
-                        {note.content}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mt-1.5 pt-1 border-t border-black/10 flex items-center justify-between text-[8px] opacity-75 font-medium">
-                    <span>📌 Post-it</span>
-                    {note.event_date ? (
-                      <span>📅 {note.event_date}</span>
-                    ) : (
-                      <span>General</span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-
-            {notes.length === 0 && (
-              <div className="rounded-xl border border-dashed border-amber-300 bg-white/60 p-4 text-center">
-                <p className="text-[11px] text-amber-900 font-medium">No tenés notas pegadas.</p>
-                <p className="mt-0.5 text-[9px] text-amber-800/80">
-                  Hacé clic en cualquier día para pegar una nota Post-it.
+              {filteredEvents.length === 0 && (
+                <p className="text-xs text-slate-400 italic py-4 text-center">
+                  No hay evaluaciones agendadas.
                 </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
