@@ -2,7 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { IconCalendar, IconFlame } from '@/components/icons'
+import {
+  IconCalendar,
+  IconFlame,
+  IconChevronLeft,
+  IconChevronRight,
+} from '@/components/icons'
 
 export interface GlobalEvent {
   id: string
@@ -119,62 +124,24 @@ export default function GlobalCalendarWidget({
   const calendarDays = getCalendarDays()
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col gap-4">
-      {/* Encabezado con Botón de Acceso al Calendario Completo */}
+    <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs flex flex-col gap-4 select-none">
+      {/* Encabezado Principal del Widget */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
         <div className="flex items-center gap-2 truncate">
           <IconCalendar className="w-5 h-5 text-indigo-600 shrink-0" />
           <h2 className="text-sm font-bold text-slate-900 truncate">
-            Panorama General ({MONTH_NAMES[currentMonth]} {currentYear})
+            Calendario de Exámenes
           </h2>
         </div>
 
         {firstSubjectId && (
           <Link
             href={`/materias/${firstSubjectId}/calendario`}
-            className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all shrink-0 flex items-center gap-1"
+            className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-all shrink-0 flex items-center gap-1 cursor-pointer"
           >
-            Ir al Calendario →
+            <span>Ver Calendario Completo →</span>
           </Link>
         )}
-      </div>
-
-      {/* Navegación del mes */}
-      <div className="flex items-center justify-between px-1 text-xs">
-        <span className="font-semibold text-slate-600">
-          {MONTH_NAMES[currentMonth]} {currentYear}
-        </span>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() =>
-              currentMonth === 0
-                ? (setCurrentMonth(11), setCurrentYear(currentYear - 1))
-                : setCurrentMonth(currentMonth - 1)
-            }
-            className="rounded-lg border border-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
-            ←
-          </button>
-          <button
-            onClick={() => {
-              setCurrentYear(today.getFullYear())
-              setCurrentMonth(today.getMonth())
-            }}
-            className="rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
-          >
-            Hoy
-          </button>
-          <button
-            onClick={() =>
-              currentMonth === 11
-                ? (setCurrentMonth(0), setCurrentYear(currentYear + 1))
-                : setCurrentMonth(currentMonth + 1)
-            }
-            className="rounded-lg border border-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
-            →
-          </button>
-        </div>
       </div>
 
       {/* Próximo Examen Destacado */}
@@ -200,9 +167,56 @@ export default function GlobalCalendarWidget({
         </div>
       )}
 
-      {/* Grilla Mini del Calendario */}
-      <div className="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50">
-        <div className="grid grid-cols-7 bg-slate-900 text-white text-center font-bold text-[10px] py-1">
+      {/* BLOQUE COMBINADO: Navegación de Mes + Grilla del Calendario Unificada */}
+      <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-2xs">
+        {/* Barra de Navegación del Mes integrada directamente sobre el calendario */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-100/80 border-b border-slate-200 text-xs">
+          <span className="font-bold text-slate-800 text-xs tracking-tight">
+            {MONTH_NAMES[currentMonth]} {currentYear}
+          </span>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() =>
+                currentMonth === 0
+                  ? (setCurrentMonth(11), setCurrentYear(currentYear - 1))
+                  : setCurrentMonth(currentMonth - 1)
+              }
+              className="rounded-lg border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+              title="Mes anterior"
+            >
+              <IconChevronLeft className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentYear(today.getFullYear())
+                setCurrentMonth(today.getMonth())
+              }}
+              className="rounded-lg bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-2xs cursor-pointer"
+            >
+              Hoy
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                currentMonth === 11
+                  ? (setCurrentMonth(0), setCurrentYear(currentYear + 1))
+                  : setCurrentMonth(currentMonth + 1)
+              }
+              className="rounded-lg border border-slate-200 bg-white p-1 text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+              title="Mes siguiente"
+            >
+              <IconChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Encabezado de Días de la Semana */}
+        <div className="grid grid-cols-7 bg-slate-900 text-white text-center font-bold text-[10px] py-1.5">
           <div>Lu</div>
           <div>Ma</div>
           <div>Mi</div>
@@ -212,6 +226,7 @@ export default function GlobalCalendarWidget({
           <div className="text-amber-300">Do</div>
         </div>
 
+        {/* Celdas del Calendario */}
         <div className="grid grid-cols-7 border-collapse bg-white">
           {calendarDays.map((cell, idx) => {
             const isToday = cell.dateStr === todayStr
@@ -221,52 +236,47 @@ export default function GlobalCalendarWidget({
             return (
               <div
                 key={idx}
-                className={`min-h-[48px] p-1 border-b border-r border-slate-100 flex flex-col justify-between text-center relative ${
+                className={`min-h-[50px] sm:min-h-[56px] border-b border-r border-slate-100 p-1 flex flex-col justify-between transition-colors ${
                   !cell.isCurrentMonth
-                    ? 'bg-slate-50 text-slate-300'
+                    ? 'bg-slate-50/60 text-slate-300'
                     : isToday
-                    ? 'bg-indigo-50 ring-1 ring-indigo-500 font-bold'
-                    : 'bg-white text-slate-700'
+                    ? 'bg-indigo-50/50 ring-1 ring-inset ring-indigo-500 font-bold'
+                    : 'hover:bg-slate-50/80 text-slate-700'
                 }`}
               >
-                <span
-                  className={`text-[10px] ${
-                    isToday
-                      ? 'text-indigo-600 font-black'
-                      : cell.isCurrentMonth
-                      ? 'font-bold'
-                      : 'text-slate-300'
-                  }`}
-                >
-                  {cell.dayNum}
-                </span>
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`text-[10px] font-mono leading-none ${
+                      isToday
+                        ? 'flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-white font-bold'
+                        : ''
+                    }`}
+                  >
+                    {cell.dayNum}
+                  </span>
+                </div>
 
-                {/* Puntos o Badges de Eventos */}
-                <div className="flex flex-col gap-0.5 items-center">
-                  {dayEvents.map((evt) => (
-                    <Link
-                      key={evt.id}
-                      href={`/materias/${evt.subject_id}/calendario`}
-                      className={`w-full truncate text-[7px] font-bold px-0.5 rounded text-white ${
-                        evt.event_type === 'parcial'
-                          ? 'bg-rose-500'
-                          : evt.event_type === 'final'
-                          ? 'bg-purple-600'
-                          : 'bg-sky-600'
+                {/* Marcadores de eventos y notas en la celda */}
+                <div className="flex flex-col gap-0.5 mt-0.5">
+                  {dayEvents.slice(0, 2).map((ev) => (
+                    <div
+                      key={ev.id}
+                      className={`truncate rounded px-1 py-0.5 text-[8px] font-bold leading-tight ${
+                        ev.event_type === 'final'
+                          ? 'bg-purple-600 text-white'
+                          : ev.event_type === 'entrega_tp'
+                          ? 'bg-sky-600 text-white'
+                          : 'bg-rose-600 text-white'
                       }`}
-                      title={`${evt.subject_name}: ${evt.title}`}
+                      title={`${ev.title} (${ev.subject_name})`}
                     >
-                      {evt.title}
-                    </Link>
+                      {ev.title}
+                    </div>
                   ))}
 
-                  {dayNotes.map((n) => (
-                    <span
-                      key={n.id}
-                      className="w-1.5 h-1.5 rounded-full bg-amber-400"
-                      title={`Post-it: ${n.title}`}
-                    />
-                  ))}
+                  {dayNotes.length > 0 && dayEvents.length === 0 && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 self-center" />
+                  )}
                 </div>
               </div>
             )
@@ -274,38 +284,36 @@ export default function GlobalCalendarWidget({
         </div>
       </div>
 
-      {/* Lista de Próximas Evaluaciones Consolidadas */}
+      {/* Lista de Próximos Exámenes en el Pie */}
       {upcomingEvents.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Próximos Exámenes ({upcomingEvents.length})
-          </h3>
-          <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto pr-1">
-            {upcomingEvents.slice(0, 4).map((evt) => (
-              <Link
-                key={evt.id}
-                href={`/materias/${evt.subject_id}/calendario`}
-                className="rounded-xl border border-slate-200/80 bg-slate-50 p-2 text-xs hover:bg-slate-100 transition-colors flex items-center justify-between gap-2"
+          </span>
+          <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto scrollbar-none">
+            {upcomingEvents.slice(0, 4).map((ev) => (
+              <div
+                key={ev.id}
+                className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 px-3 py-2 text-xs"
               >
-                <div className="truncate">
-                  <span className="text-[10px] font-bold text-indigo-600 block uppercase truncate">
-                    {evt.subject_name}
+                <div className="flex flex-col truncate pr-2">
+                  <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                    {ev.subject_name}
                   </span>
-                  <span className="font-bold text-slate-900 truncate block">
-                    {evt.title}
-                  </span>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] text-slate-500 font-mono block">
-                    {evt.event_date}
-                  </span>
-                  <span className="text-[9px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">
-                    {getDaysDiff(evt.event_date) === 0
-                      ? '¡HOY!'
-                      : `${getDaysDiff(evt.event_date)} días`}
+                  <span className="font-bold text-slate-900 truncate">
+                    {ev.title}
                   </span>
                 </div>
-              </Link>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {ev.event_date}
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-md">
+                    {getDaysDiff(ev.event_date)}d
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
