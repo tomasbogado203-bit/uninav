@@ -31,11 +31,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
         <StudyTimerProvider>
-          {/* Cápsula Flotante de Productividad Pomodoro / IoT en el Top */}
-          <div className="fixed top-3 right-4 sm:right-6 z-50 pointer-events-auto">
-            <StudyTimerCapsule />
-          </div>
-
+          {/* Cápsula Flotante y Arrastrable de Productividad Pomodoro / IoT */}
+          <StudyTimerCapsule />
           <main className="flex-1">{children}</main>
         </StudyTimerProvider>
       </body>

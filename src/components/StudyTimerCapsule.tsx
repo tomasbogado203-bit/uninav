@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useStudyTimer, TIMER_PRESETS } from '@/context/StudyTimerContext'
 import {
@@ -11,6 +11,11 @@ import {
   IconSparkles,
   IconCheck,
 } from '@/components/icons'
+
+interface Position {
+  x: number
+  y: number
+}
 
 export default function StudyTimerCapsule() {
   const {
@@ -30,6 +35,127 @@ export default function StudyTimerCapsule() {
   } = useStudyTimer()
 
   const [showMenu, setShowMenu] = useState(false)
+  const [position, setPosition] = useState<Position | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const capsuleRef = useRef<HTMLDivElement>(null)
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null)
+  const hasMovedRef = useRef(false)
+
+  // Cargar posición inicial desde localStorage o centrarla arriba a la derecha
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('uninav_capsule_pos')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        // Comprobar que esté dentro de los límites de la ventana
+        const maxX = Math.max(10, window.innerWidth - 360)
+        const maxY = Math.max(10, window.innerHeight - 60)
+        setPosition({
+          x: Math.min(Math.max(10, parsed.x), maxX),
+          y: Math.min(Math.max(10, parsed.y), maxY),
+        })
+      } else {
+        // Posición por defecto: Arriba a la derecha
+        setPosition({
+          x: Math.max(16, window.innerWidth - 380),
+          y: 12,
+        })
+      }
+    } catch {
+      setPosition({ x: 20, y: 12 })
+    }
+  }, [])
+
+  // Manejo de Drag con Mouse y Touch
+  const handleStartDrag = (clientX: number, clientY: number) => {
+    if (!position) return
+    setIsDragging(true)
+    hasMovedRef.current = false
+    dragStartRef.current = {
+      mouseX: clientX,
+      mouseY: clientY,
+      startX: position.x,
+      startY: position.y,
+    }
+  }
+
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (!dragStartRef.current || !capsuleRef.current) return
+
+    const deltaX = clientX - dragStartRef.current.mouseX
+    const deltaY = clientY - dragStartRef.current.mouseY
+
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+      hasMovedRef.current = true
+    }
+
+    const rect = capsuleRef.current.getBoundingClientRect()
+    const width = rect.width || 360
+    const height = rect.height || 50
+
+    const maxX = Math.max(0, window.innerWidth - width - 8)
+    const maxY = Math.max(0, window.innerHeight - height - 8)
+
+    const nextX = Math.min(Math.max(8, dragStartRef.current.startX + deltaX), maxX)
+    const nextY = Math.min(Math.max(8, dragStartRef.current.startY + deltaY), maxY)
+
+    setPosition({ x: nextX, y: nextY })
+  }, [])
+
+  const handleEndDrag = useCallback(() => {
+    setIsDragging(false)
+    dragStartRef.current = null
+
+    if (position) {
+      try {
+        localStorage.setItem('uninav_capsule_pos', JSON.stringify(position))
+      } catch {}
+    }
+  }, [position])
+
+  // Listeners globales mientras se arrastra
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (dragStartRef.current) {
+        handleDragMove(e.clientX, e.clientY)
+      }
+    }
+
+    const onMouseUp = () => {
+      if (dragStartRef.current) {
+        handleEndDrag()
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (dragStartRef.current && e.touches[0]) {
+        handleDragMove(e.touches[0].clientX, e.touches[0].clientY)
+      }
+    }
+
+    const onTouchEnd = () => {
+      if (dragStartRef.current) {
+        handleEndDrag()
+      }
+    }
+
+    if (isDragging) {
+      window.addEventListener('mousemove', onMouseMove)
+      window.addEventListener('mouseup', onMouseUp)
+      window.addEventListener('touchmove', onTouchMove)
+      window.addEventListener('touchend', onTouchEnd)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [isDragging, handleDragMove, handleEndDrag])
+
+  if (!position) return null
 
   // Formato MM:SS del tiempo restante
   const minutes = Math.floor(timeRemaining / 60)
@@ -83,15 +209,57 @@ export default function StudyTimerCapsule() {
 
   const theme = getModeTheme()
 
+  const handleTimerClick = () => {
+    // Si se movió como arrastre, no pausar/reproducir
+    if (hasMovedRef.current) return
+    if (isRunning) pauseTimer()
+    else startTimer()
+  }
+
   return (
-    <div className="relative inline-block select-none z-50">
-      {/* PÍLDORA CÁPSULA DINÁMICA (Idéntica a la referencia de diseño) */}
+    <div
+      ref={capsuleRef}
+      style={{
+        position: 'fixed',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        touchAction: 'none',
+      }}
+      className="z-50 select-none pointer-events-auto"
+    >
+      {/* PÍLDORA CÁPSULA DINÁMICA ARRASTRABLE */}
       <div
-        className={`flex items-center rounded-full bg-slate-950/95 backdrop-blur-md border ${theme.borderColor} px-4 sm:px-5 py-2 shadow-2xl transition-all gap-3 sm:gap-6 text-white text-xs font-sans`}
+        onMouseDown={(e) => {
+          // No arrastrar si hace clic en el botón de menú
+          if ((e.target as HTMLElement).closest('button')) return
+          handleStartDrag(e.clientX, e.clientY)
+        }}
+        onTouchStart={(e) => {
+          if ((e.target as HTMLElement).closest('button')) return
+          if (e.touches[0]) handleStartDrag(e.touches[0].clientX, e.touches[0].clientY)
+        }}
+        className={`flex items-center rounded-full bg-slate-950/95 backdrop-blur-md border ${
+          theme.borderColor
+        } px-4 sm:px-5 py-2 shadow-2xl transition-shadow gap-3 sm:gap-6 text-white text-xs font-sans ${
+          isDragging ? 'cursor-grabbing scale-[1.02] ring-2 ring-indigo-500/50' : 'cursor-grab hover:border-slate-700'
+        }`}
+        title="Arrastrá para reposicionar en la pantalla"
       >
+        {/* Grip handle visual sutil */}
+        <div className="flex flex-col gap-0.5 opacity-40 hover:opacity-100 transition-opacity -mr-1">
+          <div className="flex gap-0.5">
+            <span className="w-1 h-1 bg-slate-400 rounded-full" />
+            <span className="w-1 h-1 bg-slate-400 rounded-full" />
+          </div>
+          <div className="flex gap-0.5">
+            <span className="w-1 h-1 bg-slate-400 rounded-full" />
+            <span className="w-1 h-1 bg-slate-400 rounded-full" />
+          </div>
+        </div>
+
         {/* SECCIÓN 1: Cronómetro en Vivo */}
         <div
-          onClick={() => (isRunning ? pauseTimer() : startTimer())}
+          onClick={handleTimerClick}
           className="flex items-center gap-2 cursor-pointer group"
           title={isRunning ? 'Hacé clic para pausar' : 'Hacé clic para iniciar foco'}
         >
@@ -107,7 +275,7 @@ export default function StudyTimerCapsule() {
           </div>
         </div>
 
-        {/* Separador vertical sutil */}
+        {/* Separador vertical */}
         <div className="h-6 w-px bg-slate-800/80" />
 
         {/* SECCIÓN 2: Horas de Estudio Hoy */}
@@ -120,7 +288,7 @@ export default function StudyTimerCapsule() {
           </span>
         </div>
 
-        {/* Separador vertical sutil */}
+        {/* Separador vertical */}
         <div className="h-6 w-px bg-slate-800/80" />
 
         {/* SECCIÓN 3: Porcentaje de Meta Diaria */}
@@ -140,7 +308,10 @@ export default function StudyTimerCapsule() {
         {/* BOTÓN MENÚ / AJUSTES */}
         <button
           type="button"
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowMenu(!showMenu)
+          }}
           className={`flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 border border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer ${
             showMenu ? 'ring-2 ring-indigo-500 bg-slate-800 text-white' : ''
           }`}
