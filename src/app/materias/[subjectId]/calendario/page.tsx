@@ -92,17 +92,7 @@ export default async function CalendarioPage({
   }
 
   return (
-    <div className="mx-auto max-w-[96rem] p-6 md:p-8">
-      {/* Título de la Pestaña */}
-      <div className="mb-6 border-b border-slate-200/80 pb-4">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-          Planificación Académica
-        </span>
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-          📅 Calendario de Exámenes y Notas Post-it ({subject?.name || 'Materia'})
-        </h1>
-      </div>
-
+    <div className="mx-auto max-w-[96rem] p-4 md:p-6">
       {/* Vista Principal del Calendario y Notas */}
       <CalendarView
         subjectId={subjectId}

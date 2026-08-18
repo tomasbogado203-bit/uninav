@@ -119,19 +119,7 @@ export default async function GlobalCalendarioPage() {
       </header>
 
       {/* Contenido Principal */}
-      <main className="mx-auto max-w-[96rem] p-6 md:p-8">
-        <div className="mb-6 border-b border-slate-200/80 pb-4">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-            Planificación Global
-          </span>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <IconCalendar className="w-5 h-5 text-indigo-600" />
-            Calendario de Exámenes Unificado (Todas las Materias)
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Visualizá todos tus parciales, entregas de trabajos prácticos y finales en un solo lugar para prevenir semanas críticas.
-          </p>
-        </div>
+      <main className="mx-auto max-w-[96rem] p-4 md:p-6">
 
         <CalendarView
           allSubjects={allSubjects}
