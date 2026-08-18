@@ -22,7 +22,7 @@ export default async function SimuladorPage({
     .eq('id', subjectId)
     .single()
 
-  // 1. Cargar temas disponibles para scope
+  // 1. Cargar temas disponibles
   const { data: threads } = await supabase
     .from('chat_threads')
     .select('id, title')
@@ -36,23 +36,47 @@ export default async function SimuladorPage({
     .eq('subject_id', subjectId)
     .eq('document_type', 'examen_viejo')
 
-  return (
-    <div className="mx-auto max-w-[96rem] p-6 md:p-8">
-      {/* Título de la Pestaña */}
-      <div className="mb-6 border-b border-slate-200/80 pb-4">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 block">
-          Evaluaciones Adaptativas
-        </span>
-        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-          📝 Simulador de Parciales y Quiz ({subject?.name})
-        </h1>
-      </div>
+  // 3. Cargar historial de quizzes generados con sus preguntas e intentos
+  let existingQuizzes: any[] = []
+  try {
+    const { data: quizzesData } = await supabase
+      .from('quizzes')
+      .select(`
+        id,
+        quiz_type,
+        scope,
+        created_at,
+        quiz_questions (
+          id,
+          question_text,
+          question_format,
+          options,
+          correct_answer,
+          source_page
+        ),
+        quiz_attempts (
+          id,
+          score,
+          attempted_at
+        )
+      `)
+      .eq('subject_id', subjectId)
+      .order('created_at', { ascending: false })
 
+    existingQuizzes = quizzesData || []
+  } catch {
+    existingQuizzes = []
+  }
+
+  return (
+    <div className="mx-auto max-w-[96rem] p-4 md:p-6">
       {/* Vista principal del Simulador */}
       <QuizView
         subjectId={subjectId}
+        subjectName={subject?.name || 'Materia'}
         threads={threads || []}
         examDocuments={oldExams || []}
+        existingQuizzes={existingQuizzes}
       />
     </div>
   )

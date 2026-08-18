@@ -24,10 +24,10 @@ export async function createQuizAction(
   const styleReferenceDocumentId = (formData.get('style_reference_document_id') as string) || null
 
   if (selectedThreadIds.length === 0) {
-    throw new Error('Debés seleccionar al menos un tema o hilo para generar el examen.')
+    throw new Error('Debés seleccionar al menos un tema para generar el examen.')
   }
 
-  // 1. Obtener texto de referencia si se seleccionó un examen viejo (Regla 5: solo formato/estilo)
+  // 1. Obtener texto de referencia de examen viejo si aplica (Regla 5: solo formato)
   let examStyleText: string | undefined = undefined
   if (styleReferenceDocumentId) {
     const { data: styleDoc } = await supabase
@@ -49,12 +49,11 @@ export async function createQuizAction(
     }
   }
 
-  // 2. Recuperar chunks por thread de forma independiente (Regla 3: sin sesgar hacia un tema)
+  // 2. Recuperar chunks por thread de forma independiente (Regla 3: sin sesgar)
   const allRetrievedChunks: RetrievedChunk[] = []
   const threadCoverages: { threadId: string; coverage: 'ok' | 'baja' }[] = []
 
   for (const threadId of selectedThreadIds) {
-    // Obtener título del tema
     const { data: threadData } = await supabase
       .from('chat_threads')
       .select('title')
@@ -79,7 +78,7 @@ export async function createQuizAction(
       scope: scope,
       style_reference_document_id: styleReferenceDocumentId || null,
     })
-    .select('id')
+    .select('id, quiz_type, scope, created_at')
     .single()
 
   if (quizError || !quiz) {
@@ -95,27 +94,58 @@ export async function createQuizAction(
     })
   }
 
-  // 5. Generar preguntas estructuradas con Gemini 3.6 Flash
-  const questions = await generateQuizQuestions(
+  // 5. Generar preguntas estructuradas con Gemini
+  const generatedQuestions = await generateQuizQuestions(
     quizType,
-    allRetrievedChunks.length > 0 ? allRetrievedChunks : [{ id: '1', document_id: '1', content: 'Conceptos de la materia', page_number: 1 }],
+    allRetrievedChunks.length > 0
+      ? allRetrievedChunks
+      : [{ id: '1', document_id: '1', content: 'Conceptos clave de la materia', page_number: 1 }],
     examStyleText
   )
 
   // 6. Guardar preguntas en quiz_questions
-  for (const q of questions) {
-    await supabase.from('quiz_questions').insert({
-      quiz_id: quiz.id,
-      question_text: q.question_text,
-      question_format: q.question_format,
-      options: q.options || null,
-      correct_answer: q.correct_answer,
-      source_page: q.source_page || null,
-    })
+  const savedQuestions = []
+  for (const q of generatedQuestions) {
+    const { data: qData } = await supabase
+      .from('quiz_questions')
+      .insert({
+        quiz_id: quiz.id,
+        question_text: q.question_text,
+        question_format: q.question_format,
+        options: q.options || null,
+        correct_answer: q.correct_answer,
+        source_page: q.source_page || null,
+      })
+      .select('id, question_text, question_format, options, correct_answer, source_page')
+      .single()
+
+    if (qData) {
+      savedQuestions.push({
+        ...qData,
+        explanation: q.explanation,
+      })
+    } else {
+      savedQuestions.push({
+        id: `q_${Date.now()}_${Math.random()}`,
+        question_text: q.question_text,
+        question_format: q.question_format,
+        options: q.options || null,
+        correct_answer: q.correct_answer,
+        source_page: q.source_page || null,
+        explanation: q.explanation,
+      })
+    }
   }
 
   revalidatePath(`/materias/${subjectId}/simulador`)
-  return quiz.id
+
+  return {
+    id: quiz.id,
+    quiz_type: quiz.quiz_type as 'multiple_choice' | 'desarrollo',
+    scope: quiz.scope,
+    created_at: quiz.created_at,
+    quiz_questions: savedQuestions,
+  }
 }
 
 export async function submitQuizAttemptAction(
@@ -137,6 +167,31 @@ export async function submitQuizAttemptAction(
     score: score,
     answers: answers,
   })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath(`/materias/${subjectId}/simulador`)
+}
+
+export async function deleteQuizAction(
+  subjectId: string,
+  quizId: string
+) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const { error } = await supabase
+    .from('quizzes')
+    .delete()
+    .eq('id', quizId)
+    .eq('subject_id', subjectId)
 
   if (error) {
     throw new Error(error.message)
