@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { explainGlossaryTermAction } from './actions'
 import {
   IconLightbulb,
@@ -10,6 +11,8 @@ import {
   IconSparkles,
   IconClipboard,
   IconChevronRight,
+  IconChevronLeft,
+  IconHome,
 } from '@/components/icons'
 
 export interface CareerResource {
@@ -109,7 +112,26 @@ export default function RecursosView({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 flex flex-col gap-6 select-none">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 flex flex-col gap-5 select-none">
+      {/* Botones de Navegación Superior para Volver al Inicio */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-slate-200/90 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-all shadow-2xs cursor-pointer active:scale-95"
+        >
+          <IconChevronLeft className="w-3.5 h-3.5" />
+          <span>Volver al Inicio</span>
+        </Link>
+
+        <Link
+          href="/materias"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-200 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-all shadow-2xs cursor-pointer active:scale-95"
+        >
+          <IconBook className="w-3.5 h-3.5" />
+          <span>Mis Materias</span>
+        </Link>
+      </div>
+
       {/* Header Encabezado Compacto y Moderno */}
       <div className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -294,7 +316,7 @@ export default function RecursosView({
                 key={letter}
                 type="button"
                 onClick={() => setSelectedLetter(letter)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                className={`rounded-lg px-2 py-1 text-xs font-bold transition-all cursor-pointer ${
                   selectedLetter === letter
                     ? 'bg-indigo-600 text-white shadow-2xs'
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
