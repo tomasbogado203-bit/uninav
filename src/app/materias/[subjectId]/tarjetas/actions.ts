@@ -5,7 +5,10 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { generateFlashcardsFromChunks } from '@/lib/supabase/gemini/flashcards'
 
-export async function generateFlashcardsAction(subjectId: string) {
+export async function generateFlashcardsAction(
+  subjectId: string,
+  topicTitle?: string
+) {
   const supabase = await createClient()
 
   const {
@@ -28,24 +31,40 @@ export async function generateFlashcardsAction(subjectId: string) {
   const docIds = docs.map((d) => d.id)
 
   // 2. Traer un muestreo representativo de fragmentos (chunks)
-  const { data: chunks } = await supabase
+  let query = supabase
     .from('document_chunks')
     .select('id, document_id, content, page_number')
     .in('document_id', docIds)
-    .limit(10)
+
+  if (topicTitle && topicTitle !== 'general' && topicTitle !== 'Todas las unidades') {
+    query = query.ilike('content', `%${topicTitle.replace(/[^a-zA-Z0-9]/g, '%')}%`)
+  }
+
+  let { data: chunks } = await query.limit(12)
+
+  if (!chunks || chunks.length === 0) {
+    // Si no encontró por filtro estricto, recuperar los primeros 12 chunks
+    const { data: fallbackChunks } = await supabase
+      .from('document_chunks')
+      .select('id, document_id, content, page_number')
+      .in('document_id', docIds)
+      .limit(12)
+
+    chunks = fallbackChunks
+  }
 
   if (!chunks || chunks.length === 0) {
     throw new Error('No se encontraron fragmentos indexados en los PDFs de esta materia.')
   }
 
   // 3. Generar tarjetas con Gemini
-  const generated = await generateFlashcardsFromChunks(chunks)
+  const generated = await generateFlashcardsFromChunks(chunks, topicTitle)
 
   if (!generated || generated.length === 0) {
     throw new Error('Ocurrió un inconveniente al procesar las tarjetas con IA.')
   }
 
-  // 4. Intentar guardar en Supabase con fallback seguro
+  // 4. Guardar en Supabase con fallback seguro
   const savedCards = []
 
   for (let i = 0; i < generated.length; i++) {
@@ -93,7 +112,11 @@ export async function generateFlashcardsAction(subjectId: string) {
   return savedCards
 }
 
-export async function toggleMasteredAction(subjectId: string, flashcardId: string, currentStatus: boolean) {
+export async function toggleMasteredAction(
+  subjectId: string,
+  flashcardId: string,
+  currentStatus: boolean
+) {
   const supabase = await createClient()
 
   const {
@@ -114,7 +137,10 @@ export async function toggleMasteredAction(subjectId: string, flashcardId: strin
   revalidatePath(`/materias/${subjectId}/tarjetas`)
 }
 
-export async function deleteFlashcardAction(subjectId: string, flashcardId: string) {
+export async function deleteFlashcardAction(
+  subjectId: string,
+  flashcardId: string
+) {
   const supabase = await createClient()
 
   const {

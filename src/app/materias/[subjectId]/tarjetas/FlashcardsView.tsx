@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   generateFlashcardsAction,
   toggleMasteredAction,
@@ -10,6 +10,8 @@ import {
   IconSparkles,
   IconDocument,
   IconTrash,
+  IconClipboard,
+  IconLightbulb,
 } from '@/components/icons'
 
 export interface FlashcardItem {
@@ -25,18 +27,29 @@ interface FlashcardsViewProps {
   subjectId: string
   subjectName: string
   flashcards: FlashcardItem[]
+  topics?: string[]
 }
 
 export default function FlashcardsView({
   subjectId,
   subjectName,
   flashcards = [],
+  topics = [],
 }: FlashcardsViewProps) {
   const [cards, setCards] = useState<FlashcardItem[]>(flashcards)
   const [loading, setLoading] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // Filtros: 'all' | 'learning' | 'mastered'
+  const [filterMode, setFilterMode] = useState<'all' | 'learning' | 'mastered'>('all')
+
+  // Vista: 'study' (tarjeta individual) | 'deck' (grilla completa)
+  const [viewMode, setViewMode] = useState<'study' | 'deck'>('study')
+
+  // Selector de tema para generar
+  const [selectedTopic, setSelectedTopic] = useState<string>('Todas las unidades')
 
   // Cargar y combinar tarjetas persistidas en localStorage como fallback seguro
   useEffect(() => {
@@ -45,7 +58,6 @@ export default function FlashcardsView({
       if (saved) {
         const parsed: FlashcardItem[] = JSON.parse(saved)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Fusionar unificando IDs únicos
           const existingIds = new Set(flashcards.map((c) => c.id))
           const missingLocal = parsed.filter((c) => !existingIds.has(c.id))
           setCards([...flashcards, ...missingLocal])
@@ -53,12 +65,12 @@ export default function FlashcardsView({
         }
       }
     } catch {
-      // Ignorar errores de localStorage
+      // Ignorar errores
     }
     setCards(flashcards)
   }, [subjectId, flashcards])
 
-  // Helper para guardar el estado actualizado en localStorage
+  // Helper para persistencia local
   const saveToLocal = (updatedCards: FlashcardItem[]) => {
     setCards(updatedCards)
     try {
@@ -68,18 +80,63 @@ export default function FlashcardsView({
     }
   }
 
+  // Filtrado de tarjetas
+  const activeCards = cards.filter((c) => {
+    if (filterMode === 'learning') return !c.mastered
+    if (filterMode === 'mastered') return c.mastered
+    return true
+  })
+
+  const currentCard = activeCards[currentIndex]
+
+  // Atajos de teclado para repaso activo ultra rápido
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (viewMode !== 'study' || activeCards.length === 0) return
+      // Ignorar si el usuario está escribiendo en un input
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault()
+        setIsFlipped((prev) => !prev)
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        e.preventDefault()
+        setIsFlipped(false)
+        setCurrentIndex((prev) => (prev < activeCards.length - 1 ? prev + 1 : 0))
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        e.preventDefault()
+        setIsFlipped(false)
+        setCurrentIndex((prev) => (prev > 0 ? prev - 1 : activeCards.length - 1))
+      } else if (e.key === 'm' || e.key === 'M') {
+        if (currentCard) {
+          e.preventDefault()
+          handleToggleMastered(currentCard.id, currentCard.mastered)
+        }
+      }
+    },
+    [viewMode, activeCards.length, currentCard]
+  )
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
   const handleGenerate = async () => {
     setLoading(true)
     setToastMessage(null)
 
     try {
-      const newCards = await generateFlashcardsAction(subjectId)
+      const newCards = await generateFlashcardsAction(
+        subjectId,
+        selectedTopic !== 'Todas las unidades' ? selectedTopic : undefined
+      )
       if (newCards && newCards.length > 0) {
         const updated = [...newCards, ...cards]
         saveToLocal(updated)
         setCurrentIndex(0)
         setIsFlipped(false)
-        setToastMessage(`¡${newCards.length} tarjetas didácticas generadas con éxito!`)
+        setToastMessage(`¡${newCards.length} tarjetas generadas con éxito con IA!`)
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al generar tarjetas con IA.')
@@ -96,7 +153,7 @@ export default function FlashcardsView({
     try {
       await toggleMasteredAction(subjectId, cardId, currentMastered)
     } catch {
-      // Fallback local completado
+      // Fallback local
     }
   }
 
@@ -106,22 +163,33 @@ export default function FlashcardsView({
     const updated = cards.filter((c) => c.id !== cardId)
     saveToLocal(updated)
 
-    if (currentIndex >= updated.length) {
-      setCurrentIndex(Math.max(0, updated.length - 1))
+    if (currentIndex >= activeCards.length - 1) {
+      setCurrentIndex(Math.max(0, activeCards.length - 2))
     }
     setIsFlipped(false)
 
     try {
       await deleteFlashcardAction(subjectId, cardId)
     } catch {
-      // Fallback local completado
+      // Fallback local
     }
   }
 
-  const currentCard = cards[currentIndex]
+  const handleShuffle = () => {
+    const shuffled = [...cards].sort(() => Math.random() - 0.5)
+    saveToLocal(shuffled)
+    setCurrentIndex(0)
+    setIsFlipped(false)
+    setToastMessage('🔀 Mazo barajado aleatoriamente')
+  }
+
+  // Métricas de progreso
+  const totalCount = cards.length
+  const masteredCount = cards.filter((c) => c.mastered).length
+  const progressPercent = totalCount > 0 ? Math.round((masteredCount / totalCount) * 100) : 0
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto">
       {/* Toast Notificación */}
       {toastMessage && (
         <div className="rounded-2xl bg-emerald-600 text-white p-3.5 text-xs font-bold shadow-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
@@ -129,74 +197,194 @@ export default function FlashcardsView({
             <IconSparkles className="w-4 h-4" />
             {toastMessage}
           </span>
-          <button onClick={() => setToastMessage(null)} className="text-white hover:opacity-80">
+          <button onClick={() => setToastMessage(null)} className="text-white hover:opacity-80 cursor-pointer">
             ✕
           </button>
         </div>
       )}
 
-      {/* Header Encabezado */}
-      <div className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header Compacto con Generador de Tarjetas */}
+      <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300 border border-indigo-500/30 mb-2">
-            NotebookLM Style • {subjectName}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-md border border-indigo-100">
+              Active Recall • {subjectName}
+            </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
             Tarjetas Didácticas (Flashcards)
           </h1>
-          <p className="mt-1 text-xs text-slate-300">
-            Repaso activo optimizado con IA. Hacé clic en la tarjeta para darla vuelta e inspeccionar la respuesta.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Poné a prueba tu retención activa antes de los exámenes.
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled={loading}
-          onClick={handleGenerate}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-indigo-500 disabled:opacity-50 transition-all shrink-0 cursor-pointer"
-        >
-          <IconSparkles className="w-4 h-4 text-indigo-200" />
-          {loading ? 'Analizando apunte y generando IA...' : 'Generar Tarjetas con IA'}
-        </button>
+        {/* Generador con Selector de Tema */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          {topics.length > 0 && (
+            <select
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            >
+              <option value="Todas las unidades">🌐 Toda la materia</option>
+              {topics.map((top, idx) => (
+                <option key={idx} value={top}>
+                  📌 {top}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleGenerate}
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer shrink-0"
+          >
+            <IconSparkles className="w-3.5 h-3.5" />
+            {loading ? 'Generando con IA...' : '⚡ Generar Tarjetas con IA'}
+          </button>
+        </div>
       </div>
 
-      {/* Visor de Tarjeta Didáctica */}
-      {currentCard ? (
-        <div className="flex flex-col items-center gap-5">
-          {/* Indicador de Avance */}
-          <div className="flex items-center justify-between w-full text-xs text-slate-500 px-2 font-semibold">
-            <span>
-              Tarjeta {currentIndex + 1} de {cards.length}
-            </span>
-            <span
-              className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full ${
-                currentCard.mastered
-                  ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                  : 'text-indigo-600 bg-indigo-50 border border-indigo-100'
-              }`}
-            >
-              {currentCard.mastered ? '✓ Dominada' : '● En repaso'}
+      {/* Barra de Progreso y Filtros */}
+      {totalCount > 0 && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-100/70 border border-slate-200/80 rounded-2xl p-3.5">
+          {/* Progreso Dominado */}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-32 bg-slate-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold text-slate-700">
+              {masteredCount} de {totalCount} dominadas ({progressPercent}%)
             </span>
           </div>
 
-          {/* Tarjeta 3D Flip */}
+          {/* Filtros y Selector de Vista */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Filtro de Estado */}
+            <div className="inline-flex rounded-xl bg-white p-0.5 border border-slate-200 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterMode('all')
+                  setCurrentIndex(0)
+                  setIsFlipped(false)
+                }}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  filterMode === 'all'
+                    ? 'bg-indigo-50 text-indigo-700 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Todas ({totalCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterMode('learning')
+                  setCurrentIndex(0)
+                  setIsFlipped(false)
+                }}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  filterMode === 'learning'
+                    ? 'bg-indigo-50 text-indigo-700 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                En repaso ({totalCount - masteredCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterMode('mastered')
+                  setCurrentIndex(0)
+                  setIsFlipped(false)
+                }}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  filterMode === 'mastered'
+                    ? 'bg-emerald-50 text-emerald-700 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                ⭐ Dominadas ({masteredCount})
+              </button>
+            </div>
+
+            {/* Botón Barajar */}
+            <button
+              type="button"
+              onClick={handleShuffle}
+              className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
+              title="Barajar tarjetas aleatoriamente"
+            >
+              🔀
+            </button>
+
+            {/* Selector de Modo Estudio vs Modo Mazo */}
+            <div className="inline-flex rounded-xl bg-white p-0.5 border border-slate-200 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setViewMode('study')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  viewMode === 'study'
+                    ? 'bg-slate-900 text-white font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                🎴 Estudio
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('deck')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  viewMode === 'deck'
+                    ? 'bg-slate-900 text-white font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                📋 Mazo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODO ESTUDIO 1 A 1 */}
+      {viewMode === 'study' && currentCard && (
+        <div className="flex flex-col items-center gap-5">
+          {/* Indicador de Avance */}
+          <div className="flex items-center justify-between w-full text-xs text-slate-500 px-1 font-semibold">
+            <span>
+              Tarjeta {currentIndex + 1} de {activeCards.length}
+            </span>
+            <span className="text-[11px] text-slate-400">
+              💡 Atajos: <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">Espacio</kbd> voltear • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">→</kbd> siguiente • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">M</kbd> dominar
+            </span>
+          </div>
+
+          {/* Tarjeta Interactiva con Animación */}
           <div
             onClick={() => setIsFlipped(!isFlipped)}
-            className="w-full min-h-[300px] cursor-pointer rounded-3xl border-2 border-indigo-200/80 bg-white p-8 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between relative group select-none"
+            className="w-full min-h-[300px] cursor-pointer rounded-3xl border-2 border-indigo-200/80 bg-white p-8 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group select-none"
           >
             {/* Lado Frontal (Concepto / Pregunta) */}
             {!isFlipped ? (
               <div className="flex flex-col justify-between h-full gap-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full">
-                    Frente • Pregunta / Concepto
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full">
+                    ❓ Pregunta / Desafío
                   </span>
                   <span className="text-xs text-slate-400 font-medium group-hover:text-indigo-600 transition-colors">
-                    Haz clic para voltear ↺
+                    Haz clic o presiona Espacio para ver respuesta ↺
                   </span>
                 </div>
 
-                <div className="my-auto py-4">
+                <div className="my-auto py-6">
                   <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-relaxed text-center">
                     {currentCard.front_text}
                   </h3>
@@ -204,7 +392,7 @@ export default function FlashcardsView({
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400">
                   {currentCard.source_page ? (
-                    <span className="flex items-center gap-1 font-mono text-indigo-600">
+                    <span className="flex items-center gap-1 font-mono text-indigo-600 font-bold">
                       <IconDocument className="w-3.5 h-3.5" />
                       Origen: Página {currentCard.source_page}
                     </span>
@@ -219,14 +407,14 @@ export default function FlashcardsView({
               <div className="flex flex-col justify-between h-full gap-6 bg-slate-900 text-white -m-8 p-8 rounded-3xl animate-in fade-in zoom-in-95">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2.5 py-1 rounded-full">
-                    Reverso • Respuesta Clave
+                    🎓 Respuesta & Concepto Clave
                   </span>
                   <span className="text-xs text-slate-400 font-medium group-hover:text-emerald-400 transition-colors">
                     Haz clic para voltear ↺
                   </span>
                 </div>
 
-                <div className="my-auto py-4">
+                <div className="my-auto py-6">
                   <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-sans text-center whitespace-pre-wrap">
                     {currentCard.back_text}
                   </p>
@@ -250,19 +438,19 @@ export default function FlashcardsView({
                   setIsFlipped(false)
                   setCurrentIndex((prev) => Math.max(0, prev - 1))
                 }}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer shadow-2xs"
               >
                 ← Anterior
               </button>
 
               <button
                 type="button"
-                disabled={currentIndex === cards.length - 1}
+                disabled={currentIndex === activeCards.length - 1}
                 onClick={() => {
                   setIsFlipped(false)
-                  setCurrentIndex((prev) => Math.min(cards.length - 1, prev + 1))
+                  setCurrentIndex((prev) => Math.min(activeCards.length - 1, prev + 1))
                 }}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors cursor-pointer shadow-2xs"
               >
                 Siguiente →
               </button>
@@ -292,9 +480,61 @@ export default function FlashcardsView({
             </div>
           </div>
         </div>
-      ) : (
-        /* Estado Vacío */
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center flex flex-col items-center gap-4">
+      )}
+
+      {/* MODO MAZO COMPLETO (GRILLA) */}
+      {viewMode === 'deck' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {activeCards.map((card, idx) => (
+            <div
+              key={card.id || idx}
+              className={`rounded-2xl border p-4 shadow-xs flex flex-col justify-between gap-3 transition-all ${
+                card.mastered
+                  ? 'bg-emerald-50/40 border-emerald-200/80'
+                  : 'bg-white border-slate-200/80'
+              }`}
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[10px] font-bold">
+                  <span className="text-indigo-600">Tarjeta #{idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMastered(card.id, card.mastered)}
+                    className="cursor-pointer"
+                  >
+                    {card.mastered ? '⭐ Dominada' : '● En repaso'}
+                  </button>
+                </div>
+                <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                  {card.front_text}
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed pt-2 border-t border-slate-100">
+                  {card.back_text}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400">
+                {card.source_page ? (
+                  <span>Pág. {card.source_page}</span>
+                ) : (
+                  <span />
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDelete(card.id)}
+                  className="text-slate-400 hover:text-rose-600 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ESTADO VACÍO */}
+      {totalCount === 0 && !loading && (
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center flex flex-col items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
             <IconSparkles className="w-6 h-6" />
           </div>
@@ -310,9 +550,9 @@ export default function FlashcardsView({
             type="button"
             disabled={loading}
             onClick={handleGenerate}
-            className="rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-md hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer"
+            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer"
           >
-            {loading ? 'Analizando apunte y generando IA...' : '⚡ Generar tarjetas con IA'}
+            {loading ? 'Generando con IA...' : '⚡ Generar tarjetas con IA'}
           </button>
         </div>
       )}
