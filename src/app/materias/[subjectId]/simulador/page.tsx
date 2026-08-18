@@ -57,6 +57,7 @@ export default async function SimuladorPage({
         quiz_attempts (
           id,
           score,
+          answers,
           attempted_at
         )
       `)
