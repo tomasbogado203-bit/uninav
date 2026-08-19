@@ -240,9 +240,9 @@ export default function SubjectSidebar({
 
   return (
     <aside
-      className={`relative flex flex-col border-r border-slate-800/80 bg-slate-950 text-slate-100 transition-all duration-300 ${
+      className={`sticky top-0 h-screen flex flex-col border-r border-slate-800/80 bg-slate-950 text-slate-100 transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-56 xl:w-64'
-      } shrink-0 min-h-screen select-none`}
+      } shrink-0 z-30 select-none overflow-hidden`}
     >
 
       {/* Botón de Colapsar / Expandir Sidebar con SVG */}
@@ -258,8 +258,8 @@ export default function SubjectSidebar({
         )}
       </button>
 
-      {/* Header: Logo Marca UniNav */}
-      <div className="flex items-center justify-between border-b border-slate-800/60 p-3.5">
+      {/* Header Fijo: Logo Marca UniNav */}
+      <div className="flex items-center justify-between border-b border-slate-800/60 p-3.5 shrink-0">
         {!collapsed ? (
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-xs group-hover:bg-indigo-500 transition-colors">
@@ -285,13 +285,16 @@ export default function SubjectSidebar({
         )}
       </div>
 
-      {/* Sección 1: Navegación Global Compacta */}
-      <div className="p-2.5 border-b border-slate-800/60 flex flex-col gap-0.5">
-        {!collapsed && (
-          <span className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 block">
-            Navegación
-          </span>
-        )}
+      {/* Contenedor con Scroll Interno para los Elementos de Navegación */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
+        {/* Sección 1: Navegación Global Compacta */}
+        <div className="p-2.5 border-b border-slate-800/60 flex flex-col gap-0.5 shrink-0">
+          {!collapsed && (
+            <span className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 block">
+              Navegación
+            </span>
+          )}
+
 
         {globalNavItems.map((gItem) => {
           const Icon = gItem.icon
@@ -504,9 +507,11 @@ export default function SubjectSidebar({
           )
         })}
       </div>
+      </div>
 
-      {/* Sección 4: Footer Compacto con Racha y Perfil */}
-      <div className="border-t border-slate-800/60 p-2.5 bg-slate-950 flex flex-col gap-2">
+      {/* Sección 4: Footer Fijo Compacto con Racha y Perfil */}
+      <div className="border-t border-slate-800/60 p-2.5 bg-slate-950 flex flex-col gap-2 shrink-0 mt-auto">
+
         {/* Pastilla de Racha en Footer con Icono SVG */}
         {!collapsed ? (
           <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1 text-amber-300 text-xs shadow-2xs">
