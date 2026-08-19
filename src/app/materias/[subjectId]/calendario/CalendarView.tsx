@@ -277,89 +277,64 @@ export default function CalendarView({
   return (
     <div className="flex flex-col gap-6">
       {/* Banner Superior: Selector Multi-Materia y Alerta de Semanas Críticas */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs">
-        {/* Selector de Alcance (Esta Materia vs Todas las Materias) */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-            Vista de Exámenes:
-          </span>
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 text-xs font-bold">
+      {/* Barra Superior Compacta de Filtros y Próximo Examen */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border border-slate-200/80 rounded-2xl p-3 shadow-xs">
+        {/* Selector de Alcance (Píldoras compactas) */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200/80 text-xs font-bold">
             {subjectId && currentSubjectName && (
               <button
                 type="button"
                 onClick={() => setScopeMode('current')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
                   scopeMode === 'current'
-                    ? 'bg-white text-indigo-700 shadow-2xs'
+                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                🔘 Solo {currentSubjectName}
+                Solo {currentSubjectName}
               </button>
             )}
             <button
               type="button"
               onClick={() => setScopeMode('all')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
                 scopeMode === 'all'
-                  ? 'bg-white text-indigo-700 shadow-2xs'
+                  ? 'bg-white text-indigo-700 shadow-2xs font-bold'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              🌐 Todas mis Materias ({events.length} eventos)
+              Todas mis Materias ({events.length})
             </button>
           </div>
+
+          {/* Próxima Evaluación Compacta */}
+          {nextEvent && (
+            <div className="inline-flex items-center gap-2 rounded-xl bg-indigo-50/80 border border-indigo-200/80 px-3 py-1 text-xs">
+              <IconCalendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="font-bold text-slate-800">
+                Próximo: {nextEvent.title} {nextEvent.subject_name ? `(${nextEvent.subject_name})` : ''}
+              </span>
+              <span className="text-[10px] font-bold bg-amber-300 text-amber-950 px-2 py-0.5 rounded-md font-mono">
+                {getDaysDiff(nextEvent.event_date) === 0
+                  ? '¡HOY!'
+                  : `En ${getDaysDiff(nextEvent.event_date)} días`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Alerta de Semanas Críticas */}
         {criticalWeeksCount > 0 && (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-bold animate-in fade-in">
-            <span>⚠️</span>
+          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/80 text-amber-900 px-3 py-1 rounded-xl text-xs font-bold shrink-0">
+            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
             <span>
-              {criticalWeeksCount} {criticalWeeksCount === 1 ? 'semana crítica' : 'semanas críticas'}{' '}
-              con 2+ exámenes solapados
+              {criticalWeeksCount} {criticalWeeksCount === 1 ? 'semana crítica' : 'semanas críticas'} con exámenes solapados
             </span>
           </div>
         )}
       </div>
 
-      {/* Tarjeta de Cuenta Regresiva al Próximo Examen */}
-      {nextEvent && (
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-500 to-indigo-700 p-5 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-white font-bold backdrop-blur-xs text-xl shrink-0">
-              <IconCalendar className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">
-                  Próxima Evaluación
-                </span>
-                {nextEvent.subject_name && (
-                  <span className="text-[10px] font-bold bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full">
-                    {nextEvent.subject_name}
-                  </span>
-                )}
-              </div>
-              <h2 className="text-base sm:text-lg font-bold mt-1 leading-tight">
-                {nextEvent.title} ({nextEvent.event_type.toUpperCase().replace('_', ' ')})
-              </h2>
-              <p className="text-xs text-indigo-100 mt-0.5">
-                Fecha agendada: {nextEvent.event_date}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white/15 px-4 py-2 rounded-xl text-right shrink-0 backdrop-blur-xs">
-            <span className="text-2xl font-black block leading-none">
-              {getDaysDiff(nextEvent.event_date)}
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">
-              Días restantes
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Grid Principal: Calendario (Izquierda 8 Cols) y Panel de Agendado/Notas (Derecha 4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
