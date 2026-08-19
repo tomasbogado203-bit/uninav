@@ -29,23 +29,37 @@ export async function middleware(request: NextRequest) {
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
   const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding')
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
 
-  // sin sesión -> mandar a login (salvo que ya esté ahí)
+  // Permitir endpoints de API (como /api/iot/lamp) sin redirección de página
+  if (isApiRoute) {
+    return supabaseResponse
+  }
+
+  // Sin sesión -> mandar a login (salvo que ya esté en login)
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // con sesión pero sin carrera elegida -> mandar a onboarding
-  if (user && !isOnboardingRoute && !isAuthRoute) {
+  // Con sesión activa
+  if (user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('career_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile?.career_id) {
+    // Si ya tiene carrera elegida y está en /login o /onboarding -> mandar directo al Dashboard /
+    if (profile?.career_id && (isAuthRoute || isOnboardingRoute)) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+
+    // Si NO tiene carrera elegida y no está en /onboarding -> mandar a onboarding
+    if (!profile?.career_id && !isOnboardingRoute) {
       const url = request.nextUrl.clone()
       url.pathname = '/onboarding'
       return NextResponse.redirect(url)
