@@ -398,13 +398,13 @@ export default function CalendarView({
                   <div
                     key={idx}
                     onClick={() => setSelectedDateStr(cell.dateStr)}
-                    className={`min-h-[100px] p-2 flex flex-col gap-1 transition-all cursor-pointer select-none ${
+                    className={`min-h-[64px] sm:min-h-[76px] p-1.5 flex flex-col gap-1 transition-all cursor-pointer select-none ${
                       cell.isCurrentMonth ? 'bg-white' : 'bg-slate-50/50 text-slate-400'
                     } ${isSelected ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30' : 'hover:bg-slate-50/80'}`}
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-[11px] font-bold h-5 w-5 flex items-center justify-center rounded-full ${
+                        className={`text-[10px] sm:text-[11px] font-bold h-4.5 w-4.5 sm:h-5 sm:w-5 flex items-center justify-center rounded-full ${
                           isToday
                             ? 'bg-indigo-600 text-white'
                             : isSelected
@@ -414,6 +414,7 @@ export default function CalendarView({
                       >
                         {cell.dayNum}
                       </span>
+
 
                       {dayEvents.length > 1 && (
                         <span

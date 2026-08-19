@@ -241,9 +241,10 @@ export default function SubjectSidebar({
   return (
     <aside
       className={`relative flex flex-col border-r border-slate-800/80 bg-slate-950 text-slate-100 transition-all duration-300 ${
-        collapsed ? 'w-16' : 'w-64'
+        collapsed ? 'w-16' : 'w-56 xl:w-64'
       } shrink-0 min-h-screen select-none`}
     >
+
       {/* Botón de Colapsar / Expandir Sidebar con SVG */}
       <button
         onClick={() => setCollapsed(!collapsed)}

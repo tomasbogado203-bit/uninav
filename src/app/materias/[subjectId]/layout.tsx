@@ -59,10 +59,11 @@ export default async function SubjectLayout({
         streakDays={streakInfo.current_streak}
       />
 
-      {/* Contenido Principal con Ancho Fijo y Cero Saltos */}
-      <main className="flex-1 overflow-y-auto min-h-screen">
+      {/* Contenido Principal con Ancho Adaptable y Cero Saltos */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden min-h-screen min-w-0 w-full">
         {children}
       </main>
+
     </div>
   )
 }
