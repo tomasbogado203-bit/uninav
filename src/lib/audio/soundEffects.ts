@@ -120,6 +120,72 @@ class SoundSynthesizer {
       osc.stop(now + time + decay)
     })
   }
+
+  /**
+   * Tono de Pausa (Dos notas descendentes suaves: E5 -> C5)
+   * Da feedback auditivo táctil de que la sesión se pausó ⏸️
+   */
+  playPauseChime(volume = 0.2) {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+    const notes = [
+      { freq: 659.25, time: 0, decay: 0.25 },   // E5
+      { freq: 523.25, time: 0.08, decay: 0.35 }, // C5
+    ]
+
+    notes.forEach(({ freq, time, decay }) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + time)
+
+      gain.gain.setValueAtTime(0, now + time)
+      gain.gain.linearRampToValueAtTime(volume, now + time + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + decay)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + time)
+      osc.stop(now + time + decay)
+    })
+  }
+
+  /**
+   * Tono de Reanudación (Dos notas ascendentes suaves: C5 -> E5)
+   * Da feedback auditivo de que la sesión continuó ▶️
+   */
+  playResumeChime(volume = 0.2) {
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+    const notes = [
+      { freq: 523.25, time: 0, decay: 0.2 },    // C5
+      { freq: 659.25, time: 0.08, decay: 0.3 }, // E5
+    ]
+
+    notes.forEach(({ freq, time, decay }) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + time)
+
+      gain.gain.setValueAtTime(0, now + time)
+      gain.gain.linearRampToValueAtTime(volume, now + time + 0.02)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + time + decay)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + time)
+      osc.stop(now + time + decay)
+    })
+  }
 }
 
 export const soundEffects = new SoundSynthesizer()

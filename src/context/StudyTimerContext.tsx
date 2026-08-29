@@ -263,6 +263,9 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
       }
     } else {
       syncLampState(mode, timeRemaining, true)
+      if (soundEnabled) {
+        soundEffects.playResumeChime()
+      }
     }
     setIsRunning(true)
   }
@@ -270,7 +273,11 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
   const pauseTimer = () => {
     setIsRunning(false)
     syncLampState(mode, timeRemaining, false)
+    if (soundEnabled) {
+      soundEffects.playPauseChime()
+    }
   }
+
 
   const resetTimer = () => {
     setIsRunning(false)
