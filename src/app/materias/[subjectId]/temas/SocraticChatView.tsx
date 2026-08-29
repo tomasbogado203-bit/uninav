@@ -13,7 +13,10 @@ import {
   IconDownload,
   IconPrinter,
   IconDocument,
+  IconExternalLink,
+  IconCheck,
 } from '@/components/icons'
+
 
 interface Citation {
   document_id: string
@@ -230,8 +233,11 @@ export default function SocraticChatView({
     page_number: number | null
     content: string
     document_title?: string
+    pdf_url?: string | null
+    view_mode?: 'text' | 'pdf'
     loading?: boolean
   } | null>(null)
+
 
   const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -426,37 +432,38 @@ export default function SocraticChatView({
 
     const foundCitation = messageCitations?.find((c) => c.page_number === pageNum) || messageCitations?.[0]
 
-    if (foundCitation && foundCitation.content) {
-      setActiveCitationModal({
-        page_number: foundCitation.page_number || pageNum,
-        content: foundCitation.content,
-        document_title: 'Bibliografía oficial',
-      })
-      return
-    }
-
     setActiveCitationModal({
-      page_number: pageNum,
-      content: 'Cargando fragmento de la bibliografía...',
+      page_number: foundCitation?.page_number || pageNum,
+      content: foundCitation?.content || 'Cargando fragmento original de la bibliografía...',
+      document_title: 'Bibliografía oficial',
+      pdf_url: null,
+      view_mode: 'text',
       loading: true,
     })
 
     try {
-      const res = await getCitationContentAction(subjectId, pageNum)
+      const res = await getCitationContentAction(subjectId, pageNum, foundCitation?.document_id)
       setActiveCitationModal({
         page_number: res.page_number,
         content: res.content,
         document_title: res.document_title,
+        pdf_url: res.pdf_url,
+        view_mode: 'text',
         loading: false,
       })
     } catch {
-      setActiveCitationModal({
-        page_number: pageNum,
-        content: 'No se pudo cargar el fragmento original.',
-        loading: false,
-      })
+      setActiveCitationModal((prev) =>
+        prev
+          ? { ...prev, loading: false }
+          : {
+              page_number: pageNum,
+              content: 'No se pudo cargar el fragmento original.',
+              loading: false,
+            }
+      )
     }
   }
+
 
   const handleCopySummary = () => {
     const md = buildStudySummaryMarkdown(threadTitle, messages)
@@ -848,62 +855,166 @@ export default function SocraticChatView({
         </div>
       )}
 
-      {/* Modal Desplegable de Cita Bibliográfica */}
+      {/* Modal Desplegable de Cita Bibliográfica y Visor PDF */}
       {activeCitationModal && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4 animate-in fade-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/75 backdrop-blur-xs p-3 sm:p-4 animate-in fade-in"
           onClick={() => setActiveCitationModal(null)}
         >
           <div
-            className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95"
+            className="w-full max-w-2xl sm:max-w-3xl max-h-[90vh] rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-200 flex flex-col gap-4 animate-in zoom-in-95 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <IconBook className="w-5 h-5 text-indigo-600" />
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                    Fragmento Bibliográfico Original
-                  </h3>
-                  <span className="text-[10px] font-semibold text-indigo-600">
-                    {activeCitationModal.document_title || 'Bibliografía oficial'} • Página {activeCitationModal.page_number}
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 shrink-0">
+                  <IconBook className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight truncate">
+                      {activeCitationModal.document_title || 'Bibliografía oficial'}
+                    </h3>
+                    <span className="shrink-0 text-[10px] font-black text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2 py-0.5 rounded-full font-mono">
+                      Página {activeCitationModal.page_number ?? 1}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 block truncate">
+                    Cita oficial indexada en la base de conocimientos de la cátedra
                   </span>
                 </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setActiveCitationModal(null)}
-                className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer"
+                className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer shrink-0 ml-2"
+                title="Cerrar visor"
               >
                 ✕
               </button>
             </div>
 
-            <div className="rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4 text-xs text-slate-800 leading-relaxed max-h-72 overflow-y-auto font-sans shadow-inner">
+            {/* Pestañas de Vista (Texto vs PDF Integrado) */}
+            {activeCitationModal.pdf_url && (
+              <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 shrink-0">
+                <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveCitationModal((prev) => (prev ? { ...prev, view_mode: 'text' } : null))
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeCitationModal.view_mode !== 'pdf'
+                        ? 'bg-white text-indigo-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📝 Fragmento Textual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveCitationModal((prev) => (prev ? { ...prev, view_mode: 'pdf' } : null))
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      activeCitationModal.view_mode === 'pdf'
+                        ? 'bg-white text-indigo-700 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    📄 Visor PDF Oficial (Pág. {activeCitationModal.page_number ?? 1})
+                  </button>
+                </div>
+
+                <a
+                  href={`${activeCitationModal.pdf_url}#page=${activeCitationModal.page_number ?? 1}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors px-2 py-1 rounded-lg hover:bg-indigo-50"
+                  title="Abrir PDF en pestaña separada"
+                >
+                  <span>Abrir en nueva pestaña</span>
+                  <IconExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            )}
+
+            {/* Contenido Principal según el Modo */}
+            <div className="flex-1 overflow-y-auto min-h-0">
               {activeCitationModal.loading ? (
-                <div className="flex items-center gap-2 text-indigo-600 font-medium animate-pulse py-4 justify-center">
-                  <span className="h-2 w-2 rounded-full bg-indigo-600 animate-ping"></span>
-                  Cargando fragmento original de la bibliografía...
+                <div className="flex flex-col items-center justify-center gap-2 text-indigo-600 font-medium animate-pulse py-12">
+                  <span className="h-3 w-3 rounded-full bg-indigo-600 animate-ping"></span>
+                  <span className="text-xs font-bold">Cargando apunte original...</span>
+                </div>
+              ) : activeCitationModal.view_mode === 'pdf' && activeCitationModal.pdf_url ? (
+                <div className="relative w-full h-[420px] sm:h-[480px] rounded-2xl border border-slate-200 overflow-hidden bg-slate-950 shadow-inner">
+                  <iframe
+                    src={`${activeCitationModal.pdf_url}#page=${activeCitationModal.page_number ?? 1}&toolbar=1`}
+                    className="w-full h-full border-0"
+                    title={`Página ${activeCitationModal.page_number} de ${activeCitationModal.document_title}`}
+                  />
                 </div>
               ) : (
-                <p className="whitespace-pre-wrap">{activeCitationModal.content}</p>
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-2xl bg-indigo-50/70 border border-indigo-100 p-4 sm:p-5 text-xs sm:text-sm text-slate-800 leading-relaxed font-sans shadow-inner max-h-[380px] overflow-y-auto">
+                    <p className="whitespace-pre-wrap selection:bg-indigo-200">
+                      {activeCitationModal.content}
+                    </p>
+                  </div>
+
+                  {activeCitationModal.pdf_url && (
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 p-3">
+                      <div className="flex items-center gap-2">
+                        <IconDocument className="w-4 h-4 text-indigo-600" />
+                        <span className="text-xs text-slate-600 font-medium">
+                          Podés ver la página completa en el visor interactivo de PDF
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveCitationModal((prev) => (prev ? { ...prev, view_mode: 'pdf' } : null))
+                        }
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-2xs hover:bg-indigo-50"
+                      >
+                        Ver página {activeCitationModal.page_number ?? 1} en PDF ➔
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-              <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
-                ✓ Verificado en los apuntes de la materia
+            {/* Footer del Modal */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 shrink-0">
+              <span className="text-[11px] text-emerald-700 font-bold flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Fuente verificada por RAG socrático
               </span>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(activeCitationModal.content)
-                  alert('¡Fragmento copiado al portapapeles!')
-                }}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-colors cursor-pointer"
-              >
-                Copiar texto
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(activeCitationModal.content)
+                    alert('¡Fragmento copiado al portapapeles!')
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <IconClipboard className="w-3.5 h-3.5 text-slate-500" />
+                  Copiar texto
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveCitationModal(null)}
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700 transition-colors cursor-pointer"
+                >
+                  Entendido
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -911,3 +1022,4 @@ export default function SocraticChatView({
     </div>
   )
 }
+

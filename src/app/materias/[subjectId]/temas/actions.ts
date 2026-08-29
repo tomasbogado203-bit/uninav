@@ -126,7 +126,11 @@ export async function askSocraticTutor(
   }
 }
 
-export async function getCitationContentAction(subjectId: string, pageNumber?: number | null) {
+export async function getCitationContentAction(
+  subjectId: string,
+  pageNumber?: number | null,
+  documentId?: string | null
+) {
   const supabase = await createClient()
 
   const {
@@ -137,7 +141,7 @@ export async function getCitationContentAction(subjectId: string, pageNumber?: n
 
   const { data: docs } = await supabase
     .from('documents')
-    .select('id, title')
+    .select('id, title, file_url')
     .eq('subject_id', subjectId)
     .eq('document_type', 'apunte')
 
@@ -146,10 +150,14 @@ export async function getCitationContentAction(subjectId: string, pageNumber?: n
       document_title: 'Bibliografía oficial',
       content: 'No hay fragmentos cargados para esta materia aún.',
       page_number: pageNumber || 1,
+      pdf_url: null,
     }
   }
 
-  const docIds = docs.map((d) => d.id)
+  let targetDoc = documentId ? docs.find((d) => d.id === documentId) : null
+  const docIds = targetDoc ? [targetDoc.id] : docs.map((d) => d.id)
+
+  let foundChunk: { content: string; page_number: number; document_id: string } | null = null
 
   if (pageNumber) {
     const { data: chunk } = await supabase
@@ -161,31 +169,50 @@ export async function getCitationContentAction(subjectId: string, pageNumber?: n
       .maybeSingle()
 
     if (chunk) {
-      const docTitle = docs.find((d) => d.id === chunk.document_id)?.title || 'Apunte oficial'
-      return {
-        document_title: docTitle,
-        content: chunk.content,
-        page_number: chunk.page_number,
-      }
+      foundChunk = chunk
     }
   }
 
-  // Fallback al primer chunk del documento
-  const { data: fallbackChunk } = await supabase
-    .from('document_chunks')
-    .select('content, page_number, document_id')
-    .in('document_id', docIds)
-    .limit(1)
-    .maybeSingle()
+  if (!foundChunk) {
+    // Fallback al primer chunk del documento
+    const { data: fallbackChunk } = await supabase
+      .from('document_chunks')
+      .select('content, page_number, document_id')
+      .in('document_id', docIds)
+      .limit(1)
+      .maybeSingle()
 
-  const docTitle = docs.find((d) => d.id === fallbackChunk?.document_id)?.title || 'Apunte oficial'
+    if (fallbackChunk) {
+      foundChunk = fallbackChunk
+    }
+  }
+
+  const selectedDoc = foundChunk
+    ? docs.find((d) => d.id === foundChunk.document_id) || docs[0]
+    : docs[0]
+
+  let signedPdfUrl: string | null = null
+  if (selectedDoc?.file_url) {
+    try {
+      const { data: signedData } = await supabase.storage
+        .from('apuntes')
+        .createSignedUrl(selectedDoc.file_url, 3600)
+      signedPdfUrl = signedData?.signedUrl || null
+    } catch {
+      signedPdfUrl = null
+    }
+  }
 
   return {
-    document_title: docTitle,
-    content: fallbackChunk?.content || 'Contenido conceptual extraído de la bibliografía oficial de la cursada.',
-    page_number: fallbackChunk?.page_number || pageNumber || 1,
+    document_title: selectedDoc?.title || 'Apunte oficial',
+    content:
+      foundChunk?.content ||
+      'Contenido conceptual extraído de la bibliografía oficial de la cursada.',
+    page_number: foundChunk?.page_number || pageNumber || 1,
+    pdf_url: signedPdfUrl,
   }
 }
+
 
 export async function generateDiagramAction(
   turns: { role: string; content: string }[]
