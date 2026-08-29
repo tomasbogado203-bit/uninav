@@ -10,6 +10,9 @@ import {
   IconMenu,
   IconSparkles,
   IconCheck,
+  IconVolume,
+  IconVolumeOff,
+  IconBell,
 } from '@/components/icons'
 
 interface Position {
@@ -24,6 +27,8 @@ export default function StudyTimerCapsule() {
     totalStudyTodaySeconds,
     dailyGoalMinutes,
     isRunning,
+    soundEnabled,
+    notificationsEnabled,
     currentPreset,
     startTimer,
     pauseTimer,
@@ -32,6 +37,9 @@ export default function StudyTimerCapsule() {
     skipToStudy,
     selectPreset,
     setDailyGoalMinutes,
+    toggleSound,
+    toggleNotifications,
+    previewChime,
   } = useStudyTimer()
 
   const [showMenu, setShowMenu] = useState(false)
@@ -341,7 +349,7 @@ export default function StudyTimerCapsule() {
       {/* DROPDOWN FLOTANTE DE CONTROL Y AJUSTES */}
       {showMenu && (
         <div
-          className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-800 bg-slate-950/98 backdrop-blur-xl p-4 text-white shadow-2xl animate-in zoom-in-95 flex flex-col gap-3.5 z-50 text-xs"
+          className="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-slate-800 bg-slate-950/98 backdrop-blur-xl p-4 text-white shadow-2xl animate-in zoom-in-95 flex flex-col gap-3.5 z-50 text-xs"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header del Menú */}
@@ -416,6 +424,66 @@ export default function StudyTimerCapsule() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Opciones de Audio y Campana Universitaria */}
+          <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Sonidos y Notificaciones:
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={toggleSound}
+                className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                  soundEnabled
+                    ? 'bg-indigo-950/60 border border-indigo-500/40 text-indigo-200'
+                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800'
+                }`}
+                title="Activar/Desactivar campana acústica"
+              >
+                <span className="flex items-center gap-1.5">
+                  {soundEnabled ? (
+                    <IconVolume className="w-3.5 h-3.5 text-indigo-400" />
+                  ) : (
+                    <IconVolumeOff className="w-3.5 h-3.5 text-slate-500" />
+                  )}
+                  <span>Campana</span>
+                </span>
+                <span className="text-[10px] font-bold">
+                  {soundEnabled ? 'ON' : 'OFF'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleNotifications}
+                className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                  notificationsEnabled
+                    ? 'bg-indigo-950/60 border border-indigo-500/40 text-indigo-200'
+                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:bg-slate-800'
+                }`}
+                title="Notificaciones en segundo plano del navegador"
+              >
+                <span className="flex items-center gap-1.5">
+                  <IconBell className={`w-3.5 h-3.5 ${notificationsEnabled ? 'text-amber-400' : 'text-slate-500'}`} />
+                  <span>Avisos</span>
+                </span>
+                <span className="text-[10px] font-bold">
+                  {notificationsEnabled ? 'ON' : 'OFF'}
+                </span>
+              </button>
+            </div>
+
+            {soundEnabled && (
+              <button
+                type="button"
+                onClick={previewChime}
+                className="text-[10px] font-medium text-slate-400 hover:text-indigo-300 text-left px-1 mt-0.5 transition-colors cursor-pointer"
+              >
+                Probar sonido de campana zen
+              </button>
+            )}
           </div>
 
           {/* Meta Diaria de Estudio */}

@@ -1,6 +1,11 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import {
+  soundEffects,
+  sendStudyNotification,
+  requestNotificationPermission,
+} from '@/lib/audio/soundEffects'
 
 export type TimerMode = 'idle' | 'study' | 'warning' | 'break'
 
@@ -34,6 +39,8 @@ interface StudyTimerContextType {
   totalStudyTodaySeconds: number
   dailyGoalMinutes: number
   isRunning: boolean
+  soundEnabled: boolean
+  notificationsEnabled: boolean
   currentPreset: TimerPreset
   lampStatus: LampPayload
   startTimer: () => void
@@ -43,6 +50,9 @@ interface StudyTimerContextType {
   skipToStudy: () => void
   selectPreset: (preset: TimerPreset) => void
   setDailyGoalMinutes: (mins: number) => void
+  toggleSound: () => void
+  toggleNotifications: () => Promise<void>
+  previewChime: () => void
 }
 
 const StudyTimerContext = createContext<StudyTimerContextType | null>(null)
@@ -54,6 +64,8 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
   const [isRunning, setIsRunning] = useState<boolean>(false)
   const [totalStudyTodaySeconds, setTotalStudyTodaySeconds] = useState<number>(0)
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState<number>(120) // 2 horas de meta
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true)
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false)
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -65,6 +77,12 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
 
       const savedGoal = localStorage.getItem('uninav_study_goal_mins')
       if (savedGoal) setDailyGoalMinutes(parseInt(savedGoal, 10))
+
+      const savedSound = localStorage.getItem('uninav_sound_enabled')
+      if (savedSound !== null) setSoundEnabled(savedSound === 'true')
+
+      const savedNotifs = localStorage.getItem('uninav_notifs_enabled')
+      if (savedNotifs !== null) setNotificationsEnabled(savedNotifs === 'true')
 
       const savedPresetId = localStorage.getItem('uninav_preset_id')
       if (savedPresetId) {
@@ -168,16 +186,36 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
           if (prev <= 1) {
             // Cambio de fase automático
             if (mode === 'study' || mode === 'warning') {
-              // Fin de estudio -> Iniciar descanso
+              // Fin de estudio -> Iniciar descanso 🟢
               setMode('break')
               const breakSecs = currentPreset.breakMinutes * 60
               syncLampState('break', breakSecs, true)
+
+              // Disparar Campana Zen de Descanso y Notificación
+              if (soundEnabled) {
+                soundEffects.playBreakChime()
+              }
+              sendStudyNotification(
+                '¡Bloque de estudio completado! 🟢',
+                `Tiempo de descanso libre (${currentPreset.breakMinutes} min). ¡Bien hecho!`
+              )
+
               return breakSecs
             } else if (mode === 'break') {
-              // Fin de descanso -> Volver a estudio
+              // Fin de descanso -> Volver a estudio 🔴
               setMode('study')
               const studySecs = currentPreset.studyMinutes * 60
               syncLampState('study', studySecs, true)
+
+              // Disparar Tono de Concentración y Notificación
+              if (soundEnabled) {
+                soundEffects.playStudyChime()
+              }
+              sendStudyNotification(
+                '¡A concentrarse! 🔴',
+                `Iniciando nuevo bloque de estudio (${currentPreset.studyMinutes} min). Semáforo en Rojo.`
+              )
+
               return studySecs
             }
           }
@@ -187,6 +225,9 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
             if (mode !== 'warning') {
               setMode('warning')
               syncLampState('warning', prev - 1, true)
+              if (soundEnabled) {
+                soundEffects.playWarningChime()
+              }
             }
           }
 
@@ -211,12 +252,15 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [isRunning, mode, currentPreset, syncLampState])
+  }, [isRunning, mode, currentPreset, soundEnabled, syncLampState])
 
   const startTimer = () => {
     if (mode === 'idle') {
       setMode('study')
       syncLampState('study', timeRemaining, true)
+      if (soundEnabled) {
+        soundEffects.playStudyChime()
+      }
     } else {
       syncLampState(mode, timeRemaining, true)
     }
@@ -241,6 +285,9 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
     const breakSecs = currentPreset.breakMinutes * 60
     setTimeRemaining(breakSecs)
     syncLampState('break', breakSecs, isRunning)
+    if (soundEnabled) {
+      soundEffects.playBreakChime()
+    }
   }
 
   const skipToStudy = () => {
@@ -248,6 +295,9 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
     const studySecs = currentPreset.studyMinutes * 60
     setTimeRemaining(studySecs)
     syncLampState('study', studySecs, isRunning)
+    if (soundEnabled) {
+      soundEffects.playStudyChime()
+    }
   }
 
   const selectPreset = (preset: TimerPreset) => {
@@ -267,6 +317,39 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
     try {
       localStorage.setItem('uninav_study_goal_mins', mins.toString())
     } catch {}
+  }
+
+  const toggleSound = () => {
+    const next = !soundEnabled
+    setSoundEnabled(next)
+    try {
+      localStorage.setItem('uninav_sound_enabled', next.toString())
+    } catch {}
+    if (next) {
+      soundEffects.playBreakChime()
+    }
+  }
+
+  const toggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      const granted = await requestNotificationPermission()
+      setNotificationsEnabled(granted)
+      try {
+        localStorage.setItem('uninav_notifs_enabled', granted.toString())
+      } catch {}
+      if (granted) {
+        sendStudyNotification('UniNav Notificaciones Activadas 🔔', 'Te avisaremos cuando terminen tus bloques de estudio.')
+      }
+    } else {
+      setNotificationsEnabled(false)
+      try {
+        localStorage.setItem('uninav_notifs_enabled', 'false')
+      } catch {}
+    }
+  }
+
+  const previewChime = () => {
+    soundEffects.playBreakChime()
   }
 
   const lampStatus: LampPayload = (() => {
@@ -339,6 +422,8 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
         totalStudyTodaySeconds,
         dailyGoalMinutes,
         isRunning,
+        soundEnabled,
+        notificationsEnabled,
         currentPreset,
         lampStatus,
         startTimer,
@@ -348,6 +433,9 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
         skipToStudy,
         selectPreset,
         setDailyGoalMinutes: handleSetDailyGoal,
+        toggleSound,
+        toggleNotifications,
+        previewChime,
       }}
     >
       {children}
