@@ -249,3 +249,157 @@ Respondé ÚNICAMENTE con un JSON válido estructurado como:
     }
   })
 }
+
+export interface SubjectCheatSheetData {
+  subject_name: string
+  overview: string
+  core_concepts: {
+    term: string
+    definition: string
+    citation_page?: number | null
+  }[]
+  formulas_and_algorithms: {
+    name: string
+    formula: string
+    description: string
+    when_to_use: string
+  }[]
+  exam_traps: {
+    trap: string
+    explanation: string
+    advice: string
+  }[]
+  self_check_questions: {
+    question: string
+    key_answer: string
+  }[]
+}
+
+export async function generateSubjectCheatSheetAction(
+  subjectId: string
+): Promise<SubjectCheatSheetData> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const { data: subject } = await supabase
+    .from('subjects')
+    .select('name')
+    .eq('id', subjectId)
+    .single()
+
+  const { data: docs } = await supabase
+    .from('documents')
+    .select('id, title')
+    .eq('subject_id', subjectId)
+    .eq('document_type', 'apunte')
+
+  if (!docs || docs.length === 0) {
+    throw new Error('Primero debés subir al menos un apunte PDF para generar la ficha de repaso.')
+  }
+
+  const docIds = docs.map((d) => d.id)
+
+  const { data: chunks } = await supabase
+    .from('document_chunks')
+    .select('content, page_number, document_id')
+    .in('document_id', docIds)
+    .limit(30)
+
+  if (!chunks || chunks.length === 0) {
+    throw new Error('Los apuntes aún no tienen fragmentos indexados. Subí un PDF válido.')
+  }
+
+  const sampleContext = chunks
+    .map((c) => {
+      const docName = docs.find((d) => d.id === c.document_id)?.title || 'Apunte'
+      return `[${docName} - Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 500)}`
+    })
+    .join('\n\n')
+
+  const prompt = `Sos un profesor titular y tutor universitario de élite en Argentina.
+Analizá los siguientes fragmentos de la bibliografía oficial de la materia "${subject?.name || 'Materia'}":
+
+<CONTEXTO_BIBLIOGRAFICO>
+${sampleContext}
+</CONTEXTO_BIBLIOGRAFICO>
+
+CONSIGNA:
+Generá una "Ficha de Fórmulas y Resumen de Repaso Rápido" (Cheat Sheet) de alto rendimiento para que el alumno estudie antes del examen.
+
+Debe incluir rigurosamente:
+1. "overview": Síntesis conceptual maestra de 2 párrafos que conecte todos los temas vistos.
+2. "core_concepts": Lista de 4 a 6 conceptos teóricos indispensables. Cada uno con:
+   - "term": Nombre del concepto.
+   - "definition": Definición formal y clara en 2 líneas.
+   - "citation_page": Número de página aproximada si surge del contexto (número entero o null).
+3. "formulas_and_algorithms": Lista de 3 a 5 fórmulas matemáticas, propiedades o algoritmos clave. Cada uno con:
+   - "name": Nombre de la fórmula / propiedad.
+   - "formula": Notación matemática en texto legible o LaTeX (ej: lim(x->a) f(x) = L, o dy/dx = f'(x)).
+   - "description": Qué calcula o qué expresa.
+   - "when_to_use": En qué tipo de ejercicios del parcial se debe aplicar.
+4. "exam_traps": Lista de 3 errores o trampas típicas de parcial que los alumnos suelen cometer al resolver ejercicios de esta materia. Cada uno con:
+   - "trap": Error común (ej: Olvidar comprobar la continuidad antes de derivar).
+   - "explanation": Por qué es un error según la teoría.
+   - "advice": Cómo evitarlo en el examen.
+5. "self_check_questions": Lista de 3 a 4 preguntas de autoevaluación rápida para que el alumno verifique si está listo. Cada una con:
+   - "question": La pregunta de parcial.
+   - "key_answer": La respuesta clave sintetizada.
+
+Respondé ÚNICAMENTE con un JSON válido con la siguiente estructura exacta:
+{
+  "subject_name": "${subject?.name || 'Materia'}",
+  "overview": "...",
+  "core_concepts": [
+    { "term": "...", "definition": "...", "citation_page": 1 }
+  ],
+  "formulas_and_algorithms": [
+    { "name": "...", "formula": "...", "description": "...", "when_to_use": "..." }
+  ],
+  "exam_traps": [
+    { "trap": "...", "explanation": "...", "advice": "..." }
+  ],
+  "self_check_questions": [
+    { "question": "...", "key_answer": "..." }
+  ]
+}`
+
+  return callWithRetry(async () => {
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        })
+
+        const jsonText = response.text ?? '{}'
+        const parsed = JSON.parse(jsonText)
+        return {
+          subject_name: parsed.subject_name || subject?.name || 'Materia',
+          overview: parsed.overview || 'Resumen general no disponible.',
+          core_concepts: Array.isArray(parsed.core_concepts) ? parsed.core_concepts : [],
+          formulas_and_algorithms: Array.isArray(parsed.formulas_and_algorithms)
+            ? parsed.formulas_and_algorithms
+            : [],
+          exam_traps: Array.isArray(parsed.exam_traps) ? parsed.exam_traps : [],
+          self_check_questions: Array.isArray(parsed.self_check_questions)
+            ? parsed.self_check_questions
+            : [],
+        }
+      } catch (err) {
+        console.warn(`Cheat Sheet con ${modelName} omitido:`, err)
+      }
+    }
+
+    throw new Error('No se pudo generar la ficha de repaso en este momento. Intentalo nuevamente.')
+  })
+}
+

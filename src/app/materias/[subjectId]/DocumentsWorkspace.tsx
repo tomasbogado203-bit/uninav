@@ -2,7 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { uploadDocument, deleteDocument, generateDocumentSummaryAction } from './actions'
+import {
+  uploadDocument,
+  deleteDocument,
+  generateDocumentSummaryAction,
+  generateSubjectCheatSheetAction,
+  SubjectCheatSheetData,
+} from './actions'
+import SubjectCheatSheetModal from '@/components/SubjectCheatSheetModal'
 import {
   IconDocument,
   IconSparkles,
@@ -14,6 +21,7 @@ import {
   IconClipboard,
   IconCheck,
 } from '@/components/icons'
+
 
 export interface DocumentItem {
   id: string
@@ -52,6 +60,23 @@ export default function DocumentsWorkspace({
   const [summarizingDocId, setSummarizingDocId] = useState<string | null>(null)
   const [activeSummaryModal, setActiveSummaryModal] = useState<SummaryData | null>(null)
   const [copiedSummary, setCopiedSummary] = useState(false)
+
+  // Estado de Ficha de Repaso Maestra (Cheat Sheet)
+  const [generatingCheatSheet, setGeneratingCheatSheet] = useState(false)
+  const [activeCheatSheetData, setActiveCheatSheetData] = useState<SubjectCheatSheetData | null>(null)
+
+  const handleGenerateCheatSheet = async () => {
+    setGeneratingCheatSheet(true)
+    try {
+      const data = await generateSubjectCheatSheetAction(subjectId)
+      setActiveCheatSheetData(data)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al generar la ficha de repaso.')
+    } finally {
+      setGeneratingCheatSheet(false)
+    }
+  }
+
 
   const handleFileChange = (file: File | null) => {
     if (!file) return
@@ -113,6 +138,50 @@ export default function DocumentsWorkspace({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Columna Izquierda: Lista de Apuntes e Indexación RAG (7 Cols) */}
       <div className="lg:col-span-7 flex flex-col gap-4">
+        {/* Banner Destacado: Ficha de Fórmulas y Resumen de Repaso Pre-Parcial */}
+        {documents.length > 0 && (
+          <div className="rounded-3xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xs shrink-0">
+                <IconSparkles className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2 py-0.5 rounded-full">
+                    Herramienta Pre-Parcial
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">1 Clic</span>
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight mt-0.5">
+                  Ficha de Fórmulas y Resumen de Repaso
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed mt-0.5">
+                  Generá una hoja de fórmulas, trampas típicas y síntesis lista para imprimir en A4 antes de rendir.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={generatingCheatSheet}
+              onClick={handleGenerateCheatSheet}
+              className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
+            >
+              {generatingCheatSheet ? (
+                <>
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span>Sintetizando...</span>
+                </>
+              ) : (
+                <>
+                  <IconSparkles className="w-4 h-4" />
+                  <span>Generar Ficha con IA</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Apuntes en Biblioteca ({documents.length})
@@ -121,6 +190,7 @@ export default function DocumentsWorkspace({
             {documents.reduce((acc, d) => acc + d.chunk_count, 0)} fragmentos indexados
           </span>
         </div>
+
 
         <div className="flex flex-col gap-3">
           {documents.map((doc) => (
@@ -468,6 +538,16 @@ export default function DocumentsWorkspace({
           </div>
         </div>
       )}
+
+      {/* Modal Desplegable de Ficha de Fórmulas y Resumen de Repaso Pre-Parcial */}
+      {activeCheatSheetData && (
+        <SubjectCheatSheetModal
+          data={activeCheatSheetData}
+          onClose={() => setActiveCheatSheetData(null)}
+        />
+      )}
     </div>
   )
 }
+
+
