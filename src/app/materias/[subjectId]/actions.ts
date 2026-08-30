@@ -275,53 +275,66 @@ export interface SubjectCheatSheetData {
   }[]
 }
 
+export interface CheatSheetActionResult {
+  success: boolean
+  data?: SubjectCheatSheetData
+  error?: string
+}
+
 export async function generateSubjectCheatSheetAction(
   subjectId: string
-): Promise<SubjectCheatSheetData> {
-  const supabase = await createClient()
+): Promise<CheatSheetActionResult> {
+  try {
+    const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+    if (!user) redirect('/login')
 
-  const { data: subject } = await supabase
-    .from('subjects')
-    .select('name')
-    .eq('id', subjectId)
-    .single()
+    const { data: subject } = await supabase
+      .from('subjects')
+      .select('name')
+      .eq('id', subjectId)
+      .single()
 
-  const { data: docs } = await supabase
-    .from('documents')
-    .select('id, title')
-    .eq('subject_id', subjectId)
-    .eq('document_type', 'apunte')
+    const { data: docs } = await supabase
+      .from('documents')
+      .select('id, title')
+      .eq('subject_id', subjectId)
+      .eq('document_type', 'apunte')
 
-  if (!docs || docs.length === 0) {
-    throw new Error('Primero debés subir al menos un apunte PDF para generar la ficha de repaso.')
-  }
+    if (!docs || docs.length === 0) {
+      return {
+        success: false,
+        error: 'Primero debés subir al menos un apunte PDF para generar la ficha de repaso.',
+      }
+    }
 
-  const docIds = docs.map((d) => d.id)
+    const docIds = docs.map((d) => d.id)
 
-  const { data: chunks } = await supabase
-    .from('document_chunks')
-    .select('content, page_number, document_id')
-    .in('document_id', docIds)
-    .limit(30)
+    const { data: chunks } = await supabase
+      .from('document_chunks')
+      .select('content, page_number, document_id')
+      .in('document_id', docIds)
+      .limit(30)
 
-  if (!chunks || chunks.length === 0) {
-    throw new Error('Los apuntes aún no tienen fragmentos indexados. Subí un PDF válido.')
-  }
+    if (!chunks || chunks.length === 0) {
+      return {
+        success: false,
+        error: 'Los apuntes aún no tienen fragmentos indexados. Subí un PDF válido.',
+      }
+    }
 
-  const sampleContext = chunks
-    .map((c) => {
-      const docName = docs.find((d) => d.id === c.document_id)?.title || 'Apunte'
-      return `[${docName} - Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 500)}`
-    })
-    .join('\n\n')
+    const sampleContext = chunks
+      .map((c) => {
+        const docName = docs.find((d) => d.id === c.document_id)?.title || 'Apunte'
+        return `[${docName} - Pág. ${c.page_number ?? 'N/A'}] ${c.content.slice(0, 500)}`
+      })
+      .join('\n\n')
 
-  const prompt = `Sos un profesor titular y tutor universitario de élite en Argentina.
+    const prompt = `Sos un profesor titular y tutor universitario de élite en Argentina.
 Analizá los siguientes fragmentos de la bibliografía oficial de la materia "${subject?.name || 'Materia'}":
 
 <CONTEXTO_BIBLIOGRAFICO>
@@ -368,38 +381,61 @@ Respondé ÚNICAMENTE con un JSON válido con la siguiente estructura exacta:
   ]
 }`
 
-  return callWithRetry(async () => {
-    for (const modelName of MODEL_FALLBACK_CHAIN) {
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        })
+    const generated = await callWithRetry(async () => {
+      for (const modelName of MODEL_FALLBACK_CHAIN) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.2,
+            },
+          })
 
-        const jsonText = response.text ?? '{}'
-        const parsed = JSON.parse(jsonText)
-        return {
-          subject_name: parsed.subject_name || subject?.name || 'Materia',
-          overview: parsed.overview || 'Resumen general no disponible.',
-          core_concepts: Array.isArray(parsed.core_concepts) ? parsed.core_concepts : [],
-          formulas_and_algorithms: Array.isArray(parsed.formulas_and_algorithms)
-            ? parsed.formulas_and_algorithms
-            : [],
-          exam_traps: Array.isArray(parsed.exam_traps) ? parsed.exam_traps : [],
-          self_check_questions: Array.isArray(parsed.self_check_questions)
-            ? parsed.self_check_questions
-            : [],
+          const jsonText = response.text ?? '{}'
+          const parsed = JSON.parse(jsonText)
+          return {
+            subject_name: parsed.subject_name || subject?.name || 'Materia',
+            overview: parsed.overview || 'Resumen general no disponible.',
+            core_concepts: Array.isArray(parsed.core_concepts) ? parsed.core_concepts : [],
+            formulas_and_algorithms: Array.isArray(parsed.formulas_and_algorithms)
+              ? parsed.formulas_and_algorithms
+              : [],
+            exam_traps: Array.isArray(parsed.exam_traps) ? parsed.exam_traps : [],
+            self_check_questions: Array.isArray(parsed.self_check_questions)
+              ? parsed.self_check_questions
+              : [],
+          }
+        } catch (err) {
+          console.warn(`Cheat Sheet con ${modelName} omitido:`, err)
         }
-      } catch (err) {
-        console.warn(`Cheat Sheet con ${modelName} omitido:`, err)
+      }
+
+      return null
+    })
+
+    if (!generated) {
+      return {
+        success: false,
+        error: 'No se pudo generar la ficha de repaso en este momento. Intentalo nuevamente.',
       }
     }
 
-    throw new Error('No se pudo generar la ficha de repaso en este momento. Intentalo nuevamente.')
-  })
+    return {
+      success: true,
+      data: generated,
+    }
+  } catch (err) {
+    console.error('Error en generateSubjectCheatSheetAction:', err)
+    return {
+      success: false,
+      error:
+        err instanceof Error
+          ? err.message
+          : 'Ocurrió un error inesperado al generar la ficha de repaso.',
+    }
+  }
 }
+
 

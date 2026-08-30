@@ -68,14 +68,21 @@ export default function DocumentsWorkspace({
   const handleGenerateCheatSheet = async () => {
     setGeneratingCheatSheet(true)
     try {
-      const data = await generateSubjectCheatSheetAction(subjectId)
-      setActiveCheatSheetData(data)
+      const res = await generateSubjectCheatSheetAction(subjectId)
+      if (!res.success) {
+        alert(res.error || 'Ocurrió un error al generar la ficha de repaso.')
+        return
+      }
+      if (res.data) {
+        setActiveCheatSheetData(res.data)
+      }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al generar la ficha de repaso.')
+      alert(err instanceof Error ? err.message : 'Error al procesar la ficha de repaso.')
     } finally {
       setGeneratingCheatSheet(false)
     }
   }
+
 
 
   const handleFileChange = (file: File | null) => {

@@ -162,10 +162,17 @@ export default function FlashcardsView({
     setToastMessage(null)
 
     try {
-      const newCards = await generateFlashcardsAction(
+      const res = await generateFlashcardsAction(
         subjectId,
         selectedTopic !== 'Todas las unidades' ? selectedTopic : undefined
       )
+
+      if (!res.success) {
+        alert(res.error || 'Ocurrió un error al generar las tarjetas.')
+        return
+      }
+
+      const newCards = res.data
       if (newCards && newCards.length > 0) {
         const updated = [...newCards, ...cards]
         saveToLocal(updated)
@@ -174,11 +181,12 @@ export default function FlashcardsView({
         setToastMessage(`¡${newCards.length} tarjetas generadas con éxito con IA!`)
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error al generar tarjetas con IA.')
+      alert(err instanceof Error ? err.message : 'Error al procesar las tarjetas con IA.')
     } finally {
       setLoading(false)
     }
   }
+
 
   const handleToggleMastered = async (cardId: string, currentMastered: boolean) => {
     const updated = cards.map((c) =>
