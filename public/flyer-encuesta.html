@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Flyer Encuesta Universitaria - UniNav (A4)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans antialiased p-0 sm:p-6 flex flex-col items-center justify-center min-h-screen">
+
+  <!-- Botón Flotante para Imprimir -->
+  <div class="no-print mb-4 flex items-center gap-3">
+    <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition-all flex items-center gap-2 cursor-pointer text-sm">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+      <span>Imprimir / Guardar en PDF (A4)</span>
+    </button>
+  </div>
+
+  <!-- HOJA A4 PRINCIPAL -->
+  <div class="a4-page w-[210mm] min-h-[297mm] bg-white border border-slate-300 shadow-2xl p-8 flex flex-col justify-between box-border relative overflow-hidden">
+    
+    <!-- Decoración Superior -->
+    <div class="absolute top-0 left-0 right-0 h-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800"></div>
+
+    <!-- Encabezado / Hook de Impacto -->
+    <div class="text-center pt-2">
+      <div class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 text-indigo-700 font-black text-xs px-3.5 py-1.5 rounded-full uppercase tracking-widest mb-3">
+        🎓 Proyecto Académico • Exactas & Ingeniería
+      </div>
+      
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight leading-tight uppercase">
+        ¿Estudiás en Exactas <br class="hidden sm:block">o Ingeniería?
+      </h1>
+      
+      <p class="text-base sm:text-lg font-bold text-indigo-900 mt-2 max-w-xl mx-auto leading-snug">
+        ¿Te trabás con Análisis, sufrís con los apuntes densos o sentís que llegás a ciegas a los parciales?
+      </p>
+    </div>
+
+    <!-- Contenedor Central con el Código QR -->
+    <div class="bg-gradient-to-b from-indigo-50/80 to-white rounded-3xl border-2 border-indigo-300 p-6 flex flex-col items-center text-center shadow-md my-3">
+      <div class="flex items-center gap-2 text-indigo-950 font-black text-sm uppercase tracking-wider mb-2">
+        <span class="flex h-3 w-3 rounded-full bg-indigo-600 animate-ping"></span>
+        <span>Ayudanos con una encuesta de 1 minuto</span>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border-2 border-slate-900 shadow-xl my-2 flex items-center justify-center">
+        <!-- Imagen del código QR cargado por el usuario -->
+        <img src="/qr-encuesta.png" alt="Código QR Encuesta UniNav" class="w-48 h-48 sm:w-56 sm:h-56 object-contain" />
+      </div>
+
+      <div class="flex items-center gap-2 mt-2">
+        <span class="text-xs font-black text-slate-900 bg-amber-200 px-3 py-1 rounded-full uppercase tracking-wide">
+          📱 Escaneá con tu cámara
+        </span>
+        <span class="text-xs font-semibold text-slate-600">
+          • 100% Anónima •
+        </span>
+      </div>
+    </div>
+
+    <!-- 3 Pilares de lo que estamos construyendo -->
+    <div>
+      <h2 class="text-center text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+        Estamos desarrollando <span class="text-indigo-600 font-extrabold">UniNav</span>:
+      </h2>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center flex flex-col items-center">
+          <div class="text-2xl mb-1">🧠</div>
+          <span class="font-black text-xs text-slate-900 block leading-tight">Tutor Socrático</span>
+          <p class="text-[10px] text-slate-600 mt-1 leading-snug">
+            Te guía con los apuntes oficiales de tu cátedra sin hacerte la tarea.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center flex flex-col items-center">
+          <div class="text-2xl mb-1">📸</div>
+          <span class="font-black text-xs text-slate-900 block leading-tight">Pizarra Digital</span>
+          <p class="text-[10px] text-slate-600 mt-1 leading-snug">
+            Digitaliza fórmulas y pizarras de clase con visión artificial.
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center flex flex-col items-center">
+          <div class="text-2xl mb-1">🎯</div>
+          <span class="font-black text-xs text-slate-900 block leading-tight">Simulador de Examen</span>
+          <p class="text-[10px] text-slate-600 mt-1 leading-snug">
+            Medí tu nivel de preparación real antes de rendir el parcial.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tiras Recortables Inferiores (Tear-off Strips) -->
+    <div class="mt-4 pt-4 border-t-2 border-dashed border-slate-400">
+      <div class="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
+        <span>✂️ Cortá un cupón para responder en el colectivo o en tu casa</span>
+      </div>
+
+      <div class="grid grid-cols-6 gap-1.5 text-center">
+        <div class="border-l border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+        <div class="border-l border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+        <div class="border-l border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+        <div class="border-l border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+        <div class="border-l border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+        <div class="border-l border-r border-dashed border-slate-300 px-1 py-1 flex flex-col items-center">
+          <span class="text-[9px] font-black text-indigo-700 uppercase">UniNav</span>
+          <span class="text-[8px] font-bold text-slate-800 leading-none mt-0.5">Encuesta 1m</span>
+          <span class="text-[7px] text-slate-500 font-mono mt-1 rotate-90 origin-center block whitespace-nowrap">Escaneá QR</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
