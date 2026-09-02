@@ -12,7 +12,6 @@ import {
 import {
   IconHome,
   IconBook,
-  IconLightbulb,
   IconDocument,
   IconChat,
   IconQuiz,
@@ -32,7 +31,6 @@ import {
   IconArrowsExchange,
   IconUsers,
 } from '@/components/icons'
-
 
 interface ChatThread {
   id: string
@@ -104,11 +102,11 @@ export default function SubjectSidebar({
       const realId = await createThread(subjectId, formData)
       if (realId) {
         setThreads((prev) =>
-          prev.map((t) => (t.id === tempId ? { ...t, id: realId } : t))
+          prev.map((t) => (t.id === tempId ? { id: realId, title } : t))
         )
       }
     } catch {
-      // Fallback local
+      setThreads(threads)
     }
   }
 
@@ -124,69 +122,37 @@ export default function SubjectSidebar({
       setEditingThreadId(null)
       return
     }
-
     const newTitle = editTitleInput.trim()
-    setEditingThreadId(null)
-
     setThreads((prev) =>
       prev.map((t) => (t.id === threadId ? { ...t, title: newTitle } : t))
     )
-
+    setEditingThreadId(null)
     try {
       await renameThreadAction(subjectId, threadId, newTitle)
     } catch {
-      // Fallback local
+      setThreads(initialThreads)
     }
   }
 
   const handleDeleteThread = async (threadId: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-
-    if (!confirm('¿Seguro que deseas eliminar este tema de conversación?')) return
-
+    if (!confirm('¿Eliminar este tema y todo su historial de chat?')) return
     setThreads((prev) => prev.filter((t) => t.id !== threadId))
-
     try {
       await deleteThreadAction(subjectId, threadId)
     } catch {
-      // Fallback local
+      setThreads(initialThreads)
     }
   }
 
-  const globalNavItems = [
-    {
-      label: 'Inicio',
-      icon: IconHome,
-      href: '/',
-      exact: true,
-    },
-    {
-      label: 'Mis Materias',
-      icon: IconBook,
-      href: '/materias',
-      exact: true,
-    },
-    {
-      label: 'Recursos & Glosario',
-      icon: IconLightbulb,
-      href: '/recursos',
-      exact: false,
-    },
-    {
-      label: 'Banco Comunitario',
-      icon: IconUsers,
-      href: '/comunidad',
-      exact: false,
-    },
-    {
-      label: 'Lámpara IoT',
-      icon: IconSparkles,
-      href: '/iot',
-      exact: false,
-    },
-  ]
 
+  const globalNavItems = [
+    { label: 'Inicio', icon: IconHome, href: '/', exact: true },
+    { label: 'Mis Materias', icon: IconBook, href: '/materias', exact: true },
+    { label: 'Recursos & Glosario', icon: IconSparkles, href: '/recursos', exact: false },
+    { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false },
+  ]
 
   const navItems = [
     {
@@ -240,15 +206,14 @@ export default function SubjectSidebar({
 
   return (
     <aside
-      className={`sticky top-0 h-screen flex flex-col border-r border-slate-800/80 bg-slate-950 text-slate-100 transition-all duration-300 ${
+      className={`sticky top-0 h-screen flex flex-col border-r border-slate-200/90 bg-white text-slate-800 transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-56 xl:w-64'
       } shrink-0 z-30 select-none overflow-hidden`}
     >
-
       {/* Botón de Colapsar / Expandir Sidebar con SVG */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-slate-300 shadow-md hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+        className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer"
         title={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
       >
         {collapsed ? (
@@ -259,17 +224,17 @@ export default function SubjectSidebar({
       </button>
 
       {/* Header Fijo: Logo Marca UniNav */}
-      <div className="flex items-center justify-between border-b border-slate-800/60 p-3.5 shrink-0">
+      <div className="flex items-center justify-between border-b border-slate-100 p-3.5 shrink-0">
         {!collapsed ? (
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-xs group-hover:bg-indigo-500 transition-colors">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-xs group-hover:bg-indigo-700 transition-colors">
               U
             </div>
             <div>
-              <span className="font-bold text-white text-sm tracking-tight block leading-none">
+              <span className="font-bold text-slate-900 text-sm tracking-tight block leading-none">
                 UniNav
               </span>
-              <span className="text-[9px] font-semibold text-indigo-400">
+              <span className="text-[9px] font-semibold text-indigo-600">
                 AI Socrático
               </span>
             </div>
@@ -288,244 +253,239 @@ export default function SubjectSidebar({
       {/* Contenedor con Scroll Interno para los Elementos de Navegación */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col">
         {/* Sección 1: Navegación Global Compacta */}
-        <div className="p-2.5 border-b border-slate-800/60 flex flex-col gap-0.5 shrink-0">
+        <div className="p-2.5 border-b border-slate-100 flex flex-col gap-0.5 shrink-0">
           {!collapsed && (
-            <span className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 block">
+            <span className="px-2 text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 block">
               Navegación
             </span>
           )}
 
-
-        {globalNavItems.map((gItem) => {
-          const Icon = gItem.icon
-          const active = isNavActive(gItem.href, gItem.exact)
-          return (
-            <Link
-              key={gItem.href}
-              href={gItem.href}
-              className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                active
-                  ? 'bg-slate-800/90 text-indigo-400 border border-slate-700/80 shadow-2xs'
-                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
-              } ${collapsed ? 'justify-center px-0' : ''}`}
-              title={collapsed ? gItem.label : undefined}
-            >
-              <Icon className="w-3.5 h-3.5 shrink-0" />
-              {!collapsed && <span className="truncate">{gItem.label}</span>}
-            </Link>
-          )
-        })}
-      </div>
-
-      {/* Sección 2: Header del Workspace de la Materia */}
-      <div className="flex items-center justify-between border-b border-slate-800/60 px-3 py-2.5 bg-slate-900/40">
-        {!collapsed ? (
-          <div className="flex items-center justify-between w-full gap-2">
-            <div className="flex flex-col gap-0.5 overflow-hidden">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                Materia Actual
-              </span>
-              <h2
-                className="text-xs font-bold text-white truncate"
-                title={formattedSubjectName}
+          {globalNavItems.map((gItem) => {
+            const Icon = gItem.icon
+            const active = isNavActive(gItem.href, gItem.exact)
+            return (
+              <Link
+                key={gItem.href}
+                href={gItem.href}
+                className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  active
+                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                } ${collapsed ? 'justify-center px-0' : ''}`}
+                title={collapsed ? gItem.label : undefined}
               >
-                {formattedSubjectName}
-              </h2>
-            </div>
-            <Link
-              href="/materias"
-              className="text-[10px] text-slate-500 hover:text-slate-300 font-semibold p-1 hover:bg-slate-800 rounded transition-colors shrink-0 flex items-center gap-1"
-              title="Cambiar materia"
-            >
-              <IconArrowsExchange className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        ) : (
-          <div className="mx-auto" title={formattedSubjectName}>
-            <IconBook className="w-4 h-4 text-indigo-400" />
-          </div>
-        )}
-      </div>
+                <Icon className="w-3.5 h-3.5 shrink-0 text-slate-400 group-hover:text-slate-600" />
+                {!collapsed && <span className="truncate">{gItem.label}</span>}
+              </Link>
+            )
+          })}
+        </div>
 
-      {/* Sección 3: Pestañas del Workspace con Acordeón Integrado */}
-      <div className="flex-1 overflow-y-auto px-2 py-2.5 flex flex-col gap-1 scrollbar-none">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const active = isNavActive(item.href, item.exact)
-
-          return (
-            <div key={item.href} className="flex flex-col gap-0.5">
-              <div className="flex items-center">
-                <Link
-                  href={item.href}
-                  className={`flex-1 flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all ${
-                    active
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-100'
-                  } ${collapsed ? 'justify-center px-0' : ''}`}
-                  title={collapsed ? item.label : undefined}
+        {/* Sección 2: Header del Workspace de la Materia */}
+        <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2.5 bg-slate-50/60">
+          {!collapsed ? (
+            <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex flex-col gap-0.5 overflow-hidden">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                  Materia Actual
+                </span>
+                <h2
+                  className="text-xs font-bold text-slate-900 truncate"
+                  title={formattedSubjectName}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-                  
-                  {/* Flecha Chevron SVG limpia integrada en la misma pastilla */}
-                  {!collapsed && item.hasSubmenu && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setTemasMenuOpen(!temasMenuOpen)
-                      }}
-                      className={`p-0.5 rounded transition-transform cursor-pointer ${
-                        active ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-white'
-                      }`}
-                      title={temasMenuOpen ? 'Ocultar temas' : 'Mostrar temas'}
-                    >
-                      {temasMenuOpen ? (
-                        <IconChevronDown className="w-3.5 h-3.5" />
-                      ) : (
-                        <IconChevronRight className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  )}
-                </Link>
+                  {formattedSubjectName}
+                </h2>
               </div>
+              <Link
+                href="/materias"
+                className="text-[10px] text-slate-400 hover:text-slate-700 font-semibold p-1 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all shrink-0 flex items-center gap-1"
+                title="Cambiar materia"
+              >
+                <IconArrowsExchange className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="mx-auto" title={formattedSubjectName}>
+              <IconBook className="w-4 h-4 text-indigo-600" />
+            </div>
+          )}
+        </div>
 
-              {/* Submenú Desplegable de Temas */}
-              {!collapsed && item.hasSubmenu && temasMenuOpen && (
-                <div className="ml-3 pl-2.5 border-l border-slate-800 flex flex-col gap-0.5 py-1 my-0.5 animate-in fade-in slide-in-from-top-1">
-                  <div className="flex items-center justify-between px-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                    <span>Lista de Temas</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsCreatingThread(!isCreatingThread)}
-                      className="text-indigo-400 hover:text-indigo-300 font-bold transition-colors cursor-pointer flex items-center gap-0.5"
-                      title="Crear nuevo tema"
-                    >
-                      <IconPlus className="w-2.5 h-2.5" />
-                      <span>Tema</span>
-                    </button>
-                  </div>
+        {/* Sección 3: Pestañas del Workspace con Acordeón Integrado */}
+        <div className="flex-1 overflow-y-auto px-2 py-2.5 flex flex-col gap-1 scrollbar-none">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const active = isNavActive(item.href, item.exact)
 
-                  {/* Formulario de creación rápida de Tema */}
-                  {isCreatingThread && (
-                    <form
-                      onSubmit={handleCreateNewThread}
-                      className="px-1 py-1 flex items-center gap-1 animate-in fade-in"
-                    >
-                      <input
-                        type="text"
-                        autoFocus
-                        value={newThreadTitleInput}
-                        onChange={(e) => setNewThreadTitleInput(e.target.value)}
-                        placeholder="Nombre del tema..."
-                        className="w-full bg-slate-900 border border-indigo-500/50 rounded-md px-2 py-1 text-[11px] text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                      />
+            return (
+              <div key={item.href} className="flex flex-col gap-0.5">
+                <div className="flex items-center">
+                  <Link
+                    href={item.href}
+                    className={`flex-1 flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      active
+                        ? 'bg-slate-900 text-white font-bold shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+                    } ${collapsed ? 'justify-center px-0' : ''}`}
+                    title={collapsed ? item.label : undefined}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                    
+                    {/* Flecha Chevron SVG limpia integrada en la misma pastilla */}
+                    {!collapsed && item.hasSubmenu && (
                       <button
-                        type="submit"
-                        className="bg-indigo-600 text-white p-1 rounded-md hover:bg-indigo-500 cursor-pointer"
-                        title="Guardar"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setTemasMenuOpen(!temasMenuOpen)
+                        }}
+                        className={`p-0.5 rounded transition-transform cursor-pointer ${
+                          active ? 'text-white/80 hover:text-white' : 'text-slate-400 hover:text-slate-700'
+                        }`}
+                        title={temasMenuOpen ? 'Ocultar temas' : 'Mostrar temas'}
                       >
-                        <IconCheck className="w-3 h-3" />
+                        {temasMenuOpen ? (
+                          <IconChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <IconChevronRight className="w-3.5 h-3.5" />
+                        )}
                       </button>
-                    </form>
-                  )}
+                    )}
+                  </Link>
+                </div>
 
-                  {/* Lista de Temas */}
-                  {threads.map((thread) => (
-                    <div
-                      key={thread.id}
-                      className="group flex items-center justify-between px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
-                    >
-                      {editingThreadId === thread.id ? (
-                        <div className="flex items-center gap-1 w-full">
-                          <input
-                            type="text"
-                            autoFocus
-                            value={editTitleInput}
-                            onChange={(e) => setEditTitleInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveRename(thread.id)
-                              if (e.key === 'Escape') setEditingThreadId(null)
-                            }}
-                            className="w-full bg-slate-900 border border-indigo-500 rounded-md px-1.5 py-0.5 text-[11px] text-white focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleSaveRename(thread.id)}
-                            className="text-indigo-400 hover:text-indigo-300 p-0.5"
-                            title="Guardar cambio"
-                          >
-                            <IconCheck className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <Link
-                            href={`/materias/${subjectId}/temas?threadId=${thread.id}`}
-                            className="flex items-center gap-1.5 truncate flex-1 min-w-0"
-                            title={thread.title}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                            <span className="truncate">{thread.title}</span>
-                          </Link>
+                {/* Submenú Desplegable de Temas */}
+                {!collapsed && item.hasSubmenu && temasMenuOpen && (
+                  <div className="ml-3 pl-2.5 border-l border-slate-200 flex flex-col gap-0.5 py-1 my-0.5 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center justify-between px-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                      <span>Lista de Temas</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingThread(!isCreatingThread)}
+                        className="text-indigo-600 hover:text-indigo-800 font-bold transition-colors cursor-pointer flex items-center gap-0.5"
+                        title="Crear nuevo tema"
+                      >
+                        <IconPlus className="w-2.5 h-2.5" />
+                        <span>Tema</span>
+                      </button>
+                    </div>
 
-                          {/* Acciones de Edición con Iconos SVG */}
-                          <div className="hidden group-hover:flex items-center gap-1 text-slate-500">
+                    {/* Formulario de creación rápida de Tema */}
+                    {isCreatingThread && (
+                      <form
+                        onSubmit={handleCreateNewThread}
+                        className="px-1 py-1 flex items-center gap-1 animate-in fade-in"
+                      >
+                        <input
+                          type="text"
+                          autoFocus
+                          value={newThreadTitleInput}
+                          onChange={(e) => setNewThreadTitleInput(e.target.value)}
+                          placeholder="Nombre del tema..."
+                          className="w-full bg-slate-50 border border-indigo-200 rounded-lg px-2 py-1 text-[11px] text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        />
+                        <button
+                          type="submit"
+                          className="bg-indigo-600 text-white p-1 rounded-lg hover:bg-indigo-700 cursor-pointer shadow-2xs"
+                          title="Guardar"
+                        >
+                          <IconCheck className="w-3 h-3" />
+                        </button>
+                      </form>
+                    )}
+
+                    {/* Lista de Temas */}
+                    {threads.map((thread) => (
+                      <div
+                        key={thread.id}
+                        className="group flex items-center justify-between px-2 py-1.5 rounded-lg text-[11px] text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                      >
+                        {editingThreadId === thread.id ? (
+                          <div className="flex items-center gap-1 w-full">
+                            <input
+                              type="text"
+                              autoFocus
+                              value={editTitleInput}
+                              onChange={(e) => setEditTitleInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveRename(thread.id)
+                                if (e.key === 'Escape') setEditingThreadId(null)
+                              }}
+                              className="w-full bg-white border border-indigo-300 rounded px-1.5 py-0.5 text-[10px] text-slate-900 focus:outline-none"
+                            />
                             <button
                               type="button"
-                              onClick={(e) => handleStartRename(thread, e)}
-                              className="hover:text-indigo-300 transition-colors p-0.5"
-                              title="Renombrar tema"
+                              onClick={() => handleSaveRename(thread.id)}
+                              className="text-emerald-600 hover:text-emerald-700 p-0.5"
                             >
-                              <IconEdit className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteThread(thread.id, e)}
-                              className="hover:text-rose-400 transition-colors p-0.5"
-                              title="Eliminar tema"
-                            >
-                              <IconTrash className="w-3 h-3" />
+                              <IconCheck className="w-3 h-3" />
                             </button>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                        ) : (
+                          <>
+                            <Link
+                              href={`/materias/${subjectId}/temas?threadId=${thread.id}`}
+                              className="flex items-center gap-1.5 truncate flex-1 min-w-0"
+                            >
+                              <span className="h-1 w-1 rounded-full bg-slate-300 group-hover:bg-indigo-500 shrink-0" />
+                              <span className="truncate">{thread.title}</span>
+                            </Link>
 
-                  {threads.length === 0 && !isCreatingThread && (
-                    <span className="px-2 py-1 text-[10px] text-slate-600 italic">
-                      Sin temas creados
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+                            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={(e) => handleStartRename(thread, e)}
+                                className="p-0.5 text-slate-400 hover:text-slate-700 rounded"
+                                title="Renombrar"
+                              >
+                                <IconEdit className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteThread(thread.id, e)}
+                                className="p-0.5 text-slate-400 hover:text-rose-600 rounded"
+                                title="Eliminar"
+                              >
+                                <IconTrash className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+
+                    {threads.length === 0 && (
+                      <span className="px-2 py-1 text-[10px] text-slate-400 italic">
+                        Sin temas creados
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Sección 4: Footer Fijo Compacto con Racha y Perfil */}
-      <div className="border-t border-slate-800/60 p-2.5 bg-slate-950 flex flex-col gap-2 shrink-0 mt-auto">
-
+      <div className="border-t border-slate-100 p-2.5 bg-slate-50/50 flex flex-col gap-2 shrink-0 mt-auto">
         {/* Pastilla de Racha en Footer con Icono SVG */}
         {!collapsed ? (
-          <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1 text-amber-300 text-xs shadow-2xs">
+          <div className="flex items-center justify-between bg-amber-50 border border-amber-200/80 rounded-xl px-2.5 py-1 text-amber-800 text-xs shadow-2xs">
             <span className="flex items-center gap-1.5 font-bold text-[11px]">
-              <IconFlame className="w-3.5 h-3.5 text-amber-400" />
+              <IconFlame className="w-3.5 h-3.5 text-amber-500" />
               Racha: {streakDays} {streakDays === 1 ? 'día' : 'días'}
             </span>
-            <span className="text-[9px] text-amber-400 font-mono font-bold bg-amber-400/10 px-1.5 py-0.5 rounded">
+            <span className="text-[9px] text-amber-700 font-mono font-bold bg-amber-100 px-1.5 py-0.5 rounded">
               ACTIVO
             </span>
           </div>
         ) : (
           <div
-            className="mx-auto flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400"
+            className="mx-auto flex h-7 w-7 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
             title={`Racha: ${streakDays} días`}
           >
             <IconFlame className="w-4 h-4" />
@@ -540,12 +500,12 @@ export default function SubjectSidebar({
                 {userName.charAt(0).toUpperCase()}
               </div>
               <div className="truncate flex-1 min-w-0">
-                <span className="text-xs font-bold text-white block truncate leading-none">
+                <span className="text-xs font-bold text-slate-900 block truncate leading-none">
                   {userName}
                 </span>
                 {careerName && (
                   <span
-                    className="text-[9px] text-slate-400 truncate block mt-0.5"
+                    className="text-[9px] text-slate-500 truncate block mt-0.5"
                     title={careerName}
                   >
                     {careerName}
@@ -566,7 +526,7 @@ export default function SubjectSidebar({
             <button
               type="button"
               onClick={() => setShowConfigModal(!showConfigModal)}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors shrink-0 cursor-pointer"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors shrink-0 cursor-pointer"
               title="Configuración de usuario"
             >
               <IconSettings className="w-3.5 h-3.5" />
@@ -576,27 +536,27 @@ export default function SubjectSidebar({
 
         {/* Desplegable de Ajustes */}
         {showConfigModal && !collapsed && (
-          <div className="mt-1 rounded-xl border border-slate-800 bg-slate-900 p-2 flex flex-col gap-1 text-xs shadow-lg animate-in fade-in slide-in-from-bottom-2">
-            <div className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+          <div className="mt-1 rounded-xl border border-slate-200 bg-white p-2 flex flex-col gap-1 text-xs shadow-lg animate-in fade-in slide-in-from-bottom-2">
+            <div className="px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">
               Ajustes de Perfil
             </div>
             <Link
               href="/onboarding"
-              className="px-2 py-1.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between text-xs"
+              className="px-2 py-1.5 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors flex items-center justify-between text-xs"
             >
               <span>Cambiar Carrera</span>
-              <IconChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              <IconChevronRight className="w-3.5 h-3.5 text-slate-400" />
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="w-full text-left px-2 py-1.5 rounded-lg text-rose-400 hover:bg-rose-950/40 hover:text-rose-300 transition-colors flex items-center justify-between font-semibold cursor-pointer text-xs"
+              className="w-full text-left px-2 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-between font-semibold cursor-pointer text-xs"
             >
               <span className="flex items-center gap-1.5">
                 <IconLogOut className="w-3 h-3" />
                 Cerrar Sesión
               </span>
-              <IconChevronRight className="w-3.5 h-3.5 text-rose-400/60" />
+              <IconChevronRight className="w-3.5 h-3.5 text-rose-400" />
             </button>
           </div>
         )}
