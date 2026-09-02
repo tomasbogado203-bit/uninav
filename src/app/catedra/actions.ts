@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { GoogleGenAI } from '@google/genai'
 import { callWithRetry } from '@/lib/supabase/gemini/retry'
 
@@ -48,21 +49,33 @@ export async function getUserRoleAction(): Promise<{
 
   if (!user) redirect('/login')
 
+  const cookieStore = await cookies()
+  const cookieRole = cookieStore.get('uninav_demo_role')?.value as
+    | 'student'
+    | 'professor'
+    | 'dean'
+    | 'admin'
+    | undefined
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, university, role')
     .eq('id', user.id)
     .single()
 
+  const resolvedRole =
+    cookieRole && ['student', 'professor', 'dean', 'admin'].includes(cookieRole)
+      ? cookieRole
+      : (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
+
   return {
-    role: (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student',
+    role: resolvedRole,
     full_name: profile?.full_name || 'Estudiante',
     university: profile?.university || 'Universidad',
   }
 }
 
 export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'dean' | 'admin') {
-
   const supabase = await createClient()
   const {
     data: { user },
@@ -70,6 +83,14 @@ export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'd
 
   if (!user) redirect('/login')
 
+  // 1. Persistir en cookie segura de sesión
+  const cookieStore = await cookies()
+  cookieStore.set('uninav_demo_role', newRole, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 30, // 30 días
+  })
+
+  // 2. Intentar persistir en Supabase si la columna existe
   try {
     await supabase.from('profiles').update({ role: newRole }).eq('id', user.id)
   } catch (err) {
@@ -80,6 +101,7 @@ export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'd
   revalidatePath('/institucional')
   revalidatePath('/')
 }
+
 
 export async function getProfessorCommissionsAction(): Promise<CommissionItem[]> {
   const supabase = await createClient()

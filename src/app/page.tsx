@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import GlobalCalendarWidget from '@/components/GlobalCalendarWidget'
 import JoinCommissionCard from '@/components/JoinCommissionCard'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import { getOrUpdateStudyStreak } from '@/lib/supabase/streak'
+
 import {
   IconBook,
   IconChat,
@@ -31,10 +33,23 @@ export default async function DashboardPage() {
     .eq('id', user?.id)
     .single()
 
-  const userRole = (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
+  const cookieStore = await cookies()
+  const cookieRole = cookieStore.get('uninav_demo_role')?.value as
+    | 'student'
+    | 'professor'
+    | 'dean'
+    | 'admin'
+    | undefined
+
+  const userRole =
+    cookieRole && ['student', 'professor', 'dean', 'admin'].includes(cookieRole)
+      ? cookieRole
+      : (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
+
   const isProfessor = userRole === 'professor' || userRole === 'admin' || userRole === 'dean'
   const isDean = userRole === 'dean' || userRole === 'admin'
   const isStudent = userRole === 'student'
+
 
   const careerName = (profile?.careers as unknown as { name: string } | null)?.name
 

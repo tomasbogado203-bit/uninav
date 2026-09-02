@@ -18,16 +18,20 @@ export default function RoleSwitcherPill({
   const handleSelectRole = async (newRole: 'student' | 'professor' | 'dean') => {
     setLoading(true)
     try {
-      await updateUserRoleAction(newRole)
+      // Escribir cookie client-side inmediatamente
+      document.cookie = `uninav_demo_role=${newRole}; path=/; max-age=2592000; SameSite=Lax`
       setRole(newRole)
       setShowModal(false)
+      await updateUserRoleAction(newRole)
       window.location.reload()
     } catch {
-      alert('No se pudo cambiar el rol.')
+      // Recargar de todos modos ya que la cookie fue seteada
+      window.location.reload()
     } finally {
       setLoading(false)
     }
   }
+
 
   const roleLabels: Record<string, { label: string; bg: string; text: string; icon: string }> = {
     student: {
