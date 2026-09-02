@@ -9,6 +9,7 @@ import {
   generateCatedraExamAction,
   updateUserRoleAction,
 } from './actions'
+import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import {
   IconBook,
   IconSparkles,
@@ -22,11 +23,12 @@ import {
 } from '@/components/icons'
 
 interface CatedraDashboardViewProps {
-  userRole: 'student' | 'professor' | 'dean'
+  userRole: 'student' | 'professor' | 'dean' | 'admin'
   userName: string
   universityName: string
   commissions: CommissionItem[]
 }
+
 
 export default function CatedraDashboardView({
   userRole,
@@ -159,9 +161,11 @@ export default function CatedraDashboardView({
               <IconBook className="w-3.5 h-3.5 text-indigo-400" />
               <span>Espacio de Cátedra y Docencia</span>
             </span>
+            <RoleSwitcherPill currentRole={userRole} />
             <span className="text-xs text-slate-400 font-medium">
               {universityName}
             </span>
+
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">

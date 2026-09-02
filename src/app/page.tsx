@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import GlobalCalendarWidget from '@/components/GlobalCalendarWidget'
 import JoinCommissionCard from '@/components/JoinCommissionCard'
+import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import { getOrUpdateStudyStreak } from '@/lib/supabase/streak'
-
 import {
   IconBook,
   IconChat,
@@ -27,9 +27,14 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, university, career_id, careers(name)')
+    .select('full_name, university, career_id, role, careers(name)')
     .eq('id', user?.id)
     .single()
+
+  const userRole = (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
+  const isProfessor = userRole === 'professor' || userRole === 'admin' || userRole === 'dean'
+  const isDean = userRole === 'dean' || userRole === 'admin'
+  const isStudent = userRole === 'student'
 
   const careerName = (profile?.careers as unknown as { name: string } | null)?.name
 
@@ -41,6 +46,7 @@ export default async function DashboardPage() {
     .eq('user_id', user?.id)
 
   const subjectIds = subjects?.map((s) => s.id) || []
+
 
   // Consultar eventos académicos consolidados de todas las materias del usuario
   let globalEvents: any[] = []
@@ -90,6 +96,9 @@ export default async function DashboardPage() {
                 {careerName || 'Universidad'} {profile?.university ? `• ${profile.university}` : ''}
               </div>
 
+              {/* Selector Rápido de Rol (Modo Demo) */}
+              <RoleSwitcherPill currentRole={userRole} />
+
               {streakInfo && (
                 <div
                   className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/40 shadow-2xs"
@@ -107,28 +116,38 @@ export default async function DashboardPage() {
               Bienvenido, {profile?.full_name ?? 'Estudiante'}
             </h1>
             <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Plataforma de acompañamiento universitario. Selecciona tu materia para acceder al tutor RAG socrático, simulador de parciales, calendario y apuntes.
+              {isProfessor
+                ? 'Panel de Cátedra. Gestioná tus comisiones, centralizá apuntes y visualizá el mapa de calor de dudas de tus alumnos.'
+                : isDean
+                ? 'Centro de Retención & Decanato. Monitoreo predictivo de riesgo de deserción y reportes de acreditación.'
+                : 'Plataforma de acompañamiento universitario. Selecciona tu materia para acceder al tutor RAG socrático, simulador de parciales y calendario.'}
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
-            <Link
-              href="/catedra"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 px-3.5 py-2.5 text-xs font-bold text-purple-200 transition-colors backdrop-blur-xs shadow-2xs"
-              title="Panel para Profesores y JTP"
-            >
-              <IconBook className="w-3.5 h-3.5 text-purple-300" />
-              <span>Rol Cátedra</span>
-            </Link>
+            {/* Solo visible para Profesores y Administradores */}
+            {isProfessor && (
+              <Link
+                href="/catedra"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 px-3.5 py-2.5 text-xs font-bold text-purple-200 transition-colors backdrop-blur-xs shadow-2xs"
+                title="Panel para Profesores y JTP"
+              >
+                <IconBook className="w-3.5 h-3.5 text-purple-300" />
+                <span>Panel Cátedra</span>
+              </Link>
+            )}
 
-            <Link
-              href="/institucional"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 px-3.5 py-2.5 text-xs font-bold text-sky-200 transition-colors backdrop-blur-xs shadow-2xs"
-              title="Panel de Decanato y Alerta Temprana"
-            >
-              <IconDocument className="w-3.5 h-3.5 text-sky-300" />
-              <span>Decanato</span>
-            </Link>
+            {/* Solo visible para Decanatos y Administradores */}
+            {isDean && (
+              <Link
+                href="/institucional"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 px-3.5 py-2.5 text-xs font-bold text-sky-200 transition-colors backdrop-blur-xs shadow-2xs"
+                title="Panel de Decanato y Alerta Temprana"
+              >
+                <IconDocument className="w-3.5 h-3.5 text-sky-300" />
+                <span>Panel Decanato</span>
+              </Link>
+            )}
 
             <Link
               href="/comunidad"
@@ -150,8 +169,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Banner para Estudiantes: Sincronizarse con Comisión de Cátedra */}
-      <JoinCommissionCard />
+      {/* Banner para Estudiantes: Sincronizarse con Comisión de Cátedra (Solo alumnos) */}
+      {isStudent && <JoinCommissionCard />}
+
 
 
       {/* Distribución Principal: Materias a la izquierda + Calendario Mini a la derecha */}

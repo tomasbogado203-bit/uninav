@@ -37,7 +37,7 @@ export interface TelemetryTopic {
 }
 
 export async function getUserRoleAction(): Promise<{
-  role: 'student' | 'professor' | 'dean'
+  role: 'student' | 'professor' | 'dean' | 'admin'
   full_name: string
   university?: string | null
 }> {
@@ -55,13 +55,14 @@ export async function getUserRoleAction(): Promise<{
     .single()
 
   return {
-    role: (profile?.role as 'student' | 'professor' | 'dean') || 'professor',
-    full_name: profile?.full_name || 'Profesor',
+    role: (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student',
+    full_name: profile?.full_name || 'Estudiante',
     university: profile?.university || 'Universidad',
   }
 }
 
-export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'dean') {
+export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'dean' | 'admin') {
+
   const supabase = await createClient()
   const {
     data: { user },

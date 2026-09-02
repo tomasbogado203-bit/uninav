@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { FacultyAnalyticsData } from './actions'
+import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import {
   IconUsers,
   IconFlame,
@@ -41,10 +42,12 @@ export default function InstitutionalDashboardView({
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300 border border-indigo-500/30">
               <span>Panel de Decanato & Secretaría Académica</span>
             </span>
+            <RoleSwitcherPill currentRole="dean" />
             <span className="text-xs text-slate-400 font-medium">
               {data.academic_period}
             </span>
           </div>
+
 
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
             Centro de Retención & Alerta Temprana
