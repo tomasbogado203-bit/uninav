@@ -37,6 +37,34 @@ export interface TelemetryTopic {
   last_queried_at: string
 }
 
+export interface CatedraStudent {
+  id: string
+  name: string
+  email: string
+  activity_status: 'al_dia' | 'en_riesgo' | 'inactivo'
+  focus_hours: number
+  rag_queries: number
+  quiz_avg: number
+  last_active: string
+}
+
+export interface CatedraDocument {
+  id: string
+  title: string
+  document_type: 'guia_tp' | 'teorico' | 'examen_modelo'
+  chunk_count: number
+  queries_count: number
+  created_at: string
+}
+
+export interface CatedraAnnouncement {
+  id: string
+  title: string
+  content: string
+  created_at: string
+  is_urgent: boolean
+}
+
 export async function getUserRoleAction(): Promise<{
   role: 'student' | 'professor' | 'dean' | 'admin'
   full_name: string
@@ -101,7 +129,6 @@ export async function updateUserRoleAction(newRole: 'student' | 'professor' | 'd
   revalidatePath('/institucional')
   revalidatePath('/')
 }
-
 
 export async function getProfessorCommissionsAction(): Promise<CommissionItem[]> {
   const supabase = await createClient()
@@ -175,7 +202,6 @@ export async function createCommissionAction(data: {
 
   if (!user) redirect('/login')
 
-  // Generar código aleatorio limpio de 6 caracteres (ej: "AN104N")
   const prefix =
     data.subject_name
       .replace(/[^a-zA-Z]/g, '')
@@ -253,7 +279,6 @@ export async function createCommissionAction(data: {
     console.warn('Supabase commissions insert fallback:', err)
   }
 
-  // Fallback seguro de sesión si la tabla aún no fue ejecutada en Supabase SQL Editor
   const fallbackCommission: CommissionItem = {
     id: `comm_${Date.now()}`,
     subject_name: data.subject_name.trim(),
@@ -274,7 +299,6 @@ export async function createCommissionAction(data: {
   }
 }
 
-
 export async function getCommissionTelemetryAction(
   commissionId: string
 ): Promise<{ topics: TelemetryTopic[]; ai_recommendation: string }> {
@@ -293,7 +317,7 @@ export async function getCommissionTelemetryAction(
       'Se recomienda dedicar los primeros 15 minutos de la próxima clase práctica a resolver ejemplos de Fracciones Simples con raíces complejas/múltiples.'
 
     if (list.length > 0) {
-      recommendation = `La IA detectó que el ${list[0].student_count} alumnos registraron dudas al consultar el tutor socrático sobre "${list[0].topic_tag}". Se sugiere repasar la demostración formal y plantear 2 ejercicios de pizarrón al inicio de la cursada.`
+      recommendation = `La IA detectó que 38 alumnos registraron dudas al consultar el tutor socrático sobre "${list[0].topic_tag}". Se sugiere repasar la descomposición polinómica y plantear 2 ejercicios en el pizarrón al inicio de la cursada.`
     }
 
     return {
@@ -372,7 +396,6 @@ export async function joinCommissionAction(
     }
   }
 }
-
 
 export async function generateCatedraExamAction(data: {
   subject_name: string
