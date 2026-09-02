@@ -2,7 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createSubject, deleteSubject } from './actions'
+import JoinCommissionCard from '@/components/JoinCommissionCard'
 import {
+
   IconBook,
   IconTrash,
   IconChevronLeft,
@@ -55,8 +57,12 @@ export default async function MateriasPage() {
         </Link>
       </div>
 
+      {/* Banner de Sincronización con Cátedra de Profesor */}
+      <JoinCommissionCard />
+
       {/* Grid de Materias */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
         {subjects?.map((s) => {
           const deleteWithId = deleteSubject.bind(null, s.id)
           const formattedName = s.name.charAt(0).toUpperCase() + s.name.slice(1)
