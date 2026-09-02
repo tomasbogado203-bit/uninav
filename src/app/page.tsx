@@ -122,9 +122,10 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
-                <span>{careerName || 'Universidad'}</span>
-                {profile?.university ? <span className="text-slate-400">• {profile.university}</span> : null}
+                <span>{careerName || 'Tecnicatura Superior'}</span>
+                <span className="text-slate-400">• {profile?.university || 'INCADE'}</span>
               </span>
+
 
               {/* Selector Rápido de Rol (Modo Demo) */}
               <RoleSwitcherPill currentRole={userRole} />

@@ -24,7 +24,9 @@ import {
   IconArrowsExchange,
   IconUsers,
   IconBuilding,
+  IconIncadeLogo,
 } from '@/components/icons'
+
 
 export interface SubjectItem {
   id: string
@@ -122,32 +124,38 @@ export default function UnifiedAppSidebar({
         )}
       </button>
 
-      {/* Header Fijo: Logo Marca UniNav */}
-      <div className="flex items-center justify-between border-b border-slate-100 p-3.5 shrink-0">
+      {/* Header Fijo: Identidad Institucional INCADE + UniNav */}
+      <div className="flex items-center justify-between border-b border-slate-100 p-3 shrink-0">
         {!collapsed ? (
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-xs group-hover:bg-indigo-700 transition-colors">
-              U
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E1B4B] p-1 shadow-2xs group-hover:scale-105 transition-transform shrink-0 border border-slate-800">
+              <IconIncadeLogo className="w-7 h-7" />
             </div>
-            <div>
-              <span className="font-bold text-slate-900 text-sm tracking-tight block leading-none">
-                UniNav
-              </span>
-              <span className="text-[9px] font-semibold text-indigo-600">
-                AI + Socrático
+            <div className="overflow-hidden">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-slate-900 text-sm tracking-tight block leading-none">
+                  {universityName && universityName !== 'Universidad' ? universityName : 'INCADE'}
+                </span>
+                <span className="text-[8px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1 py-0.2 rounded">
+                  CAMPUS
+                </span>
+              </div>
+              <span className="text-[10px] font-semibold text-slate-500 block truncate mt-0.5">
+                Portal Académico
               </span>
             </div>
           </Link>
         ) : (
           <Link
             href="/"
-            className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-sm shadow-xs"
-            title="UniNav Inicio"
+            className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E1B4B] p-1 shadow-2xs hover:scale-105 transition-transform border border-slate-800"
+            title="INCADE — Portal Académico"
           >
-            U
+            <IconIncadeLogo className="w-7 h-7" />
           </Link>
         )}
       </div>
+
 
       {/* Contenedor Scrollable de Navegación */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col scrollbar-none">
@@ -376,7 +384,15 @@ export default function UnifiedAppSidebar({
             </button>
           </div>
         )}
+
+        {/* Micro-tag discreto de plataforma */}
+        {!collapsed && (
+          <div className="text-[9px] text-slate-400 text-center font-medium tracking-tight">
+            Tecnología <span className="font-bold text-slate-600">UniNav Core</span>
+          </div>
+        )}
       </div>
     </aside>
   )
 }
+

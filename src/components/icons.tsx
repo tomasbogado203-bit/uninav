@@ -365,6 +365,77 @@ export function IconCheckCircle({ className = 'w-4 h-4' }: { className?: string 
   )
 }
 
+export function IconIncadeLogo({ className = 'w-8 h-8' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 100 115"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Escudo / Fondo Institucional */}
+      <path
+        d="M6 6H94V82C94 98 78 109 50 109C22 109 6 98 6 82V6Z"
+        fill="#1E1B4B"
+        stroke="#FFFFFF"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      {/* Borde interior */}
+      <path
+        d="M10 10H90V80C90 94 76 104 50 104C24 104 10 94 10 80V10Z"
+        stroke="#FFFFFF"
+        strokeWidth="1.5"
+      />
+      {/* Texto INCADE */}
+      <text
+        x="50"
+        y="28"
+        fill="#FFFFFF"
+        fontSize="17"
+        fontWeight="900"
+        fontFamily="serif"
+        textAnchor="middle"
+        letterSpacing="1.2"
+      >
+        INCADE
+      </text>
+      {/* Líneas horizontales de cuadrícula */}
+      <line x1="12" y1="36" x2="88" y2="36" stroke="#FFFFFF" strokeWidth="1.5" />
+      <line x1="12" y1="43" x2="88" y2="43" stroke="#FFFFFF" strokeWidth="1.5" />
+      <line x1="12" y1="50" x2="88" y2="50" stroke="#FFFFFF" strokeWidth="1.5" />
+      <line x1="12" y1="57" x2="88" y2="57" stroke="#FFFFFF" strokeWidth="1.5" />
+      {/* Flecha de Crecimiento / Gráfico */}
+      <path
+        d="M14 54L34 40L54 50L80 32"
+        stroke="#FFFFFF"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M74 32H80V38"
+        stroke="#FFFFFF"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Libro Abierto Inferior */}
+      <path
+        d="M22 86C32 80 44 81 50 85C56 81 68 80 78 86V72C68 67 56 68 50 71C44 68 32 67 22 72V86Z"
+        fill="#1E1B4B"
+        stroke="#FFFFFF"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <line x1="50" y1="71" x2="50" y2="85" stroke="#FFFFFF" strokeWidth="2" />
+      <path d="M26 76C34 72 43 73 48 76" stroke="#FFFFFF" strokeWidth="1.2" />
+      <path d="M52 76C57 73 66 72 74 76" stroke="#FFFFFF" strokeWidth="1.2" />
+    </svg>
+  )
+}
+
+
 
 
 
