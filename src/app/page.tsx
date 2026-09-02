@@ -454,90 +454,94 @@ export default async function DashboardPage() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {subjects?.map((sub) => {
                   const formattedName = sub.name.charAt(0).toUpperCase() + sub.name.slice(1)
+                  const isAnalysis = formattedName.toLowerCase().includes('analisis') || formattedName.toLowerCase().includes('análisis')
 
                   return (
                     <div
                       key={sub.id}
-                      className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between gap-3 hover:border-slate-300 transition-all"
+                      className="group flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all gap-4"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
-                          Materia
-                        </span>
-                        <Link
-                          href={`/materias/${sub.id}`}
-                          className="text-[10px] font-bold text-indigo-700 hover:underline bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full transition-colors"
-                        >
-                          Diagnóstico →
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 font-bold group-hover:bg-indigo-600 group-hover:text-white transition-colors shadow-2xs">
+                              <IconBook className="w-4 h-4" />
+                            </span>
+                            {isAnalysis ? (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <span>●</span> Cátedra Oficial
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                                Cursando
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <Link href={`/materias/${sub.id}`} className="block mt-1">
+                          <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-600 transition-colors truncate" title={formattedName}>
+                            {formattedName}
+                          </h3>
                         </Link>
                       </div>
-                      <h3 className="text-sm font-bold text-slate-900 truncate" title={formattedName}>
-                        {formattedName}
-                      </h3>
 
-                      {/* Atajos Rápidos a las Herramientas del Workspace */}
-                      <div className="grid grid-cols-3 gap-1 pt-2.5 border-t border-slate-100 text-[10px] font-bold">
+                      {/* Botón Principal y Accesos Rápidos */}
+                      <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-100">
                         <Link
                           href={`/materias/${sub.id}`}
-                          className="rounded-lg bg-slate-50 text-slate-700 hover:bg-slate-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Apuntes"
+                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white py-2 text-xs font-bold transition-all shadow-2xs"
                         >
-                          <IconDocument className="w-3 h-3 text-slate-500" />
-                          <span>Apuntes</span>
+                          <span>Entrar al Workspace</span>
+                          <span className="text-indigo-300">→</span>
                         </Link>
 
-                        <Link
-                          href={`/materias/${sub.id}/temas`}
-                          className="rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Chat RAG"
-                        >
-                          <IconChat className="w-3 h-3 text-emerald-600" />
-                          <span>Chat</span>
-                        </Link>
+                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-500 font-bold px-0.5">
+                          <Link
+                            href={`/materias/${sub.id}/temas`}
+                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            title="Chat RAG"
+                          >
+                            <IconChat className="w-3 h-3 text-emerald-600" />
+                            <span>Chat</span>
+                          </Link>
 
-                        <Link
-                          href={`/materias/${sub.id}/simulador`}
-                          className="rounded-lg bg-purple-50 text-purple-800 hover:bg-purple-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Simulador de Parciales"
-                        >
-                          <IconQuiz className="w-3 h-3 text-purple-600" />
-                          <span>Quiz</span>
-                        </Link>
+                          <Link
+                            href={`/materias/${sub.id}/simulador`}
+                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            title="Simulador de Parciales"
+                          >
+                            <IconQuiz className="w-3 h-3 text-purple-600" />
+                            <span>Quiz</span>
+                          </Link>
 
-                        <Link
-                          href={`/materias/${sub.id}/tarjetas`}
-                          className="rounded-lg bg-indigo-50 text-indigo-800 hover:bg-indigo-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Tarjetas Didácticas"
-                        >
-                          <IconSparkles className="w-3 h-3 text-indigo-600" />
-                          <span>Tarjetas</span>
-                        </Link>
+                          <Link
+                            href={`/materias/${sub.id}/tarjetas`}
+                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            title="Tarjetas Didácticas"
+                          >
+                            <IconSparkles className="w-3 h-3 text-indigo-600" />
+                            <span>Tarjetas</span>
+                          </Link>
 
-                        <Link
-                          href={`/materias/${sub.id}/calendario`}
-                          className="rounded-lg bg-amber-50 text-amber-900 hover:bg-amber-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Calendario"
-                        >
-                          <IconCalendar className="w-3 h-3 text-amber-600" />
-                          <span>Fechas</span>
-                        </Link>
-
-                        <Link
-                          href={`/materias/${sub.id}/pizarra`}
-                          className="rounded-lg bg-sky-50 text-sky-800 hover:bg-sky-100 p-1.5 text-center transition-colors flex items-center justify-center gap-1"
-                          title="Fotos de Pizarra"
-                        >
-                          <IconCamera className="w-3 h-3 text-sky-600" />
-                          <span>Pizarra</span>
-                        </Link>
+                          <Link
+                            href={`/materias/${sub.id}/calendario`}
+                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            title="Fechas de Examen"
+                          >
+                            <IconCalendar className="w-3 h-3 text-amber-600" />
+                            <span>Fechas</span>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   )
                 })}
               </div>
+
             </div>
 
             {/* Columna Derecha: Calendario Mini (5 columnas) */}

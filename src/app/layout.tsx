@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { StudyTimerProvider } from '@/context/StudyTimerContext'
 import StudyTimerCapsule from '@/components/StudyTimerCapsule'
+import AppNavbarServer from '@/components/AppNavbarServer'
+
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,11 +33,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
         <StudyTimerProvider>
+          {/* Barra de Navegación Superior Global con Glassmorphism */}
+          <AppNavbarServer />
           {/* Cápsula Flotante y Arrastrable de Productividad Pomodoro / IoT */}
           <StudyTimerCapsule />
           <main className="flex-1">{children}</main>
         </StudyTimerProvider>
       </body>
+
     </html>
   )
 }
