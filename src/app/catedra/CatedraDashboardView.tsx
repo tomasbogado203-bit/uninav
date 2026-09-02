@@ -59,6 +59,14 @@ export default function CatedraDashboardView({
   const [newDesc, setNewDesc] = useState('')
   const [creating, setCreating] = useState(false)
 
+  // Estados para subida de documento oficial de cátedra
+  const [showUploadDocModal, setShowUploadDocModal] = useState(false)
+  const [newDocTitle, setNewDocTitle] = useState('')
+  const [newDocType, setNewDocType] = useState<'guia_tp' | 'teorico' | 'examen_modelo'>('guia_tp')
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [docSuccessMsg, setDocSuccessMsg] = useState<string | null>(null)
+
+
   // Estado de telemetría de la comisión seleccionada
   const [telemetry, setTelemetry] = useState<{ topics: TelemetryTopic[]; ai_recommendation: string }>({
     topics: [
@@ -233,6 +241,30 @@ export default function CatedraDashboardView({
     setNewAnnouncementContent('')
     alert('¡Aviso publicado y notificado a los alumnos inscriptos!')
   }
+
+  const handleUploadDocSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newDocTitle.trim()) return
+
+    setUploadingDoc(true)
+    setTimeout(() => {
+      const newDoc: CatedraDocument = {
+        id: `doc-${Date.now()}`,
+        title: newDocTitle.trim(),
+        document_type: newDocType,
+        chunk_count: Math.floor(25 + Math.random() * 50),
+        queries_count: 0,
+        created_at: new Date().toISOString().slice(0, 10),
+      }
+      setDocuments([newDoc, ...documents])
+      setShowUploadDocModal(false)
+      setNewDocTitle('')
+      setUploadingDoc(false)
+      setDocSuccessMsg(`¡"${newDoc.title}" indexado con éxito en la base vectorial! Los alumnos recibirán respuestas citando esta fuente.`)
+      setTimeout(() => setDocSuccessMsg(null), 6000)
+    }, 1000)
+  }
+
 
   return (
     <div className="mx-auto max-w-[96rem] px-4 py-8 sm:px-6 flex flex-col gap-8 select-none">
@@ -498,6 +530,13 @@ export default function CatedraDashboardView({
       {/* TAB 2: BIBLIOGRAFÍA OFICIAL DE CÁTEDRA */}
       {activeTab === 'bibliografia' && (
         <div className="flex flex-col gap-6">
+          {docSuccessMsg && (
+            <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs font-bold text-emerald-800 flex items-center gap-2.5 animate-in fade-in">
+              <IconCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{docSuccessMsg}</span>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-base font-black text-slate-900">
@@ -509,12 +548,13 @@ export default function CatedraDashboardView({
             </div>
             <button
               type="button"
-              onClick={() => alert('Para subir nuevos apuntes de cátedra, podés hacerlo desde la pestaña de documentos.')}
+              onClick={() => setShowUploadDocModal(true)}
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all cursor-pointer self-start"
             >
               <span>+ Cargar Nuevo Apunte Oficial</span>
             </button>
           </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {documents.map((doc) => (
@@ -907,6 +947,96 @@ export default function CatedraDashboardView({
           </div>
         </div>
       )}
+
+      {/* Modal de Carga de Apunte Oficial de Cátedra */}
+      {showUploadDocModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-2xs p-4 animate-in fade-in"
+          onClick={() => setShowUploadDocModal(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 flex flex-col gap-5 animate-in zoom-in-95 text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                  Biblioteca Vectorial RAG
+                </span>
+                <h3 className="text-base font-black text-slate-900 mt-1">
+                  Cargar Nuevo Apunte Oficial de Cátedra
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUploadDocModal(false)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUploadDocSubmit} className="flex flex-col gap-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                  Título del Documento / Guía
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Guía Oficial de TP N° 3 - Integrales y Métodos Numéricos"
+                  value={newDocTitle}
+                  onChange={(e) => setNewDocTitle(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs sm:text-sm text-slate-900 focus:border-indigo-600 focus:outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                  Tipo de Documento
+                </label>
+                <select
+                  value={newDocType}
+                  onChange={(e) => setNewDocType(e.target.value as any)}
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs sm:text-sm text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                >
+                  <option value="guia_tp">Guía Oficial de Trabajos Prácticos (Ejercicios)</option>
+                  <option value="teorico">Material Teórico / Apunte de Clase</option>
+                  <option value="examen_modelo">Modelo de Examen / Parcial Anterior</option>
+                </select>
+              </div>
+
+              <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/40 p-5 text-center flex flex-col items-center gap-2">
+                <span className="text-2xl">📄</span>
+                <span className="font-bold text-xs text-slate-800">
+                  Seleccionar archivo PDF de Cátedra
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  El sistema extraerá automáticamente el texto, dividirá en chunks de 512 tokens y generará embeddings de 1536 dimensiones con Gemini.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowUploadDocModal(false)}
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingDoc}
+                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 py-2.5 text-xs font-bold shadow-md transition-all cursor-pointer"
+                >
+                  {uploadingDoc ? 'Indexando en pgvector...' : 'Indexar en la Cátedra'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
