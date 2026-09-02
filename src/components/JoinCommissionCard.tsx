@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { joinCommissionAction } from '@/app/catedra/actions'
-import { IconUsers, IconCheck, IconSparkles } from '@/components/icons'
+import { IconBook, IconCheck, IconSparkles } from '@/components/icons'
 
 export default function JoinCommissionCard() {
   const [code, setCode] = useState('')
@@ -37,48 +37,47 @@ export default function JoinCommissionCard() {
   }
 
   return (
-    <div className="rounded-3xl border border-indigo-200/90 bg-gradient-to-br from-indigo-50/70 via-purple-50/30 to-white p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
-      <div className="flex items-start gap-3.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xs shrink-0 mt-0.5">
-          <IconUsers className="w-5 h-5" />
+    <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex items-center gap-3.5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shrink-0 border border-indigo-100/80">
+          <IconBook className="w-5 h-5" />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 rounded-full">
-              Cátedra Oficial
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+              Vincular Cátedra Oficial
+            </h3>
+            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/60 px-2 py-0.2 rounded-full">
+              Código PIN
             </span>
-            <span className="text-xs text-slate-400 font-medium">Sincronización RAG</span>
           </div>
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-            ¿Tenés un código de comisión de tu profesor?
-          </h3>
-          <p className="text-xs text-slate-600 max-w-lg leading-relaxed">
-            Ingresá el código de 6 caracteres que te dio tu cátedra (ej: <span className="font-mono font-bold text-indigo-700">AN104N</span>) para heredar los apuntes oficiales y sincronizarte con el curso.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Ingresá el código de 6 letras de tu docente (ej: <span className="font-mono font-bold text-indigo-600">AN104N</span>) para heredar los apuntes oficiales.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleJoin} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+      <form onSubmit={handleJoin} className="flex items-center gap-2 shrink-0">
         <input
           type="text"
           maxLength={8}
-          placeholder="Código (ej: AN104N)"
+          placeholder="Código (AN104N)"
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
-          className="rounded-xl border border-indigo-300 bg-white px-4 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-widest text-slate-900 uppercase focus:border-indigo-600 focus:outline-hidden shadow-2xs text-center sm:text-left min-w-[160px]"
+          className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs sm:text-sm font-mono font-bold tracking-wider text-slate-900 uppercase focus:bg-white focus:border-indigo-600 focus:outline-hidden transition-all text-center sm:text-left w-36 sm:w-44"
         />
 
         <button
           type="submit"
           disabled={loading || !code.trim()}
-          className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+          className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
         >
           {loading ? (
             <span>Conectando...</span>
           ) : (
             <>
-              <IconSparkles className="w-4 h-4" />
-              <span>Unirse a Cátedra</span>
+              <IconSparkles className="w-3.5 h-3.5" />
+              <span>Vincular</span>
             </>
           )}
         </button>
@@ -87,14 +86,14 @@ export default function JoinCommissionCard() {
       {result && (
         <div className="col-span-full w-full">
           {result.success ? (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-800 flex items-center gap-2 animate-in fade-in">
-              <IconCheck className="w-4 h-4 text-emerald-600" />
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-semibold text-emerald-800 flex items-center gap-2 animate-in fade-in">
+              <IconCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
-                ¡Te uniste con éxito a la cátedra de {result.subject_name} ({result.commission_name})! Recargando...
+                Te uniste con éxito a la cátedra de {result.subject_name} ({result.commission_name}). Actualizando vista...
               </span>
             </div>
           ) : (
-            <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-bold text-rose-800 animate-in fade-in">
+            <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs font-semibold text-rose-800 animate-in fade-in">
               {result.error}
             </div>
           )}

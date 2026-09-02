@@ -102,59 +102,53 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[96rem] px-4 py-8 sm:px-6 flex flex-col gap-8 select-none">
-      {/* Hero Welcome Card con Racha de Estudio Destacada */}
-      <div className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl">
+      {/* Hero Welcome Card Limpio & Minimalista con Jerarquía Visual Clara */}
+      <div className="rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-xs flex flex-col gap-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-300 border border-indigo-500/30">
-                {isDean
-                  ? 'Decanato & Secretaría Académica'
-                  : isProfessor
-                  ? 'Claustro Docente'
-                  : careerName || 'Universidad'}{' '}
-                {profile?.university ? `• ${profile.university}` : ''}
-              </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200">
+                <span>{careerName || 'Universidad'}</span>
+                {profile?.university ? <span className="text-slate-400">• {profile.university}</span> : null}
+              </span>
 
               {/* Selector Rápido de Rol (Modo Demo) */}
               <RoleSwitcherPill currentRole={userRole} />
 
               {isStudent && streakInfo && (
                 <div
-                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/40 shadow-2xs"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200/80 shadow-2xs"
                   title={`Récord personal: ${streakInfo.longest_streak} días consecutivos de estudio`}
                 >
-                  <IconFlame className="w-3.5 h-3.5 text-amber-400" />
+                  <IconFlame className="w-3.5 h-3.5 text-amber-500" />
                   <span>
-                    Racha Activa: {streakInfo.current_streak}{' '}
-                    {streakInfo.current_streak === 1 ? 'día' : 'días'} (Récord:{' '}
-                    {streakInfo.longest_streak}d)
+                    Racha: {streakInfo.current_streak} {streakInfo.current_streak === 1 ? 'día' : 'días'}
                   </span>
                 </div>
               )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Bienvenido, {profile?.full_name ?? 'Usuario'}
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
+              Hola, {profile?.full_name ?? 'Estudiante'}
             </h1>
-            <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
               {isDean
-                ? 'Portal de Gestión y Decanato. Supervisá la tasa de retención estudiantil, materias filtro y emití informes de acreditación.'
+                ? 'Panel institucional de decanato. Supervisá la tasa de retención estudiantil, materias filtro y generá informes de acreditación CONEAU.'
                 : isProfessor
-                ? 'Espacio de Cátedra. Monitoreá el mapa de calor de dudas de tus alumnos, centralizá apuntes y diseñá evaluaciones.'
-                : 'Plataforma de acompañamiento universitario. Selecciona tu materia para acceder al tutor RAG socrático, simulador de parciales y calendario.'}
+                ? 'Espacio docente de cátedra. Monitoreá el mapa de calor de dudas de tus alumnos, administrá apuntes y diseñá evaluaciones.'
+                : 'Plataforma de acompañamiento universitario. Ingresá a tu materia para acceder al tutor RAG socrático, simulador de parciales y calendario.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
             {/* Solo visible para Profesores */}
             {isProfessor && (
               <Link
                 href="/catedra"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/30 px-4 py-2.5 text-xs font-bold text-purple-200 transition-colors backdrop-blur-xs shadow-2xs"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 px-4 py-2.5 text-xs font-bold text-white transition-colors shadow-2xs"
               >
-                <IconBook className="w-3.5 h-3.5 text-purple-300" />
-                <span>Ir al Panel de Cátedra</span>
+                <IconBook className="w-3.5 h-3.5" />
+                <span>Panel de Cátedra</span>
                 <IconChevronRight className="w-3.5 h-3.5" />
               </Link>
             )}
@@ -163,34 +157,35 @@ export default async function DashboardPage() {
             {isDean && (
               <Link
                 href="/institucional"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 px-4 py-2.5 text-xs font-bold text-sky-200 transition-colors backdrop-blur-xs shadow-2xs"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 px-4 py-2.5 text-xs font-bold text-white transition-colors shadow-2xs"
               >
-                <IconDocument className="w-3.5 h-3.5 text-sky-300" />
-                <span>Ir al Centro de Retención</span>
+                <IconDocument className="w-3.5 h-3.5" />
+                <span>Centro de Retención</span>
                 <IconChevronRight className="w-3.5 h-3.5" />
               </Link>
             )}
 
             <Link
               href="/comunidad"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-500/30 hover:bg-indigo-500/40 border border-indigo-400/40 px-3.5 py-2.5 text-xs font-bold text-white transition-colors backdrop-blur-xs shadow-2xs"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-700 transition-colors shadow-2xs"
             >
-              <IconUsers className="w-3.5 h-3.5 text-indigo-300" />
+              <IconUsers className="w-3.5 h-3.5 text-slate-500" />
               <span>Banco Comunitario</span>
             </Link>
 
             {isStudent && (
               <Link
                 href="/materias"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md hover:bg-indigo-500 transition-all hover:shadow-indigo-500/25 shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 transition-all shrink-0"
               >
-                <span>Gestionar materias</span>
+                <span>+ Nueva Materia</span>
                 <IconChevronRight className="w-3.5 h-3.5" />
               </Link>
             )}
           </div>
         </div>
       </div>
+
 
       {/* ─────────────────────────────────────────────────────────────
           1. VISTA EXCLUSIVA PARA DECANATO & AUTORIDADES (isDean)
