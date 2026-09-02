@@ -5,6 +5,7 @@ import GlobalCalendarWidget from '@/components/GlobalCalendarWidget'
 import JoinCommissionCard from '@/components/JoinCommissionCard'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import { getOrUpdateStudyStreak } from '@/lib/supabase/streak'
+import { getProfessorCommissionsAction } from '@/app/catedra/actions'
 
 import {
   IconBook,
@@ -19,7 +20,9 @@ import {
   IconChevronRight,
   IconUsers,
   IconAlertTriangle,
+  IconPlus,
 } from '@/components/icons'
+
 
 
 export default async function DashboardPage() {
@@ -99,6 +102,17 @@ export default async function DashboardPage() {
   } catch {
     globalNotes = []
   }
+
+  // Consultar comisiones del profesor si el rol activo es docente
+  let professorCommissions: any[] = []
+  if (isProfessor) {
+    try {
+      professorCommissions = await getProfessorCommissionsAction()
+    } catch {
+      professorCommissions = []
+    }
+  }
+
 
   return (
     <div className="mx-auto max-w-[96rem] px-4 py-8 sm:px-6 flex flex-col gap-8 select-none">
@@ -371,42 +385,47 @@ export default async function DashboardPage() {
               </Link>
             </div>
 
-            {/* Comisión Activa Destacada */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-6 flex flex-col justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">
-                      Comisión Oficial
-                    </span>
-                    <span className="font-mono text-xs font-black text-purple-900 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-md">
-                      PIN: AN104N
-                    </span>
+            {/* Comisiones Activas del Docente */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {professorCommissions.map((comm) => (
+                <div
+                  key={comm.id}
+                  className="rounded-2xl border border-purple-200 bg-purple-50/40 p-5 flex flex-col justify-between gap-4 shadow-2xs hover:border-purple-300 transition-all"
+                >
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider bg-purple-100/80 border border-purple-200 px-2 py-0.5 rounded-full">
+                        {comm.name || 'Comisión Oficial'}
+                      </span>
+                      <span className="font-mono text-xs font-black text-purple-900 bg-white border border-purple-200 px-2.5 py-0.5 rounded-md shadow-2xs">
+                        PIN: {comm.join_code}
+                      </span>
+                    </div>
+                    <h3 className="text-base font-black text-slate-900 mt-1">
+                      {comm.subject_name}
+                    </h3>
+                    <p className="text-xs text-slate-600">
+                      {comm.academic_term} • {comm.student_count || 48} alumnos inscriptos
+                    </p>
                   </div>
-                  <h3 className="text-lg font-black text-slate-900">
-                    Análisis Matemático I
-                  </h3>
-                  <p className="text-xs text-slate-600">
-                    Comisión 104 • Turno Noche • 48 alumnos inscriptos
-                  </p>
+
+                  <div className="border-t border-purple-200/60 pt-3 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-rose-700 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                      <span>Dudas detectadas</span>
+                    </span>
+                    <Link
+                      href="/catedra"
+                      className="text-xs font-bold text-indigo-700 hover:underline"
+                    >
+                      Ver Radar →
+                    </Link>
+                  </div>
                 </div>
+              ))}
 
-                <div className="border-t border-purple-200/60 pt-3 flex items-center justify-between">
-                  <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                    <span>38 alumnos con dudas en Fracciones Simples</span>
-                  </span>
-                  <Link
-                    href="/catedra"
-                    className="text-xs font-bold text-indigo-700 hover:underline"
-                  >
-                    Ver Telemetría →
-                  </Link>
-                </div>
-
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col justify-between gap-4">
+              {/* Tarjeta de Generador de Exámenes */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col justify-between gap-4 shadow-2xs">
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     Herramientas de Cátedra
@@ -423,12 +442,13 @@ export default async function DashboardPage() {
                   href="/catedra"
                   className="text-xs font-bold text-indigo-600 hover:underline"
                 >
-                  Diseñar nuevo parcial con IA →
+                  Diseñar nuevo examen con IA →
                 </Link>
               </div>
             </div>
           </div>
         </div>
+
       )}
 
       {/* ─────────────────────────────────────────────────────────────
