@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { StudyTimerProvider } from '@/context/StudyTimerContext'
 import StudyTimerCapsule from '@/components/StudyTimerCapsule'
+import AppShellServer from '@/components/AppShellServer'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -33,7 +34,8 @@ export default function RootLayout({
         <StudyTimerProvider>
           {/* Cápsula Flotante y Arrastrable de Productividad Pomodoro / IoT */}
           <StudyTimerCapsule />
-          <main className="flex-1">{children}</main>
+          {/* App Shell con Barra Lateral Persistente y Cero Saltos */}
+          <AppShellServer>{children}</AppShellServer>
         </StudyTimerProvider>
       </body>
     </html>
