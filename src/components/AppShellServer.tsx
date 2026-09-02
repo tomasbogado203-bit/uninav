@@ -52,10 +52,17 @@ export default async function AppShellServer({ children }: AppShellServerProps) 
     subjects = []
   }
 
+  const defaultUserName =
+    resolvedRole === 'dean'
+      ? 'Decano / Autoridad'
+      : resolvedRole === 'professor'
+      ? 'Profesor de Cátedra'
+      : 'Estudiante'
+
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans antialiased">
       <UnifiedAppSidebar
-        userName={profile?.full_name || 'Estudiante'}
+        userName={profile?.full_name || defaultUserName}
         careerName={careerName}
         universityName={profile?.university || 'Universidad'}
         userRole={resolvedRole}
@@ -67,4 +74,5 @@ export default async function AppShellServer({ children }: AppShellServerProps) 
       </main>
     </div>
   )
+
 }

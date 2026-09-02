@@ -129,8 +129,9 @@ export default async function DashboardPage() {
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-1">
-              Hola, {profile?.full_name ?? 'Estudiante'}
+              Hola, {profile?.full_name ? profile.full_name : isDean ? 'Decano / Autoridad' : isProfessor ? 'Profesor' : 'Estudiante'}
             </h1>
+
             <p className="text-xs sm:text-sm text-slate-500 max-w-2xl leading-relaxed">
               {isDean
                 ? 'Panel institucional de decanato. Supervisá la tasa de retención estudiantil, materias filtro y generá informes de acreditación CONEAU.'
