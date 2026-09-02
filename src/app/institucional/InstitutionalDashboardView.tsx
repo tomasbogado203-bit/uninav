@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { FacultyAnalyticsData } from './actions'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import {
@@ -12,7 +13,9 @@ import {
   IconPrinter,
   IconClipboard,
   IconLightbulb,
+  IconChevronLeft,
 } from '@/components/icons'
+
 
 interface InstitutionalDashboardViewProps {
   data: FacultyAnalyticsData
@@ -58,6 +61,14 @@ export default function InstitutionalDashboardView({
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-colors backdrop-blur-xs shadow-2xs cursor-pointer"
+          >
+            <IconChevronLeft className="w-4 h-4 text-sky-300" />
+            <span>Volver al Inicio</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => setShowConeauModal(true)}
@@ -67,6 +78,7 @@ export default function InstitutionalDashboardView({
             <span>Exportar Informe de Acreditación</span>
           </button>
         </div>
+
       </div>
 
       {/* 4 KPIs Ejecutivos */}

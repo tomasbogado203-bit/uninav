@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   CommissionItem,
   TelemetryTopic,
@@ -19,8 +20,10 @@ import {
   IconLightbulb,
   IconDocument,
   IconFlame,
+  IconChevronLeft,
   IconExternalLink,
 } from '@/components/icons'
+
 
 interface CatedraDashboardViewProps {
   userRole: 'student' | 'professor' | 'dean' | 'admin'
@@ -178,6 +181,14 @@ export default function CatedraDashboardView({
 
         {/* Acciones y Selector de Rol para Demo */}
         <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-colors backdrop-blur-xs shadow-2xs cursor-pointer"
+          >
+            <IconChevronLeft className="w-4 h-4 text-indigo-300" />
+            <span>Volver al Inicio</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
@@ -186,6 +197,7 @@ export default function CatedraDashboardView({
             <span>+ Crear Nueva Comisión</span>
           </button>
         </div>
+
       </div>
 
       {/* Grid Principal: Listado de Comisiones + Detalle de Cátedra */}
