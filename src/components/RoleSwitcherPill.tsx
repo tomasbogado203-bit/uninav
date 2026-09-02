@@ -2,7 +2,13 @@
 
 import { useState } from 'react'
 import { updateUserRoleAction } from '@/app/catedra/actions'
-import { IconUsers, IconBook, IconDocument, IconCheck } from '@/components/icons'
+import {
+  IconGraduationCap,
+  IconBook,
+  IconBuilding,
+  IconShield,
+  IconCheck,
+} from '@/components/icons'
 
 interface RoleSwitcherPillProps {
   currentRole: 'student' | 'professor' | 'dean' | 'admin'
@@ -18,49 +24,43 @@ export default function RoleSwitcherPill({
   const handleSelectRole = async (newRole: 'student' | 'professor' | 'dean') => {
     setLoading(true)
     try {
-      // Escribir cookie client-side inmediatamente
       document.cookie = `uninav_demo_role=${newRole}; path=/; max-age=2592000; SameSite=Lax`
       setRole(newRole)
       setShowModal(false)
       await updateUserRoleAction(newRole)
       window.location.reload()
     } catch {
-      // Recargar de todos modos ya que la cookie fue seteada
       window.location.reload()
     } finally {
       setLoading(false)
     }
   }
 
-
-  const roleLabels: Record<string, { label: string; bg: string; text: string; icon: string }> = {
+  const roleConfig = {
     student: {
       label: 'Estudiante',
-      bg: 'bg-indigo-500/20 border-indigo-500/30',
-      text: 'text-indigo-300',
-      icon: '🎓',
+      bg: 'bg-indigo-500/15 border-indigo-400/30 text-indigo-300',
+      icon: IconGraduationCap,
     },
     professor: {
       label: 'Profesor de Cátedra',
-      bg: 'bg-purple-500/20 border-purple-500/30',
-      text: 'text-purple-300',
-      icon: '👨‍🏫',
+      bg: 'bg-purple-500/15 border-purple-400/30 text-purple-300',
+      icon: IconBook,
     },
     dean: {
       label: 'Decanato / Autoridad',
-      bg: 'bg-sky-500/20 border-sky-500/30',
-      text: 'text-sky-300',
-      icon: '👑',
+      bg: 'bg-sky-500/15 border-sky-400/30 text-sky-300',
+      icon: IconBuilding,
     },
     admin: {
       label: 'Administrador',
-      bg: 'bg-emerald-500/20 border-emerald-500/30',
-      text: 'text-emerald-300',
-      icon: '⚙️',
+      bg: 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300',
+      icon: IconShield,
     },
   }
 
-  const currentInfo = roleLabels[role] || roleLabels.student
+  const currentInfo = roleConfig[role] || roleConfig.student
+  const CurrentIcon = currentInfo.icon
 
   return (
     <div className="relative inline-block">
@@ -68,10 +68,10 @@ export default function RoleSwitcherPill({
       <button
         type="button"
         onClick={() => setShowModal(!showModal)}
-        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold border transition-all cursor-pointer shadow-2xs hover:brightness-110 ${currentInfo.bg} ${currentInfo.text}`}
+        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold border transition-all cursor-pointer shadow-2xs hover:brightness-110 ${currentInfo.bg}`}
         title="Clic para alternar rol en Modo Demo"
       >
-        <span>{currentInfo.icon}</span>
+        <CurrentIcon className="w-3.5 h-3.5 shrink-0" />
         <span>Rol: {currentInfo.label}</span>
         <span className="text-[10px] text-slate-400 font-mono">▾</span>
       </button>
@@ -88,10 +88,10 @@ export default function RoleSwitcherPill({
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
                   Control de Acceso RBAC
                 </span>
-                <h3 className="text-base font-black text-slate-900 mt-1">
+                <h3 className="text-base font-bold text-slate-900 mt-1">
                   Alternar Rol de Usuario (Modo Demo)
                 </h3>
               </div>
@@ -105,7 +105,7 @@ export default function RoleSwitcherPill({
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Seleccioná un rol para simular cómo cambia la interfaz, los permisos y las rutas de la plataforma para cada perfil:
+              Seleccioná un perfil para visualizar los permisos, rutas y herramientas específicas del sistema:
             </p>
 
             <div className="flex flex-col gap-2.5">
@@ -121,8 +121,8 @@ export default function RoleSwitcherPill({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-xl shrink-0">
-                    🎓
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
+                    <IconGraduationCap className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="font-bold text-xs sm:text-sm text-slate-900 block">
@@ -148,8 +148,8 @@ export default function RoleSwitcherPill({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-xl shrink-0">
-                    👨‍🏫
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 shrink-0">
+                    <IconBook className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="font-bold text-xs sm:text-sm text-slate-900 block">
@@ -175,8 +175,8 @@ export default function RoleSwitcherPill({
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-xl shrink-0">
-                    👑
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 shrink-0">
+                    <IconBuilding className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="font-bold text-xs sm:text-sm text-slate-900 block">

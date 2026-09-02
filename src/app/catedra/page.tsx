@@ -11,9 +11,10 @@ export default async function CatedraPage() {
   if (userInfo.role === 'student') {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center flex flex-col items-center gap-6">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 border border-purple-200 text-purple-600 shadow-sm text-3xl">
-          👨‍🏫
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 border border-purple-200 text-purple-600 shadow-sm">
+          <IconBook className="w-8 h-8 text-purple-600" />
         </div>
+
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-center gap-2 mb-1">

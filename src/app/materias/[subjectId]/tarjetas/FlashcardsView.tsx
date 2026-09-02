@@ -450,9 +450,10 @@ export default function FlashcardsView({
               /* Lado Reverso (Explicación / Respuesta) */
               <div className="flex flex-col justify-between h-full gap-6 bg-slate-900 text-white -m-8 p-8 rounded-3xl animate-in fade-in zoom-in-95">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2.5 py-1 rounded-full">
-                    🎓 Respuesta & Concepto Clave
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2.5 py-1 rounded-full">
+                    Respuesta & Concepto Clave
                   </span>
+
                   <span className="text-xs text-slate-400 font-medium group-hover:text-emerald-400 transition-colors">
                     Haz clic para voltear ↺
                   </span>
@@ -670,9 +671,10 @@ export default function FlashcardsView({
                 </div>
               ) : (
                 <div className="flex flex-col justify-between h-full gap-4 bg-slate-900 text-white -m-6 p-6 rounded-2xl animate-in fade-in">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    🎓 Respuesta & Explicación
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                    Respuesta & Explicación
                   </span>
+
                   <p className="text-sm sm:text-base text-slate-100 leading-relaxed font-sans text-center whitespace-pre-wrap my-auto">
                     {expandedCard.back_text}
                   </p>

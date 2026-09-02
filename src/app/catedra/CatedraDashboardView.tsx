@@ -506,18 +506,28 @@ export default function CatedraDashboardView({
 
               <div className="flex flex-col gap-3">
                 <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-900">🟢 Alumnos al día con la Guía</span>
-                  <span className="font-black text-sm text-emerald-700">68%</span>
+                  <span className="text-xs font-semibold text-emerald-900 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span>Alumnos al día con la Guía</span>
+                  </span>
+                  <span className="font-bold text-sm text-emerald-700">68%</span>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-amber-900">🟡 En riesgo / Rezago de lecturas</span>
-                  <span className="font-black text-sm text-amber-700">24%</span>
+                  <span className="text-xs font-semibold text-amber-900 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span>En riesgo / Rezago de lecturas</span>
+                  </span>
+                  <span className="font-bold text-sm text-amber-700">24%</span>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-between">
-                  <span className="text-xs font-bold text-rose-900">🔴 Inactivos (+7 días sin ingresar)</span>
-                  <span className="font-black text-sm text-rose-700">8%</span>
+                  <span className="text-xs font-semibold text-rose-900 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span>Inactivos (+7 días sin ingresar)</span>
+                  </span>
+                  <span className="font-bold text-sm text-rose-700">8%</span>
                 </div>
               </div>
+
 
               <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
                 Datos calculados en base a consultas al tutor RAG, resolución de autoevaluaciones y sesiones registradas con la lámpara de concentración IoT.
@@ -728,21 +738,25 @@ export default function CatedraDashboardView({
                     </td>
                     <td className="px-5 py-3.5">
                       {st.activity_status === 'al_dia' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                          🟢 Al día
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span>Al día</span>
                         </span>
                       )}
                       {st.activity_status === 'en_riesgo' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
-                          🟡 En riesgo
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                          <span>En riesgo</span>
                         </span>
                       )}
                       {st.activity_status === 'inactivo' && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold text-rose-700">
-                          🔴 Inactivo
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                          <span>Inactivo</span>
                         </span>
                       )}
                     </td>
+
                     <td className="px-5 py-3.5 font-mono font-bold text-slate-800">
                       {st.focus_hours} hs
                     </td>

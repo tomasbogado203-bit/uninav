@@ -18,7 +18,9 @@ import {
   IconLightbulb,
   IconChevronRight,
   IconUsers,
+  IconAlertTriangle,
 } from '@/components/icons'
+
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -202,13 +204,13 @@ export default async function DashboardPage() {
               className="rounded-3xl border border-sky-200 bg-sky-50/50 p-6 shadow-xs flex flex-col justify-between gap-4 hover:border-sky-300 hover:bg-sky-50 transition-all group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-100 border border-sky-200 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 bg-sky-100 border border-sky-200 px-2.5 py-1 rounded-full">
                   Semáforo Predictivo
                 </span>
-                <span className="text-xl">🚨</span>
+                <IconAlertTriangle className="w-5 h-5 text-sky-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 group-hover:text-sky-700 transition-colors">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-sky-700 transition-colors">
                   Centro de Retención & Materias Filtro
                 </h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -225,13 +227,13 @@ export default async function DashboardPage() {
               className="rounded-3xl border border-indigo-200 bg-indigo-50/50 p-6 shadow-xs flex flex-col justify-between gap-4 hover:border-indigo-300 hover:bg-indigo-50 transition-all group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-full">
                   Acreditación Formal
                 </span>
-                <span className="text-xl">📄</span>
+                <IconDocument className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">
                   Generador de Informes CONEAU (A4)
                 </h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -248,13 +250,13 @@ export default async function DashboardPage() {
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col justify-between gap-4 hover:border-slate-300 transition-all group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
                   Transparencia Académica
                 </span>
-                <span className="text-xl">📚</span>
+                <IconBook className="w-5 h-5 text-slate-600" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 group-hover:text-slate-800 transition-colors">
+                <h3 className="text-base font-bold text-slate-900 group-hover:text-slate-800 transition-colors">
                   Supervisión de Banco Comunitario
                 </h3>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
@@ -266,6 +268,7 @@ export default async function DashboardPage() {
               </span>
             </Link>
           </div>
+
 
           {/* Directorio de Carreras y Cohortes de la Facultad */}
           <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs flex flex-col gap-6">
@@ -393,8 +396,9 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="border-t border-purple-200/60 pt-3 flex items-center justify-between">
-                  <span className="text-xs font-bold text-red-600 flex items-center gap-1">
-                    🔴 38 alumnos con dudas en Fracciones Simples
+                  <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span>38 alumnos con dudas en Fracciones Simples</span>
                   </span>
                   <Link
                     href="/catedra"
@@ -403,6 +407,7 @@ export default async function DashboardPage() {
                     Ver Telemetría →
                   </Link>
                 </div>
+
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col justify-between gap-4">

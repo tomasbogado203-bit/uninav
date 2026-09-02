@@ -172,35 +172,38 @@ export default function InstitutionalDashboardView({
                 <button
                   type="button"
                   onClick={() => setFilterRisk('ALTO')}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                     filterRisk === 'ALTO'
-                      ? 'bg-red-600 text-white'
-                      : 'bg-red-50 text-red-700 hover:bg-red-100'
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
                   }`}
                 >
-                  🔴 Alto
+                  <span className={`w-1.5 h-1.5 rounded-full ${filterRisk === 'ALTO' ? 'bg-white' : 'bg-rose-500'}`}></span>
+                  <span>Alto</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterRisk('MEDIO')}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                     filterRisk === 'MEDIO'
                       ? 'bg-amber-600 text-white'
                       : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
                   }`}
                 >
-                  🟡 Medio
+                  <span className={`w-1.5 h-1.5 rounded-full ${filterRisk === 'MEDIO' ? 'bg-white' : 'bg-amber-500'}`}></span>
+                  <span>Medio</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterRisk('BAJO')}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                     filterRisk === 'BAJO'
                       ? 'bg-emerald-600 text-white'
                       : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                   }`}
                 >
-                  🟢 Bajo
+                  <span className={`w-1.5 h-1.5 rounded-full ${filterRisk === 'BAJO' ? 'bg-white' : 'bg-emerald-500'}`}></span>
+                  <span>Bajo</span>
                 </button>
               </div>
             </div>
@@ -228,21 +231,25 @@ export default function InstitutionalDashboardView({
                       </td>
                       <td className="px-4 py-3.5">
                         {sub.risk_level === 'ALTO' && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
-                            🔴 RIESGO ALTO
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                            <span>Riesgo Alto</span>
                           </span>
                         )}
                         {sub.risk_level === 'MEDIO' && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
-                            🟡 RIESGO MEDIO
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                            <span>Riesgo Medio</span>
                           </span>
                         )}
                         {sub.risk_level === 'BAJO' && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                            🟢 ESTABLE
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span>Estable</span>
                           </span>
                         )}
                       </td>
+
                       <td className="px-4 py-3.5 font-medium text-slate-700">
                         {sub.drop_off_week}
                       </td>
