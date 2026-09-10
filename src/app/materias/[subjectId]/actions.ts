@@ -18,102 +18,135 @@ const MODEL_FALLBACK_CHAIN = [
   'gemini-3.7-flash-video-understanding-eap',
 ]
 
-export async function uploadDocument(subjectId: string, formData: FormData) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
-
-  const file = formData.get('file') as File
-  const title = (formData.get('title') as string) || file?.name
-  const isExamenViejo = formData.get('document_type') === 'examen_viejo'
-
-  if (!file || file.size === 0) {
-    throw new Error('No se seleccionó ningún archivo')
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer())
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-  const path = `${user.id}/${subjectId}/${Date.now()}-${safeFileName}`
-
-  const { error: uploadError } = await supabase.storage
-    .from('apuntes')
-    .upload(path, buffer, { contentType: 'application/pdf' })
-
-  if (uploadError) throw new Error(uploadError.message)
-
-  const { data: document, error: insertError } = await supabase
-    .from('documents')
-    .insert({
-      user_id: user.id,
-      subject_id: subjectId,
-      title,
-      file_url: path,
-      document_type: isExamenViejo ? 'examen_viejo' : 'apunte',
-    })
-    .select('id')
-    .single()
-
-  if (insertError) throw new Error(insertError.message)
-
-  // Chunking + embeddings + auto-extracción de temas de estudio
+export async function uploadDocument(subjectId: string, formData: FormData): Promise<{
+  success: boolean
+  error?: string
+  documentId?: string
+}> {
   try {
-    const pages = await extractTextByPage(buffer)
-    const chunks = chunkPages(pages)
+    const supabase = await createClient()
 
-    for (const chunk of chunks) {
-      const embedding = await embedText(chunk.content, 'RETRIEVAL_DOCUMENT')
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      const { error: chunkError } = await supabase.from('document_chunks').insert({
-        document_id: document.id,
-        content: chunk.content,
-        page_number: chunk.page_number,
-        embedding,
-      })
-
-      if (chunkError) {
-        console.error('Error guardando chunk:', chunkError.message)
-      }
+    if (!user) {
+      return { success: false, error: 'Tu sesión ha expirado. Por favor iniciá sesión nuevamente.' }
     }
 
-    // Auto-generación de temas de estudio al subir un apunte (no aplica a exámenes viejos)
-    if (!isExamenViejo && pages.length > 0) {
-      try {
-        const detectedTopics = await extractTopicsFromPdf(pages)
+    const file = formData.get('file') as File
+    const title = (formData.get('title') as string) || file?.name || 'Apunte sin título'
+    const isExamenViejo = formData.get('document_type') === 'examen_viejo'
 
-        if (detectedTopics && detectedTopics.length > 0) {
-          const { data: existingThreads } = await supabase
-            .from('chat_threads')
-            .select('title')
-            .eq('subject_id', subjectId)
+    if (!file || file.size === 0) {
+      return { success: false, error: 'No se seleccionó ningún archivo válido.' }
+    }
 
-          const existingTitles = new Set(
-            (existingThreads || []).map((t) => t.title.toLowerCase().trim())
+    if (file.size > 25 * 1024 * 1024) {
+      return { success: false, error: 'El archivo supera el tamaño máximo permitido de 25MB.' }
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const path = `${user.id}/${subjectId}/${Date.now()}-${safeFileName}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('apuntes')
+      .upload(path, buffer, { contentType: 'application/pdf', upsert: true })
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError)
+      return { success: false, error: `Error al subir el archivo a Storage: ${uploadError.message}` }
+    }
+
+    const { data: document, error: insertError } = await supabase
+      .from('documents')
+      .insert({
+        user_id: user.id,
+        subject_id: subjectId,
+        title,
+        file_url: path,
+        document_type: isExamenViejo ? 'examen_viejo' : 'apunte',
+      })
+      .select('id')
+      .single()
+
+    if (insertError) {
+      return { success: false, error: `Error al registrar el documento en la base de datos: ${insertError.message}` }
+    }
+
+    // Chunking + embeddings + auto-extracción de temas de estudio
+    try {
+      const pages = await extractTextByPage(buffer)
+      if (pages && pages.length > 0) {
+        const chunks = chunkPages(pages)
+
+        // Procesar chunks en lotes de 4
+        const BATCH_SIZE = 4
+        for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
+          const batch = chunks.slice(i, i + BATCH_SIZE)
+          await Promise.all(
+            batch.map(async (chunk) => {
+              try {
+                const embedding = await embedText(chunk.content, 'RETRIEVAL_DOCUMENT')
+                await supabase.from('document_chunks').insert({
+                  document_id: document.id,
+                  content: chunk.content,
+                  page_number: chunk.page_number,
+                  embedding,
+                })
+              } catch (chunkErr) {
+                console.error('Error guardando chunk:', chunkErr)
+              }
+            })
           )
+        }
 
-          for (const topicTitle of detectedTopics) {
-            if (!existingTitles.has(topicTitle.toLowerCase().trim())) {
-              await supabase.from('chat_threads').insert({
-                subject_id: subjectId,
-                title: topicTitle,
-              })
+        // Auto-generación de temas de estudio al subir un apunte (no aplica a exámenes viejos)
+        if (!isExamenViejo) {
+          try {
+            const detectedTopics = await extractTopicsFromPdf(pages.slice(0, 10))
+
+            if (detectedTopics && detectedTopics.length > 0) {
+              const { data: existingThreads } = await supabase
+                .from('chat_threads')
+                .select('title')
+                .eq('subject_id', subjectId)
+
+              const existingTitles = new Set(
+                (existingThreads || []).map((t) => t.title.toLowerCase().trim())
+              )
+
+              for (const topicTitle of detectedTopics) {
+                if (!existingTitles.has(topicTitle.toLowerCase().trim())) {
+                  await supabase.from('chat_threads').insert({
+                    subject_id: subjectId,
+                    title: topicTitle,
+                  })
+                }
+              }
             }
+          } catch (topicErr) {
+            console.warn('Error auto-detectando temas del PDF:', topicErr)
           }
         }
-      } catch (topicErr) {
-        console.error('Error auto-detectando temas del PDF:', topicErr)
       }
+    } catch (err) {
+      console.warn('Extracción de texto completada con observaciones:', err)
     }
-  } catch (err) {
-    console.error('Error procesando embeddings del documento:', err)
-  }
 
-  revalidatePath(`/materias/${subjectId}`, 'layout')
-  revalidatePath(`/materias/${subjectId}/temas`)
+    revalidatePath(`/materias/${subjectId}`, 'layout')
+    revalidatePath(`/materias/${subjectId}/temas`)
+    return { success: true, documentId: document.id }
+  } catch (globalErr) {
+    console.error('Error global en uploadDocument:', globalErr)
+    return {
+      success: false,
+      error: globalErr instanceof Error ? globalErr.message : 'Error inesperado al procesar el apunte.',
+    }
+  }
 }
+
 
 export async function deleteDocument(subjectId: string, documentId: string) {
   const supabase = await createClient()

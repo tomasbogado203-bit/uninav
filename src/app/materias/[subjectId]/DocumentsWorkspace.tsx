@@ -103,13 +103,19 @@ export default function DocumentsWorkspace({
     if (customTitle) formData.set('title', customTitle)
 
     try {
-      await uploadDocument(subjectId, formData)
+      const res = await uploadDocument(subjectId, formData)
+      if (!res.success) {
+        alert(res.error || 'Error al procesar el apunte.')
+        setUploading(false)
+        return
+      }
       window.location.reload()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Error al subir el archivo.')
       setUploading(false)
     }
   }
+
 
   const handleDelete = async (docId: string) => {
     if (!confirm('¿Eliminar este apunte y todos sus fragmentos indexados?')) return
