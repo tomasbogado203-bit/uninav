@@ -25,32 +25,30 @@ export default async function AppShellServer({ children }: AppShellServerProps) 
     | 'admin'
     | undefined
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, university, role, careers(name)')
-    .eq('id', user.id)
-    .single()
+  // Ejecución en paralelo de consultas independientes
+  const [profileRes, streakInfo, subjectsRes] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('full_name, university, role, careers(name)')
+      .eq('id', user.id)
+      .maybeSingle(),
+    getOrUpdateStudyStreak(user.id),
+    supabase
+      .from('subjects')
+      .select('id, name, color')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true }),
+  ])
 
+  const profile = profileRes.data
   const careerName = (profile?.careers as unknown as { name: string } | null)?.name
   const resolvedRole =
     cookieRole && ['student', 'professor', 'dean', 'admin'].includes(cookieRole)
       ? cookieRole
       : (profile?.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
 
-  const streakInfo = await getOrUpdateStudyStreak(user.id)
+  const subjects: SubjectItem[] = subjectsRes.data || []
 
-  let subjects: SubjectItem[] = []
-  try {
-    const { data: subjectsData } = await supabase
-      .from('subjects')
-      .select('id, name, color')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true })
-
-    subjects = subjectsData || []
-  } catch {
-    subjects = []
-  }
 
   const defaultUserName =
     resolvedRole === 'dean'
