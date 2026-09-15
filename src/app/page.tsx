@@ -6,6 +6,8 @@ import JoinCommissionCard from '@/components/JoinCommissionCard'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import { getOrUpdateStudyStreak } from '@/lib/supabase/streak'
 import { getProfessorCommissionsAction } from '@/app/catedra/actions'
+import StudentTutorialModal from '@/components/StudentTutorialModal'
+import StudentTutorialTrigger from '@/components/StudentTutorialTrigger'
 
 import {
   IconBook,
@@ -179,6 +181,13 @@ export default async function DashboardPage() {
                 <span>Centro de Retención</span>
                 <IconChevronRight className="w-3.5 h-3.5" />
               </Link>
+            )}
+
+            {isStudent && (
+              <StudentTutorialTrigger
+                label="Guía de Inicio"
+                variant="outline"
+              />
             )}
 
             <Link
@@ -457,6 +466,36 @@ export default async function DashboardPage() {
       ───────────────────────────────────────────────────────────── */}
       {isStudent && (
         <div className="flex flex-col gap-8 animate-in fade-in">
+          {/* Modal del Tutorial (se abre automáticamente si es la 1ra visita) */}
+          <StudentTutorialModal />
+
+          {/* Banner de Bienvenida y Guía rápida para estudiantes */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-5 shadow-2xs">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1E1B4B] text-white shrink-0 shadow-2xs border border-slate-800">
+                <IconLightbulb className="w-5 h-5 text-indigo-300" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs sm:text-sm font-black text-indigo-950">
+                  ¿Primera vez en el Campus de INCADE?
+                </span>
+                <p className="text-xs text-indigo-900/80 leading-relaxed">
+                  Conocé cómo vincular tu cátedra oficial, chatear con el tutor socrático con citas de página y practicar con simuladores.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <StudentTutorialTrigger label="Tour Rápido" variant="primary" />
+              <Link
+                href="/tutorial"
+                className="text-xs font-bold text-indigo-700 hover:text-indigo-900 px-3 py-2 rounded-xl bg-white border border-indigo-200 hover:bg-indigo-50 transition-colors flex items-center gap-1 shadow-2xs"
+              >
+                <span>Manual Completo</span>
+                <IconChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
           {/* Banner de Sincronización con Comisión de Cátedra */}
           <JoinCommissionCard />
 
