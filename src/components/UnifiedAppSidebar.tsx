@@ -111,12 +111,13 @@ export default function UnifiedAppSidebar({
     <aside
       className={`sticky top-0 h-screen flex flex-col border-r border-slate-200/90 bg-white text-slate-800 transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-60 xl:w-64'
-      } shrink-0 z-30 select-none overflow-hidden`}
+      } shrink-0 z-30 select-none`}
     >
       {/* Botón de Colapsar / Expandir Sidebar con SVG */}
       <button
+        type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-5 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all cursor-pointer"
+        className="absolute -right-3 top-4.5 z-40 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-all cursor-pointer focus:outline-hidden"
         title={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
       >
         {collapsed ? (
