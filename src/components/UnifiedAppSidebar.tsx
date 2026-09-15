@@ -26,6 +26,7 @@ import {
   IconBuilding,
   IconIncadeLogo,
   IconLightbulb,
+  IconCpu,
 } from '@/components/icons'
 
 
@@ -86,6 +87,7 @@ export default function UnifiedAppSidebar({
     { label: 'Mis Materias', icon: IconBook, href: '/materias', exact: true, show: userRole === 'student' },
     { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false, show: true },
     { label: 'Recursos & Glosario', icon: IconSparkles, href: '/recursos', exact: false, show: userRole === 'student' },
+    { label: 'Lámpara IoT Pomodoro', icon: IconCpu, href: '/iot', exact: false, show: true },
     { label: 'Guía del Estudiante', icon: IconLightbulb, href: '/tutorial', exact: false, show: true },
     { label: 'Panel de Cátedra', icon: IconBook, href: '/catedra', exact: false, show: userRole === 'professor' || userRole === 'dean' || userRole === 'admin' },
     { label: 'Centro de Retención', icon: IconBuilding, href: '/institucional', exact: false, show: userRole === 'dean' || userRole === 'admin' },
