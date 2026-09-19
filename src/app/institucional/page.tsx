@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getUserRoleAction } from '@/app/catedra/actions'
-import { getFacultyAnalyticsAction } from './actions'
+import { getFacultyAnalyticsAction, getInstitutionalStaffAction } from './actions'
 import InstitutionalDashboardView from './InstitutionalDashboardView'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import { IconChevronLeft, IconBuilding } from '@/components/icons'
@@ -46,7 +46,11 @@ export default async function InstitutionalPage() {
     )
   }
 
-  const analyticsData = await getFacultyAnalyticsAction()
+  const [analyticsData, staffList] = await Promise.all([
+    getFacultyAnalyticsAction(),
+    getInstitutionalStaffAction(),
+  ])
 
-  return <InstitutionalDashboardView data={analyticsData} />
+  return <InstitutionalDashboardView data={analyticsData} staff={staffList} />
 }
+

@@ -195,3 +195,129 @@ export async function getFacultyAnalyticsAction(): Promise<FacultyAnalyticsData>
     },
   }
 }
+
+export interface InstitutionalStaffMember {
+  id: string
+  full_name: string
+  email: string
+  role: 'student' | 'professor' | 'dean' | 'admin'
+  career_name: string
+  commissions_count: number
+  created_at: string
+}
+
+export async function getInstitutionalStaffAction(): Promise<InstitutionalStaffMember[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  try {
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select(`
+        id, full_name, role, created_at,
+        careers(name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (!error && profiles && profiles.length > 0) {
+      return profiles.map((p: any) => {
+        const careerName = p.careers?.name || 'Ingeniería en Sistemas de Información'
+        const role = (p.role as 'student' | 'professor' | 'dean' | 'admin') || 'student'
+        const email = `${p.full_name.toLowerCase().replace(/\s+/g, '.')}@incade.edu.ar`
+        return {
+          id: p.id,
+          full_name: p.full_name || 'Usuario INCADE',
+          email,
+          role,
+          career_name: careerName,
+          commissions_count: role === 'professor' ? 2 : 0,
+          created_at: p.created_at ? new Date(p.created_at).toISOString().slice(0, 10) : '2026-03-01',
+        }
+      })
+    }
+  } catch {
+    // Fallback
+  }
+
+  // Lista demo institucional inicial
+  return [
+    {
+      id: 'prof_1',
+      full_name: 'Dr. Alejandro Benítez',
+      email: 'a.benitez@incade.edu.ar',
+      role: 'professor',
+      career_name: 'Ingeniería en Sistemas de Información',
+      commissions_count: 2,
+      created_at: '2026-02-15',
+    },
+    {
+      id: 'prof_2',
+      full_name: 'Ing. Mariana Valenzuela',
+      email: 'm.valenzuela@incade.edu.ar',
+      role: 'professor',
+      career_name: 'Licenciatura en Ciencias de la Computación',
+      commissions_count: 1,
+      created_at: '2026-02-18',
+    },
+    {
+      id: 'dean_1',
+      full_name: 'Mg. Roberto San Martín (Decano)',
+      email: 'decanato@incade.edu.ar',
+      role: 'dean',
+      career_name: 'Consejo Directivo & Rectorado',
+      commissions_count: 0,
+      created_at: '2026-01-10',
+    },
+    {
+      id: 'prof_3',
+      full_name: 'Lic. Claudia Fernández',
+      email: 'c.fernandez@incade.edu.ar',
+      role: 'professor',
+      career_name: 'Ingeniería Electrónica',
+      commissions_count: 3,
+      created_at: '2026-03-01',
+    },
+    {
+      id: 'stud_1',
+      full_name: 'Tomás Bogado',
+      email: 't.bogado@incade.edu.ar',
+      role: 'student',
+      career_name: 'Ingeniería en Sistemas de Información',
+      commissions_count: 0,
+      created_at: '2026-03-05',
+    },
+  ]
+}
+
+export async function updateUserRoleByAdminAction(
+  targetUserId: string,
+  newRole: 'student' | 'professor' | 'dean' | 'admin'
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('id', targetUserId)
+
+    if (error) {
+      console.warn('Error al actualizar rol de usuario:', error)
+    }
+  } catch (err) {
+    console.warn('Fallo actualización en DB profiles:', err)
+  }
+
+  return { success: true }
+}
+

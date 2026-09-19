@@ -11,6 +11,8 @@ import {
   createCommissionAction,
   getCommissionTelemetryAction,
   generateCatedraExamAction,
+  uploadCommissionDocumentAction,
+  createCommissionAnnouncementAction,
 } from './actions'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import MoodleExamBuilder from '@/components/MoodleExamBuilder'
@@ -225,45 +227,54 @@ export default function CatedraDashboardView({
     }
   }
 
-  const handlePostAnnouncement = (e: React.FormEvent) => {
+  const handlePostAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newAnnouncementTitle.trim() || !newAnnouncementContent.trim()) return
 
-    const newA: CatedraAnnouncement = {
-      id: `a-${Date.now()}`,
-      title: newAnnouncementTitle.trim(),
-      content: newAnnouncementContent.trim(),
-      created_at: 'Publicado recién',
-      is_urgent: false,
-    }
+    const title = newAnnouncementTitle.trim()
+    const content = newAnnouncementContent.trim()
+    const commId = selectedCommission?.id || 'comm_1'
 
-    setAnnouncements([newA, ...announcements])
+    const res = await createCommissionAnnouncementAction({
+      commission_id: commId,
+      title,
+      content,
+      is_urgent: false,
+    })
+
+    if (res.announcement) {
+      setAnnouncements([res.announcement, ...announcements])
+    }
     setNewAnnouncementTitle('')
     setNewAnnouncementContent('')
     alert('¡Aviso publicado y notificado a los alumnos inscriptos!')
   }
 
-  const handleUploadDocSubmit = (e: React.FormEvent) => {
+  const handleUploadDocSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newDocTitle.trim()) return
 
     setUploadingDoc(true)
-    setTimeout(() => {
-      const newDoc: CatedraDocument = {
-        id: `doc-${Date.now()}`,
+    try {
+      const commId = selectedCommission?.id || 'comm_1'
+      const res = await uploadCommissionDocumentAction({
+        commission_id: commId,
         title: newDocTitle.trim(),
         document_type: newDocType,
-        chunk_count: Math.floor(25 + Math.random() * 50),
-        queries_count: 0,
-        created_at: new Date().toISOString().slice(0, 10),
+      })
+
+      if (res.document) {
+        setDocuments([res.document, ...documents])
+        setDocSuccessMsg(`¡"${res.document.title}" indexado con éxito en la base vectorial de la cátedra! Los alumnos recibirán respuestas socráticas citando esta fuente.`)
       }
-      setDocuments([newDoc, ...documents])
       setShowUploadDocModal(false)
       setNewDocTitle('')
-      setUploadingDoc(false)
-      setDocSuccessMsg(`¡"${newDoc.title}" indexado con éxito en la base vectorial! Los alumnos recibirán respuestas citando esta fuente.`)
       setTimeout(() => setDocSuccessMsg(null), 6000)
-    }, 1000)
+    } catch {
+      alert('Error al indexar documento.')
+    } finally {
+      setUploadingDoc(false)
+    }
   }
 
 

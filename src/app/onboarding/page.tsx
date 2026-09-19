@@ -58,7 +58,7 @@ export default async function OnboardingPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-slate-700">Carrera Universitaria</label>
+            <label className="text-xs font-semibold text-slate-700">Carrera / Área Académica</label>
             <select
               name="career_id"
               required
@@ -66,7 +66,7 @@ export default async function OnboardingPage() {
               className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium bg-white"
             >
               <option value="" disabled>
-                Seleccioná tu carrera
+                Seleccioná tu carrera o facultad
               </option>
               {careers?.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -74,6 +74,26 @@ export default async function OnboardingPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="flex flex-col gap-1 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700">
+                Código Docente / Cátedra (Opcional)
+              </label>
+              <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                Profesores & Directivos
+              </span>
+            </div>
+            <input
+              type="text"
+              name="institutional_code"
+              placeholder="Ej: DOCENTE-INCADE-2026"
+              className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium uppercase placeholder:normal-case"
+            />
+            <span className="text-[10px] text-slate-400">
+              Si sos docente o directivo de INCADE, ingresá tu PIN institucional para activar el panel de cátedra.
+            </span>
           </div>
 
           <button

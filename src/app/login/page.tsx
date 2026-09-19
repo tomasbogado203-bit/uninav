@@ -220,8 +220,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Footer Discreto */}
-        <div className="border-t border-slate-100 pt-3 text-center flex flex-col items-center gap-1">
+        {/* Footer Discreto e Informativo */}
+        <div className="border-t border-slate-100 pt-3 text-center flex flex-col items-center gap-1.5">
+          <div className="text-[11px] text-slate-500 font-medium">
+            ¿Sos docente o directivo? Podés ingresar con tu cuenta institucional o activar tu cátedra durante el registro.
+          </div>
           <div className="text-[10px] text-slate-400 font-medium">
             Tecnología <span className="font-bold text-slate-600">UniNav Core</span> • Instituto Superior INCADE
           </div>
