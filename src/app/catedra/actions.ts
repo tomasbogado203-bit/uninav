@@ -479,3 +479,146 @@ Respondé ÚNICAMENTE con un JSON estructurado como:
     throw new Error('No se pudo generar el examen de cátedra.')
   })
 }
+
+export type CustomQuestionType = 'multiple_choice' | 'true_false' | 'development'
+
+export interface CustomExamQuestion {
+  id: string
+  type: CustomQuestionType
+  question_text: string
+  points: number
+  options?: { id: string; text: string; is_correct: boolean }[]
+  correct_boolean?: boolean
+  rubric_guidelines?: string
+  feedback?: string
+}
+
+export interface CustomExamData {
+  id: string
+  commission_id?: string
+  title: string
+  subject_name: string
+  instructions: string
+  time_limit_minutes: number
+  total_points: number
+  questions: CustomExamQuestion[]
+  created_at?: string
+}
+
+export async function suggestCustomQuestionsAction(data: {
+  subject_name: string
+  topic_prompt: string
+  question_count?: number
+}): Promise<CustomExamQuestion[]> {
+  const count = data.question_count || 4
+  const prompt = `Sos un profesor titular universitario y especialista en diseño de evaluaciones en Argentina (Moodle / Campus Virtual).
+Materia: "${data.subject_name}"
+Tema o Unidad a evaluar: "${data.topic_prompt || 'Conceptos generales'}"
+Cantidad de preguntas a generar: ${count}
+
+CONSIGNA:
+Generá un conjunto balanceado de ${count} preguntas para un examen formal.
+Incluí una mezcla de:
+- "multiple_choice" (opción múltiple con 4 opciones A, B, C, D, marcando exactamente una con is_correct: true).
+- "true_false" (verdadero o falso con correct_boolean: true o false y justificación en feedback).
+- "development" (pregunta de análisis o resolución con rubric_guidelines para corrección).
+
+Cada pregunta debe incluir:
+1. "id": string único (ej: "q1", "q2").
+2. "type": "multiple_choice" | "true_false" | "development".
+3. "question_text": Enunciado claro, riguroso y sin ambigüedades.
+4. "points": Puntos sugeridos (ej: 25, 20).
+5. "options": Array de 4 objetos { "id": "opt_a", "text": "...", "is_correct": boolean } (solo para multiple_choice).
+6. "correct_boolean": boolean (solo para true_false).
+7. "rubric_guidelines": Criterios y pasos esperados para otorgar el puntaje (solo para development).
+8. "feedback": Explicación conceptual de por qué es correcta para la retroalimentación del alumno.
+
+Respondé ÚNICAMENTE con un JSON array de objetos válidos:
+[
+  {
+    "id": "q1",
+    "type": "multiple_choice",
+    "question_text": "...",
+    "points": 25,
+    "options": [
+      { "id": "opt_1", "text": "...", "is_correct": true },
+      { "id": "opt_2", "text": "...", "is_correct": false },
+      { "id": "opt_3", "text": "...", "is_correct": false },
+      { "id": "opt_4", "text": "...", "is_correct": false }
+    ],
+    "feedback": "..."
+  },
+  {
+    "id": "q2",
+    "type": "true_false",
+    "question_text": "...",
+    "points": 25,
+    "correct_boolean": false,
+    "feedback": "..."
+  },
+  {
+    "id": "q3",
+    "type": "development",
+    "question_text": "...",
+    "points": 25,
+    "rubric_guidelines": "..."
+  }
+]`
+
+  return callWithRetry(async () => {
+    for (const modelName of MODEL_FALLBACK_CHAIN) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.3,
+          },
+        })
+
+        const jsonText = response.text ?? '[]'
+        const parsed = JSON.parse(jsonText)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((q: any, idx: number) => ({
+            id: q.id || `q_${Date.now()}_${idx}`,
+            type: q.type || 'multiple_choice',
+            question_text: q.question_text || 'Enunciado de la pregunta',
+            points: Number(q.points) || 25,
+            options: Array.isArray(q.options) ? q.options : undefined,
+            correct_boolean: typeof q.correct_boolean === 'boolean' ? q.correct_boolean : true,
+            rubric_guidelines: q.rubric_guidelines || undefined,
+            feedback: q.feedback || undefined,
+          }))
+        }
+      } catch (err) {
+        console.warn(`Sugerencia de preguntas con ${modelName} falló:`, err)
+      }
+    }
+
+    return [
+      {
+        id: `q_default_1`,
+        type: 'multiple_choice',
+        question_text: '¿Cuál es la propiedad fundamental de una función continua en un intervalo cerrado [a, b] según el Teorema de Weierstrass?',
+        points: 25,
+        options: [
+          { id: 'opt_1', text: 'Alcanza un valor máximo y un valor mínimo absolutos.', is_correct: true },
+          { id: 'opt_2', text: 'Es necesariamente derivable en todo el intervalo.', is_correct: false },
+          { id: 'opt_3', text: 'Su integral definida siempre es igual a cero.', is_correct: false },
+          { id: 'opt_4', text: 'Tiene al menos una asíntota vertical.', is_correct: false },
+        ],
+        feedback: 'El Teorema de Weierstrass garantiza la existencia de extremos absolutos en conjuntos compactos.',
+      },
+      {
+        id: `q_default_2`,
+        type: 'true_false',
+        question_text: 'Toda función que es continua en un punto x = c es automáticamente derivable en dicho punto.',
+        points: 25,
+        correct_boolean: false,
+        feedback: 'Falso: la continuidad es una condición necesaria pero no suficiente para la derivabilidad (ej: f(x) = |x| en x = 0).',
+      },
+    ]
+  })
+}
+

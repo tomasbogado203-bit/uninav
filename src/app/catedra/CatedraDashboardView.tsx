@@ -13,6 +13,7 @@ import {
   generateCatedraExamAction,
 } from './actions'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
+import MoodleExamBuilder from '@/components/MoodleExamBuilder'
 import {
   IconBook,
   IconSparkles,
@@ -597,107 +598,12 @@ export default function CatedraDashboardView({
         </div>
       )}
 
-      {/* TAB 3: GENERADOR DE EXÁMENES DE CÁTEDRA */}
+      {/* TAB 3: CREADOR Y DISEÑADOR DE EXÁMENES ESTILO MOODLE */}
       {activeTab === 'examenes' && (
-        <div className="flex flex-col gap-6">
-          <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">
-                  Evaluaciones Universitarias Paralelas
-                </span>
-                <h3 className="text-xl font-black text-slate-900 mt-0.5">
-                  Generador de Matrices de Examen (Tema 1 & Tema 2)
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 max-w-xl">
-                  Crea automáticamente exámenes paralelos con equivalencia de dificultad y rúbrica de corrección paso a paso.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled={generatingExam}
-                onClick={handleGenerateExam}
-                className="rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-5 py-3 text-xs sm:text-sm font-bold shadow-lg transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto"
-              >
-                <IconSparkles className="w-4 h-4" />
-                <span>{generatingExam ? 'Diseñando Exámenes...' : 'Generar Matriz con IA'}</span>
-              </button>
-            </div>
-
-            {/* Resultado del Examen Generado */}
-            {examData ? (
-              <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-black text-lg text-slate-900">
-                    {examData.exam_title}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                  >
-                    <IconPrinter className="w-3.5 h-3.5" />
-                    <span>Imprimir Temas A4</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {examData.exam_matrix?.map((matrixTheme: any, tIdx: number) => (
-                    <div
-                      key={tIdx}
-                      className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 flex flex-col gap-4"
-                    >
-                      <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
-                        <span className="font-black text-sm text-indigo-900">
-                          {matrixTheme.theme}
-                        </span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">
-                          Total: 100 Puntos
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-4">
-                        {matrixTheme.exercises?.map((ex: any, eIdx: number) => (
-                          <div
-                            key={eIdx}
-                            className="rounded-xl bg-white p-4 border border-slate-200 flex flex-col gap-2 shadow-2xs"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-black text-slate-900">
-                                Ejercicio {ex.number} ({ex.topic})
-                              </span>
-                              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                                {ex.rubric_points} pts
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-700 leading-relaxed font-mono bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                              {ex.statement}
-                            </p>
-                            <div className="text-[11px] text-slate-600 mt-1 border-t border-slate-100 pt-2">
-                              <span className="font-bold text-emerald-700 block">Rúbrica de Resolución:</span>
-                              <span className="text-slate-600">{ex.step_solution}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center flex flex-col items-center gap-2">
-                <span className="text-2xl">📝</span>
-                <span className="font-bold text-xs text-slate-700">
-                  Ninguna matriz de examen generada todavía
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Hacé clic en &quot;Generar Matriz con IA&quot; para crear 2 temas de parcial paralelos basados en los temas más críticos de la cursada.
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        <MoodleExamBuilder
+          subjectName={selectedCommission?.subject_name || 'Materia Oficial'}
+          commissionName={selectedCommission?.name || 'Comisión Oficial'}
+        />
       )}
 
       {/* TAB 4: PADRÓN DE ALUMNOS INSCRIPTOS */}
