@@ -9,14 +9,16 @@ export interface ChatMessageInput {
   content: string
 }
 
-const SOCRATIC_SYSTEM_PROMPT = `Eres "UniNav AI", un tutor universitario socrático diseñado para acompañar a estudiantes ingresantes.
-TU OBJETIVO ES ENSEÑAR A PENSAR, NO HACER EL TRABAJO POR EL ALUMNO.
+const SOCRATIC_SYSTEM_PROMPT = `Eres "UniNav AI", un tutor universitario socrático de élite diseñado para acompañar a estudiantes ingresantes.
+TU OBJETIVO ES ENSEÑAR A PENSAR Y GUIAR AL ALUMNO, NO HACERLE EL TRABAJO DIRECTO.
 REGLAS ESTRICTAS:
-1. Jamás redactes un trabajo práctico, ensayo o informe completo de cero.
-2. Si el usuario pide "hazme el informe/respuesta", responde con estructura en viñetas, conceptos clave según la bibliografía cargada, y pídele un primer borrador de 2 líneas.
-3. Responde ÚNICAMENTE usando el contexto en <CONTEXTO_BIBLIOGRAFICO>.
-4. Si la respuesta no está en el contexto, indicá explicítamente: "Esta información no está en el apunte cargado".
-5. Cada afirmación basada en contexto lleva cita [Pág. X] al final de la frase.`
+1. Jamás redactes un trabajo práctico, ensayo o resolución matemática completa de cero.
+2. Si el alumno pide "haceme el ejercicio/informe", responde con estructura en viñetas, conceptos clave según la bibliografía y pídele su primer borrador o planteo de variables.
+3. Fundamenta tus respuestas en el contexto provisto en <CONTEXTO_BIBLIOGRAFICO>.
+4. Si la consulta del estudiante refiere a un concepto que en el apunte solo se menciona en el índice/temario o que no tiene teoría desarrollada:
+   a) Explicá con claridad qué material sí está desarrollado en el apunte cargado citando la página [Pág. X].
+   b) Brindá una breve explicación pedagógica orientadora o pregunta guía del concepto para no dejarlo sin respuesta, invitándolo a razonar o a cargar el apunte teórico complementario si lo necesita.
+5. Cada afirmación basada en el apunte debe llevar su cita [Pág. X] al final de la frase.`
 
 const MODEL_FALLBACK_CHAIN = [
   'gemini-3.6-flash',
@@ -30,18 +32,22 @@ export async function extractTopicsFromPdf(
   if (pages.length === 0) return []
 
   const sampleText = pages
-    .slice(0, 5)
+    .slice(0, 8)
     .map((p) => `[Pág. ${p.page || 1}] ${(p.text || p.content || '').slice(0, 800)}`)
     .join('\n\n')
 
-  const prompt = `Analizá el inicio de este documento bibliográfico universitario y extraé entre 2 y 4 temas de estudio o unidades temáticas principales presentes en el texto.
-Ejemplos de respuesta: ["Unidad 1 - Atributos de Calidad", "Patrones Arquitectónicos MVC", "Casos de Uso UML"]
+  const prompt = `Analizá el contenido de este documento universitario.
+Extraé entre 2 y 4 temas de estudio principales que REALMENTE TENGAN CONTENIDO, ejercicios o teoría desarrollada en las páginas.
+
+REGLAS CRÍTICAS:
+- NO extraigas temas que solo aparezcan mencionados al pasar en un encabezado, índice o temario futuro si no hay ejercicios o teoría sobre ellos en las páginas.
+- Los títulos deben ser concretos y reflejar el contenido real del texto.
 
 TEXTO DEL DOCUMENTO:
 ${sampleText}
 
 Respondé ÚNICAMENTE con un JSON array de strings válido:
-["Tema 1", "Tema 2", "Tema 3"]`
+["Tema Principal 1", "Tema Principal 2"]`
 
   return callWithRetry(async () => {
     for (const modelName of MODEL_FALLBACK_CHAIN) {
