@@ -53,9 +53,9 @@ export default function TemasWorkspace({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full w-full flex-1 min-w-0 items-stretch">
       {/* Sidebar interna de gestor de temas */}
-      <div className="md:col-span-1 border-r border-slate-200/80 pr-4">
+      <div className="lg:col-span-4 xl:col-span-3 flex flex-col h-full min-h-0 overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200/80 pr-0 lg:pr-4 pb-4 lg:pb-0">
         <ThreadManager
           subjectId={subjectId}
           initialThreads={threads}
@@ -65,7 +65,7 @@ export default function TemasWorkspace({
       </div>
 
       {/* Panel del Chat Socrático vinculado al Tema Activo */}
-      <div className="md:col-span-3">
+      <div className="lg:col-span-8 xl:col-span-9 flex flex-col h-full min-h-0 min-w-0">
         <SocraticChatView
           key={activeThread.id}
           subjectId={subjectId}

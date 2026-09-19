@@ -127,9 +127,9 @@ export default function ThreadManager({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full min-h-0">
       {/* Tarjeta de Creación de Tema */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs shrink-0">
         <div className="flex items-center gap-1.5 mb-2">
           <IconSparkles className="w-3.5 h-3.5 text-indigo-600" />
           <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -157,8 +157,8 @@ export default function ThreadManager({
       </div>
 
       {/* Lista de Temas Activos */}
-      <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[480px] pr-1">
-        <div className="flex items-center justify-between px-1 mb-1">
+      <div className="flex flex-col gap-1.5 overflow-y-auto flex-1 min-h-0 pr-1">
+        <div className="flex items-center justify-between px-1 mb-1 shrink-0">
           <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Temas activos ({threads.length})
           </h3>

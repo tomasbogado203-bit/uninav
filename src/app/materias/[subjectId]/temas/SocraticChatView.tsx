@@ -489,7 +489,7 @@ export default function SocraticChatView({
   const hasConversations = messages.filter((m) => !m.id.startsWith('welcome')).length > 0
 
   return (
-    <div className="flex flex-col h-[670px] border border-slate-200/80 rounded-2xl bg-white shadow-xs overflow-hidden relative">
+    <div className="flex flex-col h-full min-h-[520px] border border-slate-200/80 rounded-3xl bg-white shadow-xs overflow-hidden relative w-full flex-1">
       {/* Header del Chat */}
       <div className="border-b border-slate-200/80 px-5 py-3.5 bg-slate-50/80 flex items-center justify-between">
         <div className="flex items-center gap-2.5 truncate">

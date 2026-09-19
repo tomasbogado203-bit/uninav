@@ -32,7 +32,7 @@ export default async function TemasPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="mx-auto max-w-[96rem] p-4 md:p-6">
+    <div className="w-full h-[calc(100vh-4rem)] p-3 sm:p-5 flex flex-col min-w-0">
       <TemasWorkspace
         subjectId={subjectId}
         subjectName={subject?.name || 'Materia'}
