@@ -52,10 +52,12 @@ export default function LoginPage() {
     setSuccessMessage(null)
     setLoading(true)
 
+    const normalizedEmail = email.trim().toLowerCase()
+
     try {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
         })
         if (error) {
@@ -63,11 +65,11 @@ export default function LoginPage() {
           setLoading(false)
           return
         }
-        router.push('/')
-        router.refresh()
+        // En Safari iOS, window.location.href fuerza a WebKit a enviar las cookies de sesión en el request
+        window.location.href = '/'
       } else {
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
         })
         if (error) {
@@ -77,8 +79,7 @@ export default function LoginPage() {
         }
         // Si el registro fue exitoso
         if (data.session) {
-          router.push('/onboarding')
-          router.refresh()
+          window.location.href = '/onboarding'
         } else {
           setSuccessMessage(
             '¡Cuenta creada con éxito! Si tu cuenta requiere confirmación por email, revisá tu casilla; o probá iniciar sesión ahora.'
@@ -178,6 +179,9 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
             />
           </div>
@@ -200,6 +204,9 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
             />
             {mode === 'signup' && (

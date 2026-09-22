@@ -53,6 +53,8 @@ export default async function OnboardingPage() {
               name="full_name"
               placeholder="Ej: Tomás Bogado"
               required
+              autoCorrect="off"
+              spellCheck={false}
               className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
             />
           </div>
@@ -89,6 +91,9 @@ export default async function OnboardingPage() {
               type="text"
               name="institutional_code"
               placeholder="Ej: DOCENTE-INCADE-2026"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
               className="rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium uppercase placeholder:normal-case"
             />
             <span className="text-[10px] text-slate-400">

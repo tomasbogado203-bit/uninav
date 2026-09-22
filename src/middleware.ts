@@ -10,6 +10,15 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Pro
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer))
 }
 
+// Helper para construir respuestas de redirección preservando las cookies de sesión (vital para Safari iOS)
+function createRedirectResponse(url: URL, sourceResponse: NextResponse): NextResponse {
+  const redirectResponse = NextResponse.redirect(url)
+  sourceResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
+  })
+  return redirectResponse
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -48,10 +57,10 @@ export async function middleware(request: NextRequest) {
       }
     )
 
-    // Timeout de 1.2 segundos para getUser() para evitar 504 MIDDLEWARE_INVOCATION_TIMEOUT en Vercel
+    // Timeout de 3.5 segundos para getUser() para soportar conexiones móviles (4G/Wi-Fi en Safari iOS)
     const authResult = await withTimeout(
       supabase.auth.getUser(),
-      1200,
+      3500,
       { data: { user: null }, error: null } as any
     )
 
@@ -62,7 +71,7 @@ export async function middleware(request: NextRequest) {
       if (!isAuthRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
-        return NextResponse.redirect(url)
+        return createRedirectResponse(url, supabaseResponse)
       }
       return supabaseResponse
     }
@@ -71,10 +80,10 @@ export async function middleware(request: NextRequest) {
     if (user && isAuthRoute) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
-      return NextResponse.redirect(url)
+      return createRedirectResponse(url, supabaseResponse)
     }
 
-    // 3. Verificación de Onboarding con timeout seguro de 800ms
+    // 3. Verificación de Onboarding con timeout seguro de 2500ms
     if (user && (isOnboardingRoute || pathname === '/')) {
       const profilePromise = Promise.resolve(
         supabase
@@ -86,7 +95,7 @@ export async function middleware(request: NextRequest) {
 
       const profileResult = await withTimeout<{ data: { career_id?: string | null } | null; error: any }>(
         profilePromise as any,
-        800,
+        2500,
         { data: null, error: null }
       )
 
@@ -95,13 +104,13 @@ export async function middleware(request: NextRequest) {
       if (careerId && isOnboardingRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
-        return NextResponse.redirect(url)
+        return createRedirectResponse(url, supabaseResponse)
       }
 
       if (!careerId && !isOnboardingRoute && profileResult.data !== null) {
         const url = request.nextUrl.clone()
         url.pathname = '/onboarding'
-        return NextResponse.redirect(url)
+        return createRedirectResponse(url, supabaseResponse)
       }
     }
 
