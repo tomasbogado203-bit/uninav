@@ -20,6 +20,7 @@ import {
   IconChevronLeft,
   IconCheck,
   IconBook,
+  IconClose,
 } from '@/components/icons'
 
 export interface CommunityItem {
@@ -439,7 +440,7 @@ export default function CommunityView({
                   onClick={() => setImportingItem(null)}
                   className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 text-xs font-bold cursor-pointer"
                 >
-                  ✕
+                  <IconClose className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -532,7 +533,7 @@ export default function CommunityView({
                   onClick={() => setShowUploadModal(false)}
                   className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 text-xs font-bold cursor-pointer"
                 >
-                  ✕
+                  <IconClose className="w-4 h-4" />
                 </button>
               )}
             </div>

@@ -11,6 +11,7 @@ import {
   IconDocument,
   IconLightbulb,
   IconSparkles,
+  IconSearch,
 } from '@/components/icons'
 
 interface GlobalNavbarProps {
@@ -179,7 +180,7 @@ export default function GlobalNavbar({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-              <span className="text-slate-400 text-lg">🔍</span>
+              <IconSearch className="w-5 h-5 text-slate-400 shrink-0" />
               <input
                 type="text"
                 autoFocus

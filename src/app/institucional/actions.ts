@@ -169,7 +169,7 @@ export async function getFacultyAnalyticsAction(): Promise<FacultyAnalyticsData>
       year: '2026 (Actual)',
       rate: 85.8,
       system: 'UniNav: Tutor Socrático RAG + Hardware IoT',
-      status: '▲ +26.4% Retención Universitaria',
+      status: '+26.4% Retención Universitaria',
     },
   ]
 

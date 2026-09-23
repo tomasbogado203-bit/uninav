@@ -29,6 +29,8 @@ import {
   IconPrinter,
   IconCalendar,
   IconExternalLink,
+  IconBell,
+  IconClose,
 } from '@/components/icons'
 
 interface CatedraDashboardViewProps {
@@ -165,6 +167,8 @@ export default function CatedraDashboardView({
 
   const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('')
   const [newAnnouncementContent, setNewAnnouncementContent] = useState('')
+  const [newIsUrgent, setNewIsUrgent] = useState(false)
+  const [posting, setPosting] = useState(false)
 
   // Estado del generador de examen de cátedra
   const [generatingExam, setGeneratingExam] = useState(false)
@@ -231,23 +235,28 @@ export default function CatedraDashboardView({
     e.preventDefault()
     if (!newAnnouncementTitle.trim() || !newAnnouncementContent.trim()) return
 
-    const title = newAnnouncementTitle.trim()
-    const content = newAnnouncementContent.trim()
-    const commId = selectedCommission?.id || 'comm_1'
+    setPosting(true)
+    try {
+      const title = newAnnouncementTitle.trim()
+      const content = newAnnouncementContent.trim()
+      const commId = selectedCommission?.id || 'comm_1'
 
-    const res = await createCommissionAnnouncementAction({
-      commission_id: commId,
-      title,
-      content,
-      is_urgent: false,
-    })
+      const res = await createCommissionAnnouncementAction({
+        commission_id: commId,
+        title,
+        content,
+        is_urgent: newIsUrgent,
+      })
 
-    if (res.announcement) {
-      setAnnouncements([res.announcement, ...announcements])
+      if (res.announcement) {
+        setAnnouncements([res.announcement, ...announcements])
+      }
+      setNewAnnouncementTitle('')
+      setNewAnnouncementContent('')
+      setNewIsUrgent(false)
+    } finally {
+      setPosting(false)
     }
-    setNewAnnouncementTitle('')
-    setNewAnnouncementContent('')
-    alert('¡Aviso publicado y notificado a los alumnos inscriptos!')
   }
 
   const handleUploadDocSubmit = async (e: React.FormEvent) => {
@@ -700,8 +709,9 @@ export default function CatedraDashboardView({
           {/* Formulario de Publicación */}
           <div className="lg:col-span-5 flex flex-col gap-4">
             <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs flex flex-col gap-4">
-              <h3 className="text-sm font-black text-slate-900">
-                📢 Publicar Nuevo Aviso de Cátedra
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <IconBell className="w-4 h-4 text-purple-600" />
+                <span>Publicar Nuevo Aviso de Cátedra</span>
               </h3>
               <form onSubmit={handlePostAnnouncement} className="flex flex-col gap-3">
                 <div>
@@ -720,62 +730,101 @@ export default function CatedraDashboardView({
 
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
-                    Mensaje / Pautas
+                    Tipo / Prioridad de Aviso
+                  </label>
+                  <select
+                    value={newIsUrgent ? 'urgente' : 'general'}
+                    onChange={(e) => setNewIsUrgent(e.target.value === 'urgente')}
+                    className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                  >
+                    <option value="general">Información General / Cursada Regular</option>
+                    <option value="urgente">Aviso Urgente (Examen / Parcial / Aula)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                    Mensaje para los Estudiantes
                   </label>
                   <textarea
-                    rows={4}
                     required
+                    rows={4}
                     value={newAnnouncementContent}
                     onChange={(e) => setNewAnnouncementContent(e.target.value)}
-                    placeholder="Escribí las indicaciones para los alumnos..."
+                    placeholder="Escribí el comunicado detallado que verán todos los alumnos inscriptos en esta comisión..."
                     className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                >
-                  Publicar y Notificar a la Comisión
-                </button>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={posting}
+                    className="rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-5 py-2.5 text-xs font-bold shadow-md transition-all cursor-pointer"
+                  >
+                    {posting ? 'Publicando...' : 'Publicar Aviso'}
+                  </button>
+                </div>
               </form>
             </div>
           </div>
 
-          {/* Listado de Avisos Publicados */}
+          {/* Listado de Anuncios Publicados */}
           <div className="lg:col-span-7 flex flex-col gap-4">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider text-[11px]">
-              Avisos Vigentes en el Tablón ({announcements.length})
-            </h3>
-
-            <div className="flex flex-col gap-4">
-              {announcements.map((a) => (
-                <div
-                  key={a.id}
-                  className={`rounded-3xl border p-6 shadow-xs flex flex-col gap-2.5 ${
-                    a.is_urgent
-                      ? 'border-amber-200 bg-amber-50/40'
-                      : 'border-slate-200 bg-white'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {a.is_urgent && (
-                        <span className="text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
-                          Importante
-                        </span>
-                      )}
-                      <h4 className="font-bold text-sm text-slate-900">{a.title}</h4>
-                    </div>
-                    <span className="text-[10px] text-slate-400">{a.created_at}</span>
-                  </div>
-
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {a.content}
-                  </p>
-                </div>
-              ))}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Historial de Avisos de la Cátedra ({announcements.length})
+              </span>
             </div>
+
+            {announcements.length === 0 ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center flex flex-col items-center gap-3">
+                <span className="text-slate-400 text-xs">
+                  Aún no publicaste avisos en esta comisión.
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {announcements.map((ann) => (
+                  <div
+                    key={ann.id}
+                    className="rounded-3xl border border-slate-200/90 bg-white p-5 shadow-xs flex flex-col gap-3 transition-all hover:border-purple-200"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                          ann.is_urgent
+                            ? 'bg-rose-50 border border-rose-200 text-rose-700'
+                            : 'bg-purple-50 border border-purple-200 text-purple-700'
+                        }`}>
+                          {ann.is_urgent ? 'Urgente' : 'General'}
+                        </span>
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                          {ann.title}
+                        </h4>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                        {new Date(ann.created_at).toLocaleDateString('es-AR', {
+                          day: 'numeric',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">
+                      {ann.content}
+                    </p>
+
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 text-[10px] text-slate-400">
+                      <span>Publicado por: {userName}</span>
+                      <span className="text-purple-600 font-semibold">Notificación enviada a todos los alumnos</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -797,9 +846,9 @@ export default function CatedraDashboardView({
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -901,9 +950,9 @@ export default function CatedraDashboardView({
               <button
                 type="button"
                 onClick={() => setShowUploadDocModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -938,7 +987,7 @@ export default function CatedraDashboardView({
               </div>
 
               <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/40 p-5 text-center flex flex-col items-center gap-2">
-                <span className="text-2xl">📄</span>
+                <IconDocument className="w-8 h-8 text-indigo-600" />
                 <span className="font-bold text-xs text-slate-800">
                   Seleccionar archivo PDF de Cátedra
                 </span>

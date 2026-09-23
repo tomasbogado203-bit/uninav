@@ -15,6 +15,9 @@ import {
   IconClipboard,
   IconChat,
   IconCalendar,
+  IconSearch,
+  IconClose,
+  IconCheck,
 } from '@/components/icons'
 
 interface DetectedEvent {
@@ -219,7 +222,7 @@ export default function PizarraView({
             >
               {uploading && uploadMode === 'normal'
                 ? 'Guardando...'
-                : '📷 Solo Guardar Foto (Sin OCR)'}
+                : 'Solo Guardar Foto (Sin OCR)'}
             </button>
 
             <button
@@ -266,14 +269,15 @@ export default function PizarraView({
                       src={photo.signed_url}
                       alt="Foto de Pizarra"
                       className="w-full h-full object-cover max-h-[260px] group-hover:scale-105 transition-transform duration-300"
-                    />
+                    ></img>
                   ) : (
-                    <span className="text-4xl text-slate-500">📷</span>
+                    <IconCamera className="w-10 h-10 text-slate-500" />
                   )}
 
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="bg-white/90 text-slate-900 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md">
-                      🔍 Ver Ampliada
+                    <span className="bg-white/90 text-slate-900 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md inline-flex items-center gap-1.5">
+                      <IconSearch className="w-3.5 h-3.5" />
+                      <span>Ver Ampliada</span>
                     </span>
                   </div>
 
@@ -293,14 +297,19 @@ export default function PizarraView({
                 {/* Contenido Transcrito OCR */}
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold">📅 Clase del {photo.class_date}</span>
+                    <span className="font-semibold flex items-center gap-1.5">
+                      <IconCalendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Clase del {photo.class_date}</span>
+                    </span>
                     {hasValidOcr ? (
-                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-full text-[10px]">
-                        🤖 Transcrito con IA
+                      <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-bold px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                        <IconSparkles className="w-3 h-3 text-emerald-600" />
+                        <span>Transcrito con IA</span>
                       </span>
                     ) : (
-                      <span className="bg-slate-100 text-slate-600 border border-slate-200 font-medium px-2 py-0.5 rounded-full text-[10px]">
-                        🖼️ Foto guardada
+                      <span className="bg-slate-100 text-slate-600 border border-slate-200 font-medium px-2 py-0.5 rounded-full text-[10px] inline-flex items-center gap-1">
+                        <IconCamera className="w-3 h-3 text-slate-500" />
+                        <span>Foto guardada</span>
                       </span>
                     )}
                   </div>
@@ -320,7 +329,7 @@ export default function PizarraView({
                             onClick={() => handleCopyTranscription(photo.id, photo.ocr_text || '')}
                             className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
                           >
-                            {copiedPhotoId === photo.id ? '¡Copiado! ✓' : 'Copiar'}
+                            {copiedPhotoId === photo.id ? '¡Copiado!' : 'Copiar'}
                           </button>
                           <span className="text-slate-300">•</span>
                           <button
@@ -398,8 +407,9 @@ export default function PizarraView({
             {/* Foto Ampliada */}
             <div className="md:w-1/2 flex flex-col gap-2">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <span className="text-xs font-bold text-slate-800">
-                  📷 Foto de Pizarra • {activeZoomPhoto.class_date}
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <IconCamera className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Foto de Pizarra • {activeZoomPhoto.class_date}</span>
                 </span>
               </div>
               <div className="rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center">
@@ -426,7 +436,7 @@ export default function PizarraView({
                     onClick={() => setActiveZoomPhoto(null)}
                     className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 text-xs font-bold cursor-pointer"
                   >
-                    ✕
+                    <IconClose className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -442,7 +452,7 @@ export default function PizarraView({
                   className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <IconClipboard className="w-3.5 h-3.5" />
-                  {copiedPhotoId === activeZoomPhoto.id ? '¡Copiado! ✓' : 'Copiar Texto'}
+                  {copiedPhotoId === activeZoomPhoto.id ? '¡Copiado!' : 'Copiar Texto'}
                 </button>
 
                 <button

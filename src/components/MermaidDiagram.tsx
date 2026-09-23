@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { IconChart, IconCheck } from '@/components/icons'
 
 interface MermaidDiagramProps {
   chart: string
@@ -67,8 +68,8 @@ export default function MermaidDiagram({ chart }: MermaidDiagramProps) {
       {/* Encabezado del Diagrama */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs">
-            📊
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+            <IconChart className="w-3.5 h-3.5" />
           </span>
           <span className="text-xs font-bold text-slate-800 tracking-tight">
             Esquema Conceptual (Mermaid.js)
@@ -79,16 +80,23 @@ export default function MermaidDiagram({ chart }: MermaidDiagramProps) {
           <button
             type="button"
             onClick={() => setShowCode(!showCode)}
-            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           >
             {showCode ? 'Ver gráfico' : 'Ver código'}
           </button>
           <button
             type="button"
             onClick={handleCopyCode}
-            className="rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
+            className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors cursor-pointer"
           >
-            {copied ? '✓ Copiado' : 'Copiar Mermaid'}
+            {copied ? (
+              <>
+                <IconCheck className="w-3 h-3 text-emerald-600" />
+                <span>Copiado</span>
+              </>
+            ) : (
+              <span>Copiar Mermaid</span>
+            )}
           </button>
         </div>
       </div>
@@ -100,7 +108,7 @@ export default function MermaidDiagram({ chart }: MermaidDiagramProps) {
         </pre>
       ) : error ? (
         <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900 flex flex-col gap-2">
-          <span className="font-bold">⚠️ No se pudo renderizar la vista gráfica.</span>
+          <span className="font-bold">No se pudo renderizar la vista gráfica.</span>
           <p className="text-[11px] text-amber-800">
             Podés copiar la sintaxis Mermaid e inspeccionarla en el editor oficial.
           </p>
@@ -116,7 +124,7 @@ export default function MermaidDiagram({ chart }: MermaidDiagramProps) {
         />
       ) : (
         <div className="flex items-center justify-center py-6 text-xs text-slate-400 animate-pulse">
-          ⏳ Renderizando diagrama vectorial Mermaid...
+          Renderizando diagrama vectorial Mermaid...
         </div>
       )}
     </div>

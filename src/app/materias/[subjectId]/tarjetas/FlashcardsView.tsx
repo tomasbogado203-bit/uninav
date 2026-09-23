@@ -12,6 +12,12 @@ import {
   IconTrash,
   IconClipboard,
   IconLightbulb,
+  IconAward,
+  IconArrowsExchange,
+  IconCheck,
+  IconClose,
+  IconSearch,
+  IconLayers,
 } from '@/components/icons'
 
 export interface FlashcardItem {
@@ -224,7 +230,7 @@ export default function FlashcardsView({
     saveToLocal(shuffled)
     setCurrentIndex(0)
     setIsFlipped(false)
-    setToastMessage('🔀 Mazo barajado aleatoriamente')
+    setToastMessage('Mazo barajado aleatoriamente')
   }
 
   // Métricas de progreso
@@ -241,8 +247,8 @@ export default function FlashcardsView({
             <IconSparkles className="w-4 h-4" />
             {toastMessage}
           </span>
-          <button onClick={() => setToastMessage(null)} className="text-white hover:opacity-80 cursor-pointer">
-            ✕
+          <button onClick={() => setToastMessage(null)} className="text-white hover:opacity-80 cursor-pointer p-0.5">
+            <IconClose className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -271,10 +277,10 @@ export default function FlashcardsView({
               onChange={(e) => setSelectedTopic(e.target.value)}
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             >
-              <option value="Todas las unidades">🌐 Toda la materia</option>
+              <option value="Todas las unidades">Toda la materia</option>
               {topics.map((top, idx) => (
                 <option key={idx} value={top}>
-                  📌 {top}
+                  {top}
                 </option>
               ))}
             </select>
@@ -287,7 +293,7 @@ export default function FlashcardsView({
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer shrink-0"
           >
             <IconSparkles className="w-3.5 h-3.5" />
-            {loading ? 'Generando con IA...' : '⚡ Generar Tarjetas con IA'}
+            {loading ? 'Generando con IA...' : 'Generar Tarjetas con IA'}
           </button>
         </div>
       </div>
@@ -349,13 +355,13 @@ export default function FlashcardsView({
                   setCurrentIndex(0)
                   setIsFlipped(false)
                 }}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   filterMode === 'mastered'
                     ? 'bg-emerald-50 text-emerald-700 font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                ⭐ Dominadas ({masteredCount})
+                <IconAward className="w-3.5 h-3.5 text-amber-500" /> Dominadas ({masteredCount})
               </button>
             </div>
 
@@ -366,7 +372,7 @@ export default function FlashcardsView({
               className="p-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-bold transition-colors cursor-pointer"
               title="Barajar tarjetas aleatoriamente"
             >
-              🔀
+              <IconArrowsExchange className="w-4 h-4" />
             </button>
 
             {/* Selector de Modo Estudio vs Modo Mazo */}
@@ -374,24 +380,24 @@ export default function FlashcardsView({
               <button
                 type="button"
                 onClick={() => setViewMode('study')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   viewMode === 'study'
                     ? 'bg-slate-900 text-white font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                🎴 Estudio
+                <IconDocument className="w-3.5 h-3.5" /> Estudio
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('deck')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   viewMode === 'deck'
                     ? 'bg-slate-900 text-white font-bold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                📋 Mazo
+                <IconLayers className="w-3.5 h-3.5" /> Mazo
               </button>
             </div>
           </div>
@@ -406,8 +412,8 @@ export default function FlashcardsView({
             <span>
               Tarjeta {currentIndex + 1} de {activeCards.length}
             </span>
-            <span className="text-[11px] text-slate-400">
-              💡 Atajos: <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">Espacio</kbd> voltear • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">→</kbd> siguiente • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">M</kbd> dominar
+            <span className="text-[11px] text-slate-400 inline-flex items-center gap-1">
+              <IconLightbulb className="w-3.5 h-3.5 text-amber-500" /> Atajos: <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">Espacio</kbd> voltear • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">→</kbd> siguiente • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">M</kbd> dominar
             </span>
           </div>
 
@@ -421,7 +427,7 @@ export default function FlashcardsView({
               <div className="flex flex-col justify-between h-full gap-6">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full">
-                    ❓ Pregunta / Desafío
+                    Pregunta / Desafío
                   </span>
                   <span className="text-xs text-slate-400 font-medium group-hover:text-indigo-600 transition-colors">
                     Haz clic o presiona Espacio para ver respuesta ↺
@@ -467,7 +473,9 @@ export default function FlashcardsView({
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800 pt-3">
                   <span>Fundamentado en bibliografía oficial</span>
-                  <span className="text-emerald-400 font-bold">✓ Respuesta Verificada</span>
+                  <span className="text-emerald-400 font-bold inline-flex items-center gap-1">
+                    <IconCheck className="w-3.5 h-3.5" /> Respuesta Verificada
+                  </span>
                 </div>
               </div>
             )}
@@ -505,13 +513,21 @@ export default function FlashcardsView({
               <button
                 type="button"
                 onClick={() => handleToggleMastered(currentCard.id, currentCard.mastered)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                   currentCard.mastered
                     ? 'bg-emerald-600 text-white shadow-2xs'
                     : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'
                 }`}
               >
-                {currentCard.mastered ? '✓ Marcar para repasar' : '⭐ Marcar como dominada'}
+                {currentCard.mastered ? (
+                  <>
+                    <IconCheck className="w-3.5 h-3.5" /> Marcar para repasar
+                  </>
+                ) : (
+                  <>
+                    <IconAward className="w-3.5 h-3.5" /> Marcar como dominada
+                  </>
+                )}
               </button>
 
               <button
@@ -549,7 +565,7 @@ export default function FlashcardsView({
                   <span className="text-indigo-600">Tarjeta #{idx + 1}</span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity font-semibold">
-                      🔍 Agrandar
+                      Agrandar
                     </span>
                     <button
                       type="button"
@@ -559,7 +575,7 @@ export default function FlashcardsView({
                       }}
                       className="cursor-pointer"
                     >
-                      {card.mastered ? '⭐ Dominada' : '● En repaso'}
+                      {card.mastered ? 'Dominada' : 'En repaso'}
                     </button>
                   </div>
                 </div>
@@ -617,7 +633,7 @@ export default function FlashcardsView({
                       : 'bg-indigo-50 text-indigo-700'
                   }`}
                 >
-                  {expandedCard.mastered ? '⭐ Dominada' : '● En repaso'}
+                  {expandedCard.mastered ? 'Dominada' : 'En repaso'}
                 </span>
                 <span className="hidden sm:inline text-[11px] text-slate-400 ml-2">
                   Atajos: <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">Espacio</kbd> • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">←/→</kbd> • <kbd className="bg-slate-200 px-1 py-0.5 rounded text-[10px] font-mono">M</kbd>
@@ -635,14 +651,14 @@ export default function FlashcardsView({
                   className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 transition-colors cursor-pointer"
                   title="Pasar al modo estudio individual en esta tarjeta"
                 >
-                  🎴 Abrir en Estudio
+                  Abrir en Estudio
                 </button>
                 <button
                   type="button"
                   onClick={() => setExpandedCardIndex(null)}
                   className="rounded-xl bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200 text-xs font-bold cursor-pointer"
                 >
-                  ✕
+                  <IconClose className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -655,7 +671,7 @@ export default function FlashcardsView({
               {!expandedCardFlipped ? (
                 <div className="flex flex-col justify-between h-full gap-4">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
-                    ❓ Pregunta / Desafío (Hacé clic para ver respuesta ↺)
+                    Pregunta / Desafío (Hacé clic para ver respuesta ↺)
                   </span>
                   <h3 className="text-base sm:text-xl font-bold text-slate-900 leading-relaxed text-center my-auto">
                     {expandedCard.front_text}
@@ -680,7 +696,9 @@ export default function FlashcardsView({
                   </p>
                   <div className="text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-800 pt-2">
                     <span>Fundamentado en bibliografía oficial</span>
-                    <span className="text-emerald-400 font-bold">✓ Verificada</span>
+                    <span className="text-emerald-400 font-bold inline-flex items-center gap-1">
+                      <IconCheck className="w-3.5 h-3.5" /> Verificada
+                    </span>
                   </div>
                 </div>
               )}
@@ -720,13 +738,21 @@ export default function FlashcardsView({
                 <button
                   type="button"
                   onClick={() => handleToggleMastered(expandedCard.id, expandedCard.mastered)}
-                  className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                     expandedCard.mastered
                       ? 'bg-emerald-600 text-white'
                       : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                   }`}
                 >
-                  {expandedCard.mastered ? '✓ Dominada' : '⭐ Marcar como dominada'}
+                  {expandedCard.mastered ? (
+                    <>
+                      <IconCheck className="w-3.5 h-3.5" /> Dominada
+                    </>
+                  ) : (
+                    <>
+                      <IconAward className="w-3.5 h-3.5" /> Marcar como dominada
+                    </>
+                  )}
                 </button>
 
                 <button
@@ -762,7 +788,7 @@ export default function FlashcardsView({
             onClick={handleGenerate}
             className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition-all cursor-pointer"
           >
-            {loading ? 'Generando con IA...' : '⚡ Generar tarjetas con IA'}
+            {loading ? 'Generando con IA...' : 'Generar tarjetas con IA'}
           </button>
         </div>
       )}

@@ -14,6 +14,8 @@ import {
   IconLightbulb,
   IconSparkles,
   IconIncadeLogo,
+  IconDocument,
+  IconClose,
 } from '@/components/icons'
 
 interface StudentTutorialModalProps {
@@ -99,7 +101,8 @@ export default function StudentTutorialModal({
           </p>
           <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex flex-col gap-2">
             <span className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
-              📄 ¿Qué podés subir?
+              <IconDocument className="w-3.5 h-3.5 text-indigo-600" />
+              <span>¿Qué podés subir?</span>
             </span>
             <ul className="list-disc pl-4 space-y-1 text-slate-700">
               <li><strong>Guías de Trabajos Prácticos y Teóricos:</strong> Libros y PDFs de clase. El sistema detecta automáticamente los temas principales.</li>
@@ -234,10 +237,10 @@ export default function StudentTutorialModal({
           <button
             type="button"
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-700 font-bold text-sm p-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
             title="Cerrar tutorial"
           >
-            ✕
+            <IconClose className="w-4 h-4" />
           </button>
         </div>
 

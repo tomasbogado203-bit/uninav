@@ -24,6 +24,8 @@ import {
   IconDocument,
   IconSparkles,
   IconBuilding,
+  IconEdit,
+  IconClose,
 } from '@/components/icons'
 
 interface GradesDashboardViewProps {
@@ -310,7 +312,7 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
             </span>
           </div>
           <span className="text-[11px] text-slate-500">
-            {data.overall_gpa >= 8 ? '🌟 Nivel de Excelencia Académica' : 'Promedio ponderado de materias finalizadas'}
+            {data.overall_gpa >= 8 ? 'Nivel de Excelencia Académica (Promedio destacado)' : 'Promedio ponderado de materias finalizadas'}
           </span>
         </div>
 
@@ -522,7 +524,7 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
                         title="Editar notas"
                         className="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                       >
-                        ✏️
+                        <IconEdit className="w-3.5 h-3.5 text-slate-700" />
                       </button>
                     </div>
                   </td>
@@ -560,9 +562,9 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
               <button
                 type="button"
                 onClick={() => setShowSimModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -678,22 +680,22 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
               <div className="text-xs text-slate-700 leading-relaxed font-medium">
                 {simResult.status === 'promocionada' && (
                   <p className="text-emerald-800 font-semibold">
-                    🎉 ¡Excelente! Con estas notas promocionás directamente la materia sin necesidad de rendir examen final.
+                    ¡Excelente! Con estas notas promocionás directamente la materia sin necesidad de rendir examen final.
                   </p>
                 )}
                 {simResult.status === 'regular' && (
                   <p className="text-sky-800">
-                    📘 Quedás en condición de <strong>Alumno Regular</strong>. Aprobaste la cursada y quedás habilitado para rendir el Examen Final en los turnos de julio o diciembre.
+                    Quedás en condición de <strong>Alumno Regular</strong>. Aprobaste la cursada y quedás habilitado para rendir el Examen Final en los turnos de julio o diciembre.
                   </p>
                 )}
                 {simResult.status === 'a_recuperatorio' && (
                   <p className="text-amber-800">
-                    ⚠️ Tenés un parcial desaprobado. Podés presentarte al Recuperatorio al final del cuatrimestre para regularizar la cursada.
+                    Tenés un parcial desaprobado. Podés presentarte al Recuperatorio al final del cuatrimestre para regularizar la cursada.
                   </p>
                 )}
                 {simResult.status === 'libre' && (
                   <p className="text-rose-800">
-                    🚨 Con estos valores quedarías en condición Libre {simAttendance < 75 ? '(por asistencia inferior al 75%)' : '(por ambos parciales desaprobados)'}. Contactá a la cátedra para solicitar tutoría socrática.
+                    Con estos valores quedarías en condición Libre {simAttendance < 75 ? '(por asistencia inferior al 75%)' : '(por ambos parciales desaprobados)'}. Contactá a la cátedra para solicitar tutoría socrática.
                   </p>
                 )}
               </div>
@@ -729,9 +731,9 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
@@ -1010,9 +1012,9 @@ export default function GradesDashboardView({ initialData }: GradesDashboardView
               <button
                 type="button"
                 onClick={() => setShowPrintModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 

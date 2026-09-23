@@ -10,6 +10,8 @@ import {
   IconCheck,
   IconLightbulb,
   IconBook,
+  IconAlertTriangle,
+  IconClose,
 } from '@/components/icons'
 
 interface SubjectCheatSheetModalProps {
@@ -42,14 +44,14 @@ export default function SubjectCheatSheetModal({
       year: 'numeric',
     })
 
-    let md = `# 📋 Ficha de Fórmulas y Resumen de Repaso: ${data.subject_name}\n`
+    let md = `# Ficha de Fórmulas y Resumen de Repaso: ${data.subject_name}\n`
     md += `*Generado por UniNav AI • ${todayStr}*\n\n`
     md += `---\n\n`
 
-    md += `## 💡 Síntesis Conceptual de la Cursada\n${data.overview}\n\n`
+    md += `## Síntesis Conceptual de la Cursada\n${data.overview}\n\n`
 
     if (data.core_concepts.length > 0) {
-      md += `## 📌 Conceptos Teóricos Indispensables\n`
+      md += `## Conceptos Teóricos Indispensables\n`
       data.core_concepts.forEach((c, i) => {
         md += `### ${i + 1}. ${c.term}${c.citation_page ? ` [Pág. ${c.citation_page}]` : ''}\n`
         md += `${c.definition}\n\n`
@@ -57,7 +59,7 @@ export default function SubjectCheatSheetModal({
     }
 
     if (data.formulas_and_algorithms.length > 0) {
-      md += `## 📐 Fórmulas Matemáticas & Algoritmos Clave\n`
+      md += `## Fórmulas Matemáticas & Algoritmos Clave\n`
       data.formulas_and_algorithms.forEach((f, i) => {
         md += `### ${i + 1}. ${f.name}\n`
         md += `**Fórmula / Notación:** \`${f.formula}\`\n`
@@ -67,7 +69,7 @@ export default function SubjectCheatSheetModal({
     }
 
     if (data.exam_traps.length > 0) {
-      md += `## ⚠️ Trampas y Errores Frecuentes en Exámenes\n`
+      md += `## Trampas y Errores Frecuentes en Exámenes\n`
       data.exam_traps.forEach((t, i) => {
         md += `### ${i + 1}. Error Común: ${t.trap}\n`
         md += `*Por qué ocurre:* ${t.explanation}\n`
@@ -76,7 +78,7 @@ export default function SubjectCheatSheetModal({
     }
 
     if (data.self_check_questions.length > 0) {
-      md += `## 💡 Autoevaluación Rápida antes de Rendir\n`
+      md += `## Autoevaluación Rápida antes de Rendir\n`
       data.self_check_questions.forEach((q, i) => {
         md += `**P${i + 1}: ${q.question}**\n`
         md += `*Respuesta Clave:* ${q.key_answer}\n\n`
@@ -168,16 +170,16 @@ export default function SubjectCheatSheetModal({
               title="Copiar contenido"
             >
               <IconClipboard className="w-3.5 h-3.5 text-slate-300" />
-              <span>{copied ? '¡Copiado! ✓' : 'Copiar'}</span>
+              <span>{copied ? '¡Copiado!' : 'Copiar'}</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors text-xs font-bold cursor-pointer ml-1"
+              className="rounded-xl bg-slate-100 p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors cursor-pointer ml-1"
               title="Cerrar ficha"
             >
-              ✕
+              <IconClose className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -201,7 +203,7 @@ export default function SubjectCheatSheetModal({
               <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5">
                 <IconBook className="w-4 h-4 text-indigo-600" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                  📌 Conceptos Teóricos Indispensables
+                  Conceptos Teóricos Indispensables
                 </h3>
               </div>
 
@@ -236,7 +238,7 @@ export default function SubjectCheatSheetModal({
               <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5">
                 <span className="text-base font-black text-indigo-600 font-mono">∑</span>
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                  📐 Fórmulas Matemáticas & Algoritmos Clave
+                  Fórmulas Matemáticas & Algoritmos Clave
                 </h3>
               </div>
 
@@ -268,7 +270,7 @@ export default function SubjectCheatSheetModal({
           {data.exam_traps.length > 0 && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                <span className="text-amber-500 font-bold text-sm">⚠️</span>
+                <IconAlertTriangle className="w-4 h-4 text-amber-500" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                   Trampas y Errores Típicos de Parcial
                 </h3>
@@ -290,7 +292,7 @@ export default function SubjectCheatSheetModal({
                     </div>
 
                     <div className="rounded-xl bg-amber-100/90 border border-amber-300/80 p-2 text-[10px] font-bold text-amber-950 flex items-start gap-1">
-                      <span className="shrink-0 text-amber-700">💡 Tip:</span>
+                      <span className="shrink-0 text-amber-800 font-black">Consejo:</span>
                       <span>{trap.advice}</span>
                     </div>
                   </div>
@@ -303,7 +305,7 @@ export default function SubjectCheatSheetModal({
           {data.self_check_questions.length > 0 && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-1.5">
-                <span className="text-emerald-600 font-bold text-sm">✓</span>
+                <IconCheck className="w-4 h-4 text-emerald-600" />
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
                   Autoevaluación Rápida antes de Rendir
                 </h3>

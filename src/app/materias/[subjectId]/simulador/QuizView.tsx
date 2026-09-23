@@ -11,6 +11,12 @@ import {
   IconSparkles,
   IconTrash,
   IconChat,
+  IconClock,
+  IconCheck,
+  IconClose,
+  IconRefresh,
+  IconEye,
+  IconChevronLeft,
 } from '@/components/icons'
 
 interface Thread {
@@ -77,6 +83,8 @@ export default function QuizView({
   const [submitted, setSubmitted] = useState(false)
   const [finalScore, setFinalScore] = useState<number | null>(null)
   const [isReviewMode, setIsReviewMode] = useState(false)
+  const [selectedThreads, setSelectedThreads] = useState<string[]>([])
+  const [selectedExamDoc, setSelectedExamDoc] = useState<string>('')
 
   // Temporizador opcional en minutos
   const [timerMinutes, setTimerMinutes] = useState<number>(0) // 0 = Sin límite
@@ -85,6 +93,36 @@ export default function QuizView({
   useEffect(() => {
     setQuizzesList(existingQuizzes)
   }, [existingQuizzes])
+
+  const handleToggleThread = (threadId: string) => {
+    setSelectedThreads((prev) =>
+      prev.includes(threadId) ? prev.filter((id) => id !== threadId) : [...prev, threadId]
+    )
+  }
+
+  const handleCreateQuiz = async (quizType: 'multiple_choice' | 'desarrollo') => {
+    if (selectedThreads.length === 0) return
+    setLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('quiz_type', quizType)
+      formData.append('scope', selectedThreads.length > 1 ? 'integrador' : 'tema_unico')
+      selectedThreads.forEach((id) => formData.append('thread_ids', id))
+      if (selectedExamDoc) {
+        formData.append('style_reference_document_id', selectedExamDoc)
+      }
+
+      const newQuiz = await createQuizAction(subjectId, formData)
+      if (newQuiz) {
+        setQuizzesList((prev) => [newQuiz, ...prev])
+        handleStartQuiz(newQuiz, timerMinutes)
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error al generar el examen.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Lógica del Temporizador de Examen
   useEffect(() => {
@@ -279,10 +317,10 @@ export default function QuizView({
                     onChange={(e) => setTimerMinutes(parseInt(e.target.value, 10))}
                     className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   >
-                    <option value={0}>⏳ Sin límite de tiempo</option>
-                    <option value={15}>⏱️ 15 Minutos (Test Rápido)</option>
-                    <option value={30}>⏱️ 30 Minutos (Parcial Estándar)</option>
-                    <option value={45}>⏱️ 45 Minutos (Examen Completo)</option>
+                    <option value={0}>Sin límite de tiempo</option>
+                    <option value={15}>15 Minutos (Test Rápido)</option>
+                    <option value={30}>30 Minutos (Parcial Estándar)</option>
+                    <option value={45}>45 Minutos (Examen Completo)</option>
                   </select>
                 </div>
               </div>
@@ -300,34 +338,32 @@ export default function QuizView({
                     >
                       <input
                         type="checkbox"
-                        name="thread_ids"
-                        value={t.id}
-                        defaultChecked
+                        checked={selectedThreads.includes(t.id)}
+                        onChange={() => handleToggleThread(t.id)}
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
                       />
                       <span className="truncate">{t.title}</span>
                     </label>
                   ))}
-                  {threads.length === 0 && (
-                    <p className="col-span-full text-xs text-slate-400 italic py-2">
-                      Subí apuntes PDF en la biblioteca para extraer automáticamente los temas de la materia.
-                    </p>
-                  )}
                 </div>
               </div>
 
-              {/* Referencia de Exámenes Viejos (Regla 5) */}
+              {/* Documento de Estilo Opcional (Regla 5) */}
               {examDocuments.length > 0 && (
-                <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
                   <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                     <IconBook className="w-3.5 h-3.5 text-indigo-600" />
-                    Estilo de redacción según Examen Anterior (Opcional):
+                    Modelo de Examen Viejo de Referencia (Opcional):
                   </label>
+                  <p className="text-[11px] text-slate-500">
+                    La IA adoptará el formato y estilo de consignas de este parcial viejo, pero usará los contenidos de los temas seleccionados.
+                  </p>
                   <select
-                    name="style_reference_document_id"
-                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none"
+                    value={selectedExamDoc}
+                    onChange={(e) => setSelectedExamDoc(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   >
-                    <option value="">Ninguno (Formato estándar)</option>
+                    <option value="">Sin modelo de referencia (Formato estándar)</option>
                     {examDocuments.map((doc) => (
                       <option key={doc.id} value={doc.id}>
                         {doc.title}
@@ -337,56 +373,79 @@ export default function QuizView({
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading || threads.length === 0}
-                className="rounded-xl bg-indigo-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <IconSparkles className="w-4 h-4" />
-                {loading ? 'Generando examen con IA...' : 'Generar y Rendir Simulacro con IA'}
-              </button>
+              {/* Botones de Generación */}
+              <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={loading || selectedThreads.length === 0}
+                  onClick={() => handleCreateQuiz('multiple_choice')}
+                  className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <IconQuiz className="w-4 h-4" />
+                  <span>{loading ? 'Generando Examen...' : 'Generar Multiple Choice'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={loading || selectedThreads.length === 0}
+                  onClick={() => handleCreateQuiz('desarrollo')}
+                  className="flex-1 rounded-xl border border-indigo-600 bg-white px-4 py-2.5 text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <IconDocument className="w-4 h-4" />
+                  <span>{loading ? 'Generando...' : 'Generar Preguntas de Desarrollo'}</span>
+                </button>
+              </div>
             </form>
           </div>
 
-          {/* Historial de Simulacros Anteriores con Modo Revisión y Re-intento */}
-          {quizzesList.length > 0 && (
-            <div className="flex flex-col gap-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Historial de Simulacros Guardados ({quizzesList.length})
-              </h3>
+          {/* Listado de Exámenes Creados */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <IconDocument className="w-4 h-4 text-indigo-600" />
+              <span>Historial de Simuladores Disponibles ({quizzesList.length})</span>
+            </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {quizzesList.map((quiz, idx) => {
+            {quizzesList.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center bg-slate-50/50">
+                <p className="text-xs text-slate-500 font-medium">
+                  Aún no creaste ningún simulador para esta materia.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {quizzesList.map((quiz) => {
                   const lastAttempt = quiz.quiz_attempts?.[0]
-                  const hasAttempt = lastAttempt !== undefined
+                  const hasAttempt = Boolean(lastAttempt)
 
                   return (
                     <div
-                      key={quiz.id || idx}
-                      className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs flex flex-col justify-between gap-3 hover:border-indigo-300 transition-all"
+                      key={quiz.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between gap-3 hover:border-slate-300 transition-all"
                     >
                       <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between text-[10px] font-bold">
-                          <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100 uppercase">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
                             {quiz.quiz_type === 'multiple_choice' ? 'Multiple Choice' : 'Desarrollo'}
                           </span>
-                          <span className="text-slate-400">
-                            {new Date(quiz.created_at).toLocaleDateString('es-AR')}
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {quiz.scope === 'integrador' ? 'Integrador' : 'Tema Único'}
                           </span>
                         </div>
 
-                        <h4 className="text-xs font-bold text-slate-900 mt-1">
-                          Simulacro #{quizzesList.length - idx} ({quiz.quiz_questions.length} preguntas)
-                        </h4>
+                        <span className="font-bold text-xs text-slate-900 mt-1">
+                          {quiz.quiz_questions.length} preguntas
+                        </span>
 
-                        {hasAttempt ? (
-                          <div className="flex items-center gap-1.5 text-xs mt-1">
-                            <span className="text-slate-500 font-medium">Última nota:</span>
+                        {lastAttempt ? (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-600 mt-0.5">
+                            <span>Último puntaje:</span>
                             <span
-                              className={`font-black px-2 py-0.5 rounded-md text-[11px] ${
-                                lastAttempt.score >= 60
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-rose-100 text-rose-800'
+                              className={`font-black font-mono text-xs ${
+                                lastAttempt.score >= 70
+                                  ? 'text-emerald-700'
+                                  : lastAttempt.score >= 40
+                                  ? 'text-amber-700'
+                                  : 'text-rose-700'
                               }`}
                             >
                               {lastAttempt.score} / 100
@@ -394,31 +453,33 @@ export default function QuizView({
                           </div>
                         ) : (
                           <span className="text-[11px] text-amber-700 italic mt-1 font-medium">
-                            ● Pendiente de rendir
+                            Pendiente de rendir
                           </span>
                         )}
                       </div>
 
                       {/* Botones de Acción: Ver Corrección / Rendir de nuevo / Eliminar */}
                       <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
-                        {hasAttempt ? (
+                        {lastAttempt ? (
                           <div className="flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => handleReviewQuiz(quiz, lastAttempt)}
-                              className="flex-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 text-xs font-bold border border-indigo-200/80 transition-all cursor-pointer text-center"
+                              className="flex-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 text-xs font-bold border border-indigo-200/80 transition-all cursor-pointer text-center inline-flex items-center justify-center gap-1"
                               title="Ver preguntas con respuestas correctas y explicaciones"
                             >
-                              🔍 Ver Corrección
+                              <IconEye className="w-3.5 h-3.5" />
+                              <span>Ver Corrección</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleStartQuiz(quiz, timerMinutes)}
-                              className="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer text-center"
+                              className="rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 text-xs font-bold transition-all cursor-pointer text-center inline-flex items-center justify-center gap-1"
                               title="Volver a rendir este examen desde cero"
                             >
-                              🔄 Re-intentar
+                              <IconRefresh className="w-3.5 h-3.5" />
+                              <span>Re-intentar</span>
                             </button>
 
                             <button
@@ -455,8 +516,8 @@ export default function QuizView({
                   )
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </>
       ) : (
         /* VISTA DE EXAMEN ACTIVO / MODO REVISIÓN */
@@ -470,7 +531,7 @@ export default function QuizView({
                 </span>
                 {isReviewMode ? (
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
-                    🔍 Modo Revisión (Nota: {finalScore}/100)
+                    Modo Revisión (Nota: {finalScore}/100)
                   </span>
                 ) : (
                   <span className="text-xs text-slate-500 font-semibold">
@@ -493,7 +554,7 @@ export default function QuizView({
                       : 'bg-slate-100 border-slate-200 text-slate-800'
                   }`}
                 >
-                  <span>⏱️</span>
+                  <IconClock className="w-3.5 h-3.5 text-slate-700" />
                   <span>{formatTimer(timeRemainingSeconds)}</span>
                 </div>
               )}
@@ -509,18 +570,20 @@ export default function QuizView({
                     setIsReviewMode(false)
                     setFinalScore(null)
                   }}
-                  className="rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer"
+                  className="rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 text-xs font-bold hover:bg-indigo-100 transition-colors cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  🔄 Rendir este examen de nuevo
+                  <IconRefresh className="w-3.5 h-3.5" />
+                  <span>Rendir este examen de nuevo</span>
                 </button>
               )}
 
               <button
                 type="button"
                 onClick={() => setActiveQuiz(null)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                className="text-xs font-semibold text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer inline-flex items-center gap-1"
               >
-                ✕ Volver al Historial
+                <IconChevronLeft className="w-3.5 h-3.5" />
+                <span>Volver al Historial</span>
               </button>
             </div>
           </div>
@@ -553,13 +616,23 @@ export default function QuizView({
                     <div className="flex items-center gap-1.5 shrink-0">
                       {submitted && activeQuiz.quizType === 'multiple_choice' && (
                         <span
-                          className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          className={`text-[10px] font-black px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
                             isCorrectOption
                               ? 'bg-emerald-100 text-emerald-800'
                               : 'bg-rose-100 text-rose-800'
                           }`}
                         >
-                          {isCorrectOption ? '✓ Correcta' : '✕ Incorrecta'}
+                          {isCorrectOption ? (
+                            <>
+                              <IconCheck className="w-3 h-3 text-emerald-700" />
+                              <span>Correcta</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconClose className="w-3 h-3 text-rose-700" />
+                              <span>Incorrecta</span>
+                            </>
+                          )}
                         </span>
                       )}
                       {q.source_page && (
@@ -605,13 +678,15 @@ export default function QuizView({
                             <div className="flex items-center justify-between">
                               <span>{opt}</span>
                               {submitted && isRightChoice && (
-                                <span className="text-emerald-700 font-bold text-[11px]">
-                                  ✓ Opción Correcta
+                                <span className="text-emerald-700 font-bold text-[11px] inline-flex items-center gap-1">
+                                  <IconCheck className="w-3 h-3 text-emerald-700" />
+                                  <span>Opción Correcta</span>
                                 </span>
                               )}
                               {submitted && isSelected && !isRightChoice && (
-                                <span className="text-rose-600 font-bold text-[11px]">
-                                  ✕ Tu Selección
+                                <span className="text-rose-600 font-bold text-[11px] inline-flex items-center gap-1">
+                                  <IconClose className="w-3 h-3 text-rose-600" />
+                                  <span>Tu Selección</span>
                                 </span>
                               )}
                             </div>
@@ -649,35 +724,37 @@ export default function QuizView({
                             <button
                               type="button"
                               onClick={() => handleSelfEval(q.id, 10)}
-                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer inline-flex items-center gap-1 ${
                                 selfScores[q.id] === 10
                                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                                   : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100'
                               }`}
                             >
-                              ✓ Excelente (10 pts)
+                              <IconCheck className="w-3 h-3" />
+                              <span>Excelente (10 pts)</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => handleSelfEval(q.id, 5)}
                               className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
                                 selfScores[q.id] === 5
-                              ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
-                              : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-100'
+                                ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                                : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-100'
                               }`}
                             >
-                              ½ Parcial (5 pts)
+                              Parcial (5 pts)
                             </button>
                             <button
                               type="button"
                               onClick={() => handleSelfEval(q.id, 0)}
-                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer inline-flex items-center gap-1 ${
                                 selfScores[q.id] === 0
-                              ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                              : 'bg-white text-rose-800 border-rose-200 hover:bg-rose-100'
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                                : 'bg-white text-rose-800 border-rose-200 hover:bg-rose-100'
                               }`}
                             >
-                              ✕ Incompleto (0 pts)
+                              <IconClose className="w-3 h-3" />
+                              <span>Incompleto (0 pts)</span>
                             </button>
                           </div>
                         )}

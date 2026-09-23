@@ -186,7 +186,7 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
           if (prev <= 1) {
             // Cambio de fase automático
             if (mode === 'study' || mode === 'warning') {
-              // Fin de estudio -> Iniciar descanso 🟢
+              // Fin de estudio -> Iniciar descanso
               setMode('break')
               const breakSecs = currentPreset.breakMinutes * 60
               syncLampState('break', breakSecs, true)
@@ -196,13 +196,13 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
                 soundEffects.playBreakChime()
               }
               sendStudyNotification(
-                '¡Bloque de estudio completado! 🟢',
+                '¡Bloque de estudio completado!',
                 `Tiempo de descanso libre (${currentPreset.breakMinutes} min). ¡Bien hecho!`
               )
 
               return breakSecs
             } else if (mode === 'break') {
-              // Fin de descanso -> Volver a estudio 🔴
+              // Fin de descanso -> Volver a estudio
               setMode('study')
               const studySecs = currentPreset.studyMinutes * 60
               syncLampState('study', studySecs, true)
@@ -212,8 +212,8 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
                 soundEffects.playStudyChime()
               }
               sendStudyNotification(
-                '¡A concentrarse! 🔴',
-                `Iniciando nuevo bloque de estudio (${currentPreset.studyMinutes} min). Semáforo en Rojo.`
+                '¡A concentrarse!',
+                `Iniciando nuevo bloque de estudio (${currentPreset.studyMinutes} min). Modo concentración activo.`
               )
 
               return studySecs
@@ -345,7 +345,7 @@ export function StudyTimerProvider({ children }: { children: React.ReactNode }) 
         localStorage.setItem('uninav_notifs_enabled', granted.toString())
       } catch {}
       if (granted) {
-        sendStudyNotification('UniNav Notificaciones Activadas 🔔', 'Te avisaremos cuando terminen tus bloques de estudio.')
+        sendStudyNotification('UniNav Notificaciones Activadas', 'Te avisaremos cuando terminen tus bloques de estudio.')
       }
     } else {
       setNotificationsEnabled(false)

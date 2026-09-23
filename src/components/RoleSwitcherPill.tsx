@@ -8,6 +8,8 @@ import {
   IconBuilding,
   IconShield,
   IconCheck,
+  IconChevronDown,
+  IconClose,
 } from '@/components/icons'
 
 interface RoleSwitcherPillProps {
@@ -73,7 +75,7 @@ export default function RoleSwitcherPill({
       >
         <CurrentIcon className="w-3.5 h-3.5 shrink-0" />
         <span>Rol: {currentInfo.label}</span>
-        <span className="text-[10px] text-slate-400 font-mono">▾</span>
+        <IconChevronDown className="w-3.5 h-3.5 text-slate-300 shrink-0" />
       </button>
 
       {/* Modal Desplegable de Selección de Rol */}
@@ -98,9 +100,9 @@ export default function RoleSwitcherPill({
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 

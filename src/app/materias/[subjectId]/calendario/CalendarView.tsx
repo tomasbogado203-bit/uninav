@@ -450,7 +450,7 @@ export default function CalendarView({
                           className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold truncate border ${NOTE_COLOR_STYLES[note.color]}`}
                           title={note.title}
                         >
-                          📌 {note.title}
+                          {note.title}
                         </div>
                       ))}
                     </div>
@@ -688,8 +688,9 @@ export default function CalendarView({
                       <h4 className="text-xs font-bold text-slate-900 leading-tight">
                         {evt.title}
                       </h4>
-                      <span className="text-[11px] text-slate-500 font-semibold block mt-0.5">
-                        📅 {evt.event_date} • {evt.event_type.toUpperCase().replace('_', ' ')}
+                      <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5 mt-0.5">
+                        <IconCalendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{evt.event_date} • {evt.event_type.toUpperCase().replace('_', ' ')}</span>
                       </span>
                     </div>
 

@@ -17,6 +17,9 @@ import {
   IconBook,
   IconBuilding,
   IconShield,
+  IconAlertTriangle,
+  IconChart,
+  IconClose,
 } from '@/components/icons'
 
 interface InstitutionalDashboardViewProps {
@@ -186,7 +189,7 @@ export default function InstitutionalDashboardView({
               {data.retention_rate_projected}%
             </span>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-              ▲ +26.4% vs 2024
+              +26.4% vs 2024
             </span>
           </div>
           <span className="text-[11px] text-slate-500">Objetivo institucional: &gt; 80%</span>
@@ -230,8 +233,9 @@ export default function InstitutionalDashboardView({
           <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col gap-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-base font-black text-slate-900">
-                  🚨 Semáforo de Alerta Temprana por Cátedra (Materias Filtro)
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <IconAlertTriangle className="w-4 h-4 text-rose-600" />
+                  <span>Semáforo de Alerta Temprana por Cátedra (Materias Filtro)</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Identificación de cuellos de botella académicos y semanas críticas de abandono.
@@ -350,8 +354,9 @@ export default function InstitutionalDashboardView({
 
           {/* Matriz de Retención por Carrera */}
           <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col gap-4">
-            <h3 className="text-base font-black text-slate-900">
-              📊 Distribución de Retención por Titulación / Carrera
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <IconChart className="w-4 h-4 text-indigo-600" />
+              <span>Distribución de Retención por Titulación / Carrera</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -690,9 +695,9 @@ export default function InstitutionalDashboardView({
               <button
                 type="button"
                 onClick={() => setShowConeauModal(false)}
-                className="text-slate-400 hover:text-slate-700 font-bold text-sm"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 

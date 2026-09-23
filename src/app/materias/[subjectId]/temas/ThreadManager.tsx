@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createThread, renameThreadAction, deleteThreadAction } from './actions'
-import { IconChat, IconTrash, IconSparkles } from '@/components/icons'
+import { IconChat, IconTrash, IconSparkles, IconCheck, IconEdit } from '@/components/icons'
 
 interface Thread {
   id: string
@@ -194,9 +194,9 @@ export default function ThreadManager({
                   <button
                     type="button"
                     onClick={() => handleSaveRename(t.id)}
-                    className="rounded-md bg-indigo-600 text-white font-bold text-[10px] px-2 py-1 hover:bg-indigo-700"
+                    className="rounded-md bg-indigo-600 text-white font-bold text-[10px] p-1.5 hover:bg-indigo-700 cursor-pointer"
                   >
-                    ✓
+                    <IconCheck className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
@@ -210,15 +210,15 @@ export default function ThreadManager({
                     <button
                       type="button"
                       onClick={(e) => handleStartRename(t, e)}
-                      className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-100/60 transition-colors"
+                      className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-100/60 transition-colors cursor-pointer"
                       title="Renombrar tema"
                     >
-                      ✎
+                      <IconEdit className="w-3.5 h-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={(e) => handleDelete(t.id, e)}
-                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-100/60 transition-colors"
+                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-100/60 transition-colors cursor-pointer"
                       title="Eliminar tema"
                     >
                       <IconTrash className="w-3.5 h-3.5" />

@@ -57,7 +57,7 @@ class SoundSynthesizer {
 
   /**
    * Campana Zen / Chime de Descanso (Acorde Armónico Mayor: C5, E5, G5, C6)
-   * Se dispara cuando termina el bloque de concentración y comienza el descanso libre 🟢
+   * Se dispara cuando termina el bloque de concentración y comienza el descanso libre.
    */
   playBreakChime(volume = 0.45) {
     this.playToneSeries(
@@ -73,7 +73,7 @@ class SoundSynthesizer {
 
   /**
    * Tono de Foco Activo (Gong / Chime Suave: A4, E5, A5)
-   * Se dispara cuando inicia un bloque de concentración 🔴
+   * Se dispara cuando inicia un bloque de concentración.
    */
   playStudyChime(volume = 0.4) {
     this.playToneSeries(
@@ -87,7 +87,7 @@ class SoundSynthesizer {
   }
 
   /**
-   * Tono de Advertencia (Últimos 2 minutos de foco 🟡)
+   * Tono de Advertencia (Últimos 2 minutos de foco)
    */
   playWarningChime(volume = 0.35) {
     this.playToneSeries(
@@ -100,8 +100,8 @@ class SoundSynthesizer {
   }
 
   /**
-   * Tono de Pausa (Dos notas descendentes claras: G5 ➔ D5 ➔ C5)
-   * Da feedback auditivo táctil de que la sesión se pausó ⏸️
+   * Tono de Pausa (Dos notas descendentes claras: G5 -> D5 -> C5)
+   * Da feedback auditivo táctil de que la sesión se pausó.
    */
   playPauseChime(volume = 0.35) {
     this.playToneSeries(
@@ -115,8 +115,8 @@ class SoundSynthesizer {
   }
 
   /**
-   * Tono de Reanudación (Dos notas ascendentes nítidas: C5 ➔ E5 ➔ G5)
-   * Da feedback auditivo de que la sesión continuó ▶️
+   * Tono de Reanudación (Dos notas ascendentes nítidas: C5 -> E5 -> G5)
+   * Da feedback auditivo de que la sesión continuó.
    */
   playResumeChime(volume = 0.35) {
     this.playToneSeries(

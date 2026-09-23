@@ -20,6 +20,11 @@ import {
   IconIncadeLogo,
   IconDocument,
   IconClipboard,
+  IconEdit,
+  IconEye,
+  IconPackage,
+  IconSettings,
+  IconClose,
 } from '@/components/icons'
 
 interface MoodleExamBuilderProps {
@@ -371,13 +376,14 @@ export default function MoodleExamBuilder({
           <button
             type="button"
             onClick={() => setActiveView('editor')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
               activeView === 'editor'
                 ? 'bg-white text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            ✏️ Diseñador
+            <IconEdit className="w-3.5 h-3.5" />
+            <span>Diseñador</span>
           </button>
 
           <button
@@ -386,37 +392,40 @@ export default function MoodleExamBuilder({
               setActiveView('preview')
               setPreviewSubmitted(false)
             }}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
               activeView === 'preview'
                 ? 'bg-white text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            👁️ Vista Alumno (Moodle)
+            <IconEye className="w-3.5 h-3.5" />
+            <span>Vista Alumno (Moodle)</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveView('print')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
               activeView === 'print'
                 ? 'bg-white text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            📄 Formato A4
+            <IconDocument className="w-3.5 h-3.5" />
+            <span>Formato A4</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveView('moodle_xml')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
               activeView === 'moodle_xml'
                 ? 'bg-white text-indigo-700 shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            📦 Moodle XML
+            <IconPackage className="w-3.5 h-3.5" />
+            <span>Moodle XML</span>
           </button>
         </div>
       </div>
@@ -430,7 +439,8 @@ export default function MoodleExamBuilder({
           <div className="lg:col-span-4 flex flex-col gap-5">
             <div className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs flex flex-col gap-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <span>⚙️</span> Parámetros del Examen
+                <IconSettings className="w-4 h-4 text-slate-500" />
+                <span>Parámetros del Examen</span>
               </h3>
 
               <div className="flex flex-col gap-3">
@@ -705,10 +715,10 @@ export default function MoodleExamBuilder({
                               <button
                                 type="button"
                                 onClick={() => handleDeleteOption(q.id, opt.id)}
-                                className="text-slate-400 hover:text-rose-600 text-xs px-1"
+                                className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
                                 title="Eliminar opción"
                               >
-                                ✕
+                                <IconClose className="w-3 h-3" />
                               </button>
                             )}
                           </div>
@@ -942,8 +952,18 @@ export default function MoodleExamBuilder({
                             : 'bg-rose-50 border-rose-200 text-rose-900'
                         }`}
                       >
-                        <span className="font-bold flex items-center gap-1">
-                          {isCorrect ? '✓ Respuesta Correcta' : '✗ Respuesta Incorrecta'}
+                        <span className="font-bold flex items-center gap-1.5">
+                          {isCorrect ? (
+                            <>
+                              <IconCheck className="w-4 h-4 text-emerald-600" />
+                              <span>Respuesta Correcta</span>
+                            </>
+                          ) : (
+                            <>
+                              <IconClose className="w-4 h-4 text-rose-600" />
+                              <span>Respuesta Incorrecta</span>
+                            </>
+                          )}
                         </span>
                         {q.feedback && <p className="text-[11px]">{q.feedback}</p>}
                         {q.rubric_guidelines && (
@@ -1172,9 +1192,9 @@ export default function MoodleExamBuilder({
               <button
                 type="button"
                 onClick={() => setShowAiModal(false)}
-                className="text-slate-400 hover:text-slate-700 text-sm font-bold"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                ✕
+                <IconClose className="w-4 h-4" />
               </button>
             </div>
 
