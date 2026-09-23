@@ -7,7 +7,7 @@ import { IconSparkles } from '@/components/icons'
 interface StudentTutorialTriggerProps {
   label?: string
   className?: string
-  variant?: 'primary' | 'secondary' | 'outline' | 'pill'
+  variant?: 'primary' | 'secondary' | 'outline' | 'pill' | 'white'
 }
 
 export default function StudentTutorialTrigger({
@@ -17,9 +17,11 @@ export default function StudentTutorialTrigger({
 }: StudentTutorialTriggerProps) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const variantStyles = {
+  const variantStyles: Record<string, string> = {
     primary:
       'bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs inline-flex items-center gap-2 text-xs transition-all cursor-pointer',
+    white:
+      'bg-white hover:bg-slate-100 text-[#1E1B4B] font-bold px-5 py-3 rounded-xl shadow-md inline-flex items-center gap-2 text-xs transition-all cursor-pointer border border-white/40',
     secondary:
       'bg-[#1E1B4B] hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs inline-flex items-center gap-2 text-xs transition-all cursor-pointer border border-slate-800',
     outline:
@@ -33,11 +35,11 @@ export default function StudentTutorialTrigger({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`${variantStyles[variant]} ${className}`}
+        className={`${variantStyles[variant] || variantStyles.primary} ${className}`}
         title="Abrir guía interactiva paso a paso"
       >
-        <IconSparkles className="w-3.5 h-3.5" />
-        <span>{label}</span>
+        <IconSparkles className="w-3.5 h-3.5 shrink-0" />
+        <span className="shrink-0">{label}</span>
       </button>
 
       {isOpen && (

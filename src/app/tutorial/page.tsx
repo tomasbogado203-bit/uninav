@@ -183,8 +183,7 @@ export default function TutorialPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <StudentTutorialTrigger
               label="Iniciar Tour Interactivo (5 Pasos)"
-              variant="primary"
-              className="bg-white hover:bg-slate-100 text-[#1E1B4B] font-black px-5 py-3 shadow-lg hover:shadow-xl"
+              variant="white"
             />
             <Link
               href="/"
@@ -395,7 +394,6 @@ export default function TutorialPage() {
           <StudentTutorialTrigger
             label="Ver Tour de 5 Pasos"
             variant="primary"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-black px-4 py-2.5"
           />
           <Link
             href="/materias"
