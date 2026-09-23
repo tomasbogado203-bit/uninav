@@ -27,6 +27,7 @@ import {
   IconIncadeLogo,
   IconLightbulb,
   IconCpu,
+  IconAcademicCap,
 } from '@/components/icons'
 
 
@@ -85,6 +86,7 @@ export default function UnifiedAppSidebar({
   const globalNavItems = [
     { label: 'Inicio', icon: IconHome, href: '/', exact: true, show: true },
     { label: 'Mis Materias', icon: IconBook, href: '/materias', exact: true, show: userRole === 'student' },
+    { label: 'Libreta de Notas', icon: IconAcademicCap, href: '/calificaciones', exact: false, show: userRole === 'student' },
     { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false, show: true },
     { label: 'Recursos & Glosario', icon: IconSparkles, href: '/recursos', exact: false, show: userRole === 'student' },
     { label: 'Lámpara IoT Pomodoro', icon: IconCpu, href: '/iot', exact: false, show: true },
