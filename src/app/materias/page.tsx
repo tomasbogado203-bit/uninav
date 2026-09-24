@@ -79,11 +79,11 @@ export default async function MateriasPage() {
                       <IconBook className="w-5 h-5" />
                     </span>
                     {isAnalysis ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                        <span>●</span> Cátedra Oficial
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Cátedra Oficial
                       </span>
                     ) : (
-                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50/80 border border-indigo-200/70 px-2.5 py-0.5 rounded-full">
                         Materia Activa
                       </span>
                     )}
@@ -114,16 +114,16 @@ export default async function MateriasPage() {
               <div className="flex flex-col gap-3 pt-3 border-t border-slate-100">
                 <Link
                   href={`/materias/${s.id}`}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white py-2.5 text-xs font-bold transition-all shadow-2xs"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 text-xs font-bold transition-all shadow-xs active:scale-[0.99]"
                 >
                   <span>Ingresar al Workspace</span>
-                  <span className="text-indigo-300 font-normal">→</span>
+                  <span className="text-indigo-200 font-normal">→</span>
                 </Link>
 
-                <div className="flex items-center justify-between gap-1 text-[11px] text-slate-500 font-bold px-1">
+                <div className="flex items-center justify-between gap-1 text-[11px] text-slate-600 font-semibold px-1">
                   <Link
                     href={`/materias/${s.id}/temas`}
-                    className="hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                    className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                     title="Tutor Socrático RAG"
                   >
                     <IconChat className="w-3.5 h-3.5 text-emerald-600" />
@@ -132,7 +132,7 @@ export default async function MateriasPage() {
 
                   <Link
                     href={`/materias/${s.id}/simulador`}
-                    className="hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                    className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                     title="Simulador de Parciales"
                   >
                     <IconQuiz className="w-3.5 h-3.5 text-purple-600" />
@@ -141,7 +141,7 @@ export default async function MateriasPage() {
 
                   <Link
                     href={`/materias/${s.id}/tarjetas`}
-                    className="hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                    className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                     title="Tarjetas Didácticas"
                   >
                     <IconSparkles className="w-3.5 h-3.5 text-indigo-600" />
@@ -150,7 +150,7 @@ export default async function MateriasPage() {
 
                   <Link
                     href={`/materias/${s.id}/calendario`}
-                    className="hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                    className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                     title="Fechas de Examen"
                   >
                     <IconCalendar className="w-3.5 h-3.5 text-amber-600" />
