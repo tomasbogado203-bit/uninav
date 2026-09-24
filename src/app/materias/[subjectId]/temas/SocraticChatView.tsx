@@ -91,45 +91,33 @@ function buildStudySummaryMarkdown(threadTitle: string, messages: Message[]): st
   return md
 }
 
-function renderTextWithHighlights(
+function renderInlineContent(
   text: string,
   isUserMessage: boolean = false,
   onCitationClick?: (pageTagStr: string) => void
 ) {
-  const regex = /(\*\*.*?\*\*|\[Pág\.\s*[^\]]+\])/g
-  const parts = text.split(regex)
+  // Regex to match citations [Pág. X], bold **...**, inline code `...`, italic *...*
+  const tokenRegex = /(\[Pág\.\s*[^\]]+\]|\*\*[^*]+?\*\*|`[^`]+?`|(?<!\*)\*[^*]+?\*(?!\*))/g
+  const parts = text.split(tokenRegex)
 
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      const boldText = part.slice(2, -2)
-      return (
-        <strong
-          key={i}
-          className={`font-black tracking-tight px-1.5 py-0.5 rounded-md border shadow-2xs mx-0.5 ${
-            isUserMessage
-              ? 'bg-indigo-700 text-white border-indigo-500'
-              : 'bg-indigo-100/90 text-indigo-950 border-indigo-300'
-          }`}
-        >
-          {boldText}
-        </strong>
-      )
-    }
+  return parts.map((part, idx) => {
+    if (!part) return null
 
+    // Citation [Pág. X]
     if (part.startsWith('[Pág.') && part.endsWith(']')) {
       return (
         <button
-          key={i}
+          key={idx}
           type="button"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
             onCitationClick?.(part)
           }}
-          className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-md mx-0.5 font-mono shadow-2xs cursor-pointer hover:scale-105 active:scale-95 transition-all ${
+          className={`inline-flex items-center text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md mx-0.5 align-baseline cursor-pointer hover:scale-105 active:scale-95 transition-all ${
             isUserMessage
-              ? 'bg-indigo-800 text-indigo-200 border border-indigo-500 hover:bg-indigo-900'
-              : 'bg-indigo-50 text-indigo-700 border border-indigo-200/90 hover:bg-indigo-100 hover:text-indigo-900'
+              ? 'bg-indigo-800 text-indigo-100 border border-indigo-500 hover:bg-indigo-900'
+              : 'bg-indigo-50 text-indigo-700 border border-indigo-200/90 hover:bg-indigo-100 hover:text-indigo-900 shadow-2xs'
           }`}
           title="Ver fragmento bibliográfico original"
         >
@@ -138,7 +126,54 @@ function renderTextWithHighlights(
       )
     }
 
-    return part
+    // Bold **text**
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      const boldText = part.slice(2, -2)
+      return (
+        <strong
+          key={idx}
+          className={`font-bold ${
+            isUserMessage ? 'text-white' : 'text-slate-900'
+          }`}
+        >
+          {boldText}
+        </strong>
+      )
+    }
+
+    // Inline Code `code`
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      const codeText = part.slice(1, -1)
+      return (
+        <code
+          key={idx}
+          className={`font-mono text-[11px] px-1.5 py-0.5 rounded ${
+            isUserMessage
+              ? 'bg-indigo-800 text-indigo-100'
+              : 'bg-slate-100 text-indigo-800 border border-slate-200'
+          }`}
+        >
+          {codeText}
+        </code>
+      )
+    }
+
+    // Italic *text*
+    if (part.startsWith('*') && part.endsWith('*') && part.length >= 2 && !part.startsWith('**')) {
+      const italicText = part.slice(1, -1)
+      return (
+        <em
+          key={idx}
+          className={`italic ${
+            isUserMessage ? 'text-indigo-100' : 'text-slate-700'
+          }`}
+        >
+          {italicText}
+        </em>
+      )
+    }
+
+    return <span key={idx}>{part}</span>
   })
 }
 
@@ -154,32 +189,101 @@ function FormattedChatMessage({
   const lines = content.split('\n')
 
   return (
-    <div className="flex flex-col gap-2 leading-relaxed">
+    <div className={`flex flex-col gap-1.5 leading-relaxed text-xs sm:text-sm ${isUserMessage ? 'text-white' : 'text-slate-800'}`}>
       {lines.map((line, idx) => {
-        if (!line.trim()) return <div key={idx} className="h-0.5" />
+        const trimmed = line.trim()
+        if (!trimmed) return <div key={idx} className="h-1" />
 
-        const isBullet =
-          line.trim().startsWith('* ') ||
-          line.trim().startsWith('- ') ||
-          /^\d+\.\s/.test(line.trim())
-
-        let cleanLine = line
-        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
-          cleanLine = line.trim().substring(2)
+        // Divider: --- or *** or ___
+        if (/^[-*_]{3,}$/.test(trimmed)) {
+          return (
+            <hr
+              key={idx}
+              className={`my-2.5 border-t ${
+                isUserMessage ? 'border-indigo-400/40' : 'border-slate-200'
+              }`}
+            />
+          )
         }
 
-        return (
-          <div
-            key={idx}
-            className={
-              isBullet
-                ? isUserMessage
-                  ? 'flex items-start gap-2 pl-2 border-l-2 border-indigo-300 my-0.5'
-                  : 'flex items-start gap-2 pl-2.5 border-l-2 border-indigo-500 my-0.5 bg-indigo-50/40 py-0.5 rounded-r-lg'
-                : ''
-            }
-          >
-            {isBullet && (
+        // Heading 1: # Title
+        if (trimmed.startsWith('# ') && !trimmed.startsWith('## ')) {
+          return (
+            <h2
+              key={idx}
+              className={`text-sm sm:text-base font-bold mt-2.5 mb-0.5 tracking-tight ${
+                isUserMessage ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              {renderInlineContent(trimmed.substring(2), isUserMessage, onCitationClick)}
+            </h2>
+          )
+        }
+
+        // Heading 2: ## Subtitle
+        if (trimmed.startsWith('## ') && !trimmed.startsWith('### ')) {
+          return (
+            <h3
+              key={idx}
+              className={`text-xs sm:text-sm font-bold mt-2 mb-0.5 tracking-tight ${
+                isUserMessage ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              {renderInlineContent(trimmed.substring(3), isUserMessage, onCitationClick)}
+            </h3>
+          )
+        }
+
+        // Heading 3: ### Section
+        if (trimmed.startsWith('### ')) {
+          return (
+            <h4
+              key={idx}
+              className={`text-xs sm:text-sm font-bold mt-2.5 mb-0.5 flex items-center gap-1.5 ${
+                isUserMessage ? 'text-indigo-100' : 'text-indigo-950'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isUserMessage ? 'bg-indigo-300' : 'bg-indigo-600'}`} />
+              <span>{renderInlineContent(trimmed.substring(4), isUserMessage, onCitationClick)}</span>
+            </h4>
+          )
+        }
+
+        // Heading 4+: #### Section
+        if (trimmed.startsWith('#### ')) {
+          return (
+            <h5
+              key={idx}
+              className={`text-xs font-bold mt-1.5 mb-0.5 ${
+                isUserMessage ? 'text-indigo-100' : 'text-slate-800'
+              }`}
+            >
+              {renderInlineContent(trimmed.substring(5), isUserMessage, onCitationClick)}
+            </h5>
+          )
+        }
+
+        // Blockquote: > Quote
+        if (trimmed.startsWith('> ')) {
+          return (
+            <blockquote
+              key={idx}
+              className={`border-l-2 pl-3 py-1 my-1 italic rounded-r-lg text-xs ${
+                isUserMessage
+                  ? 'border-indigo-300 bg-indigo-700/40 text-indigo-100'
+                  : 'border-indigo-400 bg-indigo-50/40 text-slate-700'
+              }`}
+            >
+              {renderInlineContent(trimmed.substring(2), isUserMessage, onCitationClick)}
+            </blockquote>
+          )
+        }
+
+        // Unordered List Bullet: * item, - item, + item
+        if (/^[\*\-\+]\s+/.test(trimmed)) {
+          const itemText = trimmed.replace(/^[\*\-\+]\s+/, '')
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 my-0.5 leading-relaxed">
               <span
                 className={`font-bold text-xs shrink-0 mt-0.5 ${
                   isUserMessage ? 'text-indigo-200' : 'text-indigo-600'
@@ -187,11 +291,37 @@ function FormattedChatMessage({
               >
                 •
               </span>
-            )}
-            <div className="flex-1">
-              {renderTextWithHighlights(cleanLine, isUserMessage, onCitationClick)}
+              <div className="flex-1 min-w-0">
+                {renderInlineContent(itemText, isUserMessage, onCitationClick)}
+              </div>
             </div>
-          </div>
+          )
+        }
+
+        // Numbered List: 1. item, 2. item, 1) item, etc.
+        const numMatch = trimmed.match(/^(\d+[\.\)])\s+(.*)$/)
+        if (numMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 my-0.5 leading-relaxed">
+              <span
+                className={`font-bold font-mono text-xs shrink-0 mt-0.5 ${
+                  isUserMessage ? 'text-indigo-200' : 'text-indigo-600'
+                }`}
+              >
+                {numMatch[1]}
+              </span>
+              <div className="flex-1 min-w-0">
+                {renderInlineContent(numMatch[2], isUserMessage, onCitationClick)}
+              </div>
+            </div>
+          )
+        }
+
+        // Normal paragraph line
+        return (
+          <p key={idx} className="leading-relaxed">
+            {renderInlineContent(trimmed, isUserMessage, onCitationClick)}
+          </p>
         )
       })}
     </div>
@@ -595,12 +725,19 @@ export default function SocraticChatView({
               {/* Citas de la bibliografía */}
               {m.citations && m.citations.length > 0 && (
                 <div className="mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600">
-                  <span className="font-semibold text-slate-700 mb-1 text-[11px] flex items-center gap-1">
+                  <span className="font-semibold text-slate-700 mb-1.5 text-[11px] flex items-center gap-1.5">
                     <IconBook className="w-3.5 h-3.5 text-indigo-600" />
                     Citas bibliográficas utilizadas (hacé clic para desplegar):
                   </span>
                   <ul className="flex flex-wrap gap-1.5 mt-1">
-                    {m.citations.map((c, i) => (
+                    {Array.from(
+                      new Map(
+                        m.citations.map((c) => [
+                          `${c.document_id || 'doc'}_${c.page_number ?? 1}`,
+                          c,
+                        ])
+                      ).values()
+                    ).map((c, i) => (
                       <li key={i}>
                         <button
                           type="button"
@@ -609,7 +746,7 @@ export default function SocraticChatView({
                             e.stopPropagation()
                             handleOpenCitationModal(m.citations, `[Pág. ${c.page_number || 1}]`)
                           }}
-                          className="bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 rounded-lg px-2 py-0.5 text-[11px] font-medium transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+                          className="bg-indigo-50 border border-indigo-200/80 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 rounded-lg px-2.5 py-0.5 text-[11px] font-semibold font-mono transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-2xs"
                         >
                           Pág. {c.page_number ?? 'N/A'}
                         </button>

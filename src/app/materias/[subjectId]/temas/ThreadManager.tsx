@@ -172,14 +172,18 @@ export default function ThreadManager({
             <div
               key={t.id}
               onClick={() => handleSelect(t.id)}
-              className={`group rounded-xl border p-3 text-xs font-semibold cursor-pointer transition-all flex items-center justify-between gap-2 select-none ${
+              className={`group rounded-xl border p-3 text-xs font-semibold cursor-pointer transition-all flex items-center justify-between gap-2 select-none relative overflow-hidden ${
                 isSelected
-                  ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-2xs'
+                  ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 shadow-2xs ring-1 ring-indigo-500/20'
                   : 'border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
               }`}
             >
+              {isSelected && (
+                <span className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-l-md" />
+              )}
+
               {isEditing ? (
-                <div className="flex items-center gap-1.5 w-full" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-1.5 w-full pl-1" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="text"
                     autoFocus
@@ -189,28 +193,28 @@ export default function ThreadManager({
                       if (e.key === 'Enter') handleSaveRename(t.id)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
-                    className="w-full rounded-lg border border-indigo-500 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none"
+                    className="w-full rounded-lg border border-indigo-500 bg-white px-2.5 py-1 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleSaveRename(t.id)}
-                    className="rounded-md bg-indigo-600 text-white font-bold text-[10px] p-1.5 hover:bg-indigo-700 cursor-pointer"
+                    className="rounded-md bg-indigo-600 text-white font-bold text-[10px] p-1.5 hover:bg-indigo-700 cursor-pointer shrink-0"
                   >
                     <IconCheck className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 truncate">
-                    <IconChat className={`w-4 h-4 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                  <div className="flex items-center gap-2 truncate pl-1">
+                    <IconChat className={`w-4 h-4 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
                     <span className="truncate">{t.title}</span>
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
                       type="button"
                       onClick={(e) => handleStartRename(t, e)}
-                      className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-100/60 transition-colors cursor-pointer"
+                      className="p-1 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-100/70 transition-colors cursor-pointer"
                       title="Renombrar tema"
                     >
                       <IconEdit className="w-3.5 h-3.5" />
@@ -218,7 +222,7 @@ export default function ThreadManager({
                     <button
                       type="button"
                       onClick={(e) => handleDelete(t.id, e)}
-                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-100/60 transition-colors cursor-pointer"
+                      className="p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-100/70 transition-colors cursor-pointer"
                       title="Eliminar tema"
                     >
                       <IconTrash className="w-3.5 h-3.5" />
