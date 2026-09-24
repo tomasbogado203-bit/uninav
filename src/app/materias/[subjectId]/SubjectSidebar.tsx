@@ -30,6 +30,7 @@ import {
   IconPlus,
   IconArrowsExchange,
   IconUsers,
+  IconAward,
 } from '@/components/icons'
 
 interface ChatThread {
@@ -150,6 +151,7 @@ export default function SubjectSidebar({
   const globalNavItems = [
     { label: 'Inicio', icon: IconHome, href: '/', exact: true },
     { label: 'Mis Materias', icon: IconBook, href: '/materias', exact: true },
+    { label: 'Calificaciones', icon: IconAward, href: '/calificaciones', exact: true },
     { label: 'Recursos & Glosario', icon: IconSparkles, href: '/recursos', exact: false },
     { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false },
   ]

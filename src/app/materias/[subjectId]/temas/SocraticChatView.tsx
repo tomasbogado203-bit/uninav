@@ -652,9 +652,9 @@ export default function SocraticChatView({
                     key={fIdx}
                     type="button"
                     onClick={() => handleSend(undefined, followUp)}
-                    className="text-[11px] font-semibold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-600 hover:text-white border border-indigo-200 px-3 py-1.5 rounded-xl transition-all shadow-2xs text-left cursor-pointer active:scale-95 flex items-center gap-1.5"
+                    className="group text-[11px] font-semibold text-indigo-700 bg-indigo-50/90 hover:bg-indigo-600 hover:text-white border border-indigo-200 px-3 py-1.5 rounded-xl transition-all shadow-2xs text-left cursor-pointer active:scale-95 flex items-center gap-1.5"
                   >
-                    <IconLightbulb className="w-3 h-3 text-indigo-600" />
+                    <IconLightbulb className="w-3 h-3 text-indigo-600 group-hover:text-white transition-colors shrink-0" />
                     <span>{followUp}</span>
                   </button>
                 ))}

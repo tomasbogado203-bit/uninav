@@ -67,10 +67,12 @@ export default function GlobalNavbar({
   const navLinks = [
     { href: '/', label: 'Inicio', roles: ['student', 'professor', 'dean', 'admin'] },
     { href: '/materias', label: 'Mis Materias', roles: ['student'] },
+    { href: '/calificaciones', label: 'Calificaciones', roles: ['student'] },
     { href: '/catedra', label: 'Panel Cátedra', roles: ['professor', 'dean', 'admin'] },
     { href: '/institucional', label: 'Decanato & Retención', roles: ['dean', 'admin'] },
-    { href: '/comunidad', label: 'Banco Comunitario', roles: ['student', 'professor', 'dean', 'admin'] },
+    { href: '/comunidad', label: 'Banco de Exámenes', roles: ['student', 'professor', 'dean', 'admin'] },
     { href: '/recursos', label: 'Software & Glosario', roles: ['student'] },
+    { href: '/tutorial', label: 'Guía', roles: ['student', 'professor', 'dean', 'admin'] },
   ]
 
   const visibleLinks = navLinks.filter((link) => link.roles.includes(userRole))
@@ -79,12 +81,14 @@ export default function GlobalNavbar({
     { title: 'Análisis Matemático I', href: '/materias', type: 'Materia' },
     { title: 'Álgebra y Geometría Analítica', href: '/materias', type: 'Materia' },
     { title: 'Física I (Mecánica)', href: '/materias', type: 'Materia' },
+    { title: 'Libreta de Calificaciones y Promedios', href: '/calificaciones', type: 'Rendimiento' },
     { title: 'Chat Tutor Socrático', href: '/materias', type: 'Herramienta RAG' },
     { title: 'Simulador de Parciales', href: '/materias', type: 'Evaluaciones' },
-    { title: 'Radar de Cátedra & Mapa de Calor', href: '/catedra', type: 'Docente' },
+    { title: 'Radar de Cátedra & Telemetría', href: '/catedra', type: 'Docente' },
     { title: 'Centro de Retención Institucional', href: '/institucional', type: 'Decanato' },
     { title: 'Banco Comunitario de Exámenes', href: '/comunidad', type: 'Recursos' },
     { title: 'Glosario y Software por Carrera', href: '/recursos', type: 'Guías' },
+    { title: 'Guía y Tour del Estudiante', href: '/tutorial', type: 'Tutorial' },
   ]
 
   const filteredSearch = searchItems.filter((item) =>
