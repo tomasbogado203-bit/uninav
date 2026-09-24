@@ -532,11 +532,11 @@ export default async function DashboardPage() {
                               <IconBook className="w-4 h-4" />
                             </span>
                             {isAnalysis ? (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-                                <span>●</span> Cátedra Oficial
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Cátedra Oficial
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50/80 border border-indigo-200/70 px-2.5 py-0.5 rounded-full">
                                 Cursando
                               </span>
                             )}
@@ -554,17 +554,17 @@ export default async function DashboardPage() {
                       <div className="flex flex-col gap-2.5 pt-3 border-t border-slate-100">
                         <Link
                           href={`/materias/${sub.id}`}
-                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white py-2 text-xs font-bold transition-all shadow-2xs"
+                          className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-2 text-xs font-bold transition-all shadow-xs active:scale-[0.99]"
                         >
                           <span>Entrar al Workspace</span>
-                          <span className="text-indigo-300">→</span>
+                          <span className="text-indigo-200">→</span>
                         </Link>
 
-                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-500 font-bold px-0.5">
+                        <div className="flex items-center justify-between gap-1 text-[10px] text-slate-600 font-semibold px-0.5">
                           <Link
                             href={`/materias/${sub.id}/temas`}
-                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
-                            title="Chat RAG"
+                            className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+                            title="Chat RAG Socrático"
                           >
                             <IconChat className="w-3 h-3 text-emerald-600" />
                             <span>Chat</span>
@@ -572,7 +572,7 @@ export default async function DashboardPage() {
 
                           <Link
                             href={`/materias/${sub.id}/simulador`}
-                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                             title="Simulador de Parciales"
                           >
                             <IconQuiz className="w-3 h-3 text-purple-600" />
@@ -581,7 +581,7 @@ export default async function DashboardPage() {
 
                           <Link
                             href={`/materias/${sub.id}/tarjetas`}
-                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                             title="Tarjetas Didácticas"
                           >
                             <IconSparkles className="w-3 h-3 text-indigo-600" />
@@ -590,7 +590,7 @@ export default async function DashboardPage() {
 
                           <Link
                             href={`/materias/${sub.id}/calendario`}
-                            className="hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                            className="hover:text-indigo-700 hover:bg-indigo-50 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
                             title="Fechas de Examen"
                           >
                             <IconCalendar className="w-3 h-3 text-amber-600" />
@@ -614,7 +614,11 @@ export default async function DashboardPage() {
                 <span className="text-[10px] text-slate-400 font-medium">Consolidado</span>
               </div>
 
-              <GlobalCalendarWidget events={globalEvents} notes={globalNotes} />
+              <GlobalCalendarWidget
+                events={globalEvents}
+                notes={globalNotes}
+                firstSubjectId={subjectIds[0] || null}
+              />
             </div>
           </div>
         </div>

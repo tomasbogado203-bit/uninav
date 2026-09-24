@@ -7,6 +7,7 @@ import {
   IconFlame,
   IconChevronLeft,
   IconChevronRight,
+  IconSparkles,
 } from '@/components/icons'
 
 export interface GlobalEvent {
@@ -285,7 +286,7 @@ export default function GlobalCalendarWidget({
       </div>
 
       {/* Lista de Próximos Exámenes en el Pie */}
-      {upcomingEvents.length > 0 && (
+      {upcomingEvents.length > 0 ? (
         <div className="flex flex-col gap-2 pt-2 border-t border-slate-100">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Próximos Exámenes ({upcomingEvents.length})
@@ -316,6 +317,11 @@ export default function GlobalCalendarWidget({
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2.5 rounded-xl bg-slate-50 border border-dashed border-slate-200 p-3 text-xs text-slate-500">
+          <IconSparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+          <span>Sin exámenes agendados para los próximos días. Podés sumar fechas en cada materia.</span>
         </div>
       )}
     </div>
