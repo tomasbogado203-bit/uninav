@@ -502,3 +502,61 @@ export function IconInfo({ className = 'w-4 h-4' }: { className?: string }) {
     </svg>
   )
 }
+
+export function IconPencil({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
+  )
+}
+
+export function IconHighlighter({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 0L8.5 15.5H5v-3.5l6.328-6.328m3.536 0l2.5-2.5a1.5 1.5 0 012.122 0l1.414 1.414a1.5 1.5 0 010 2.122l-2.5 2.5m-3.536 0l3.536-3.536" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18" />
+    </svg>
+  )
+}
+
+export function IconEraser({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-8H7v8" />
+    </svg>
+  )
+}
+
+export function IconUndo({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l6 6m-6-6l6-6" />
+    </svg>
+  )
+}
+
+export function IconRedo({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 10H11a5 5 0 00-5 5v2m15-7l-6 6m6-6l-6-6" />
+    </svg>
+  )
+}
+
+export function IconZoomIn({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+    </svg>
+  )
+}
+
+export function IconZoomOut({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+    </svg>
+  )
+}

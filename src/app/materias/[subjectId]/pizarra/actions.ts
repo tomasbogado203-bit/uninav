@@ -221,3 +221,66 @@ export async function deleteBoardPhotoAction(
 
   revalidatePath(`/materias/${subjectId}/pizarra`)
 }
+
+export async function saveAnnotatedBoardAction(
+  subjectId: string,
+  base64DataUrl: string,
+  title?: string,
+  classDate?: string
+) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  if (!base64DataUrl || !base64DataUrl.startsWith('data:image/')) {
+    throw new Error('Datos de imagen no válidos.')
+  }
+
+  // Extraer base64 y convertir a Buffer
+  const matches = base64DataUrl.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/)
+  if (!matches || matches.length !== 3) {
+    throw new Error('Formato de imagen inválido.')
+  }
+
+  const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1]
+  const base64Data = matches[2]
+  const buffer = Buffer.from(base64Data, 'base64')
+
+  const fileName = `pizarra-digital-${Date.now()}.${ext}`
+  const filePath = `${user.id}/${subjectId}/pizarra/${fileName}`
+
+  // Subir al bucket apuntes
+  const { error: uploadError } = await supabase.storage
+    .from('apuntes')
+    .upload(filePath, buffer, {
+      contentType: `image/${matches[1]}`,
+      upsert: false,
+    })
+
+  if (uploadError) {
+    throw new Error(`Error al guardar la pizarra: ${uploadError.message}`)
+  }
+
+  const dateStr = classDate || new Date().toISOString().split('T')[0]
+  const noteTitle = title?.trim() || 'Pizarra Digital Anotada'
+
+  // Insertar en board_photos
+  const { error: dbError } = await supabase.from('board_photos').insert({
+    subject_id: subjectId,
+    photo_url: filePath,
+    class_date: dateStr,
+    ocr_text: `[${noteTitle}] - Pizarra digital interactiva y notas manuscritas.`,
+    ocr_status: 'done',
+  })
+
+  if (dbError) {
+    throw new Error(`Error en base de datos: ${dbError.message}`)
+  }
+
+  revalidatePath(`/materias/${subjectId}/pizarra`)
+  return { success: true }
+}
