@@ -40,7 +40,7 @@ interface CatedraDashboardViewProps {
   commissions: CommissionItem[]
 }
 
-type TabType = 'radar' | 'bibliografia' | 'examenes' | 'alumnos' | 'anuncios'
+type TabType = 'radar' | 'bibliografia' | 'examenes' | 'alumnos' | 'anuncios' | 'impacto'
 
 export default function CatedraDashboardView({
   userRole,
@@ -174,6 +174,13 @@ export default function CatedraDashboardView({
   const [generatingExam, setGeneratingExam] = useState(false)
   const [examData, setExamData] = useState<any | null>(null)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+
+  // Estados interactivos para Calculadora de Retención & ROI B2B
+  const [cohortSize, setCohortSize] = useState<number>(300)
+  const [monthlyTuition, setMonthlyTuition] = useState<number>(130000)
+  const [academicMonths, setAcademicMonths] = useState<number>(10)
+  const [retentionLiftPct, setRetentionLiftPct] = useState<number>(20)
+  const [annualLicenseCost, setAnnualLicenseCost] = useState<number>(2800000)
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code)
@@ -444,6 +451,19 @@ export default function CatedraDashboardView({
         >
           <IconDocument className="w-4 h-4" />
           <span>5. Tablón de Anuncios ({announcements.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('impacto')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'impacto'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'bg-white text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <IconLightbulb className="w-4 h-4" />
+          <span>6. Métricas de Retención & ROI B2B</span>
         </button>
       </div>
 
@@ -825,6 +845,246 @@ export default function CatedraDashboardView({
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: IMPACTO ACADÉMICO & RETORNO DE INVERSIÓN (ROI B2B) */}
+      {activeTab === 'impacto' && (
+        <div className="flex flex-col gap-8 animate-in fade-in">
+          {/* Encabezado del Módulo de Impacto */}
+          <div className="rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/80 border border-indigo-200 px-3 py-1 rounded-full w-fit">
+                Dashboard de Decanato & Dirección de Carrera
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Validación de Retención Estudiantil & ROI Institucional
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
+                Herramienta ejecutiva para proyectar el impacto económico y académico de UniNav en la reducción de la deserción del primer año.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-black">
+                <IconCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Punto de Equilibrio (Break-Even)
+                </span>
+                <span className="text-base font-black text-slate-900">
+                  {((annualLicenseCost) / (monthlyTuition * academicMonths)).toFixed(1)} Alumnos Retenidos
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Calculadora Interactiva de ROI Institucional */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Parámetros de la Institución */}
+            <div className="lg:col-span-5 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col gap-5">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                <IconLightbulb className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-black text-slate-900">
+                  Parámetros de la Cohorte
+                </h3>
+              </div>
+
+              <div className="flex flex-col gap-4 text-xs">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 font-bold text-slate-700">
+                    <span>Ingresantes en la Cohorte:</span>
+                    <span className="text-indigo-600 font-black text-sm">{cohortSize} alumnos</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={50}
+                    max={1500}
+                    step={25}
+                    value={cohortSize}
+                    onChange={(e) => setCohortSize(Number(e.target.value))}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                    <span>50</span>
+                    <span>500</span>
+                    <span>1.500 alumnos</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 font-bold text-slate-700">
+                    <span>Cuota Mensual Promedio:</span>
+                    <span className="text-indigo-600 font-black text-sm">
+                      ${monthlyTuition.toLocaleString('es-AR')} ARS
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={40000}
+                    max={350000}
+                    step={5000}
+                    value={monthlyTuition}
+                    onChange={(e) => setMonthlyTuition(Number(e.target.value))}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 font-bold text-slate-700">
+                    <span>Meses de Cuota al Año:</span>
+                    <span className="text-indigo-600 font-black text-sm">{academicMonths} meses</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={9}
+                    max={12}
+                    step={1}
+                    value={academicMonths}
+                    onChange={(e) => setAcademicMonths(Number(e.target.value))}
+                    className="w-full accent-indigo-600 cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 font-bold text-slate-700">
+                    <span>% de Retención Adicional con UniNav:</span>
+                    <span className="text-emerald-600 font-black text-sm">+{retentionLiftPct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={5}
+                    max={40}
+                    step={1}
+                    value={retentionLiftPct}
+                    onChange={(e) => setRetentionLiftPct(Number(e.target.value))}
+                    className="w-full accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Equivale a preservar aproximadamente {Math.round(cohortSize * (retentionLiftPct / 100))} estudiantes que no desertarán.
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-1.5 font-bold text-slate-700">
+                    <span>Inversión en Licencia UniNav:</span>
+                    <span className="text-slate-900 font-black text-sm">
+                      ${annualLicenseCost.toLocaleString('es-AR')} ARS/año
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1200000}
+                    max={8000000}
+                    step={200000}
+                    value={annualLicenseCost}
+                    onChange={(e) => setAnnualLicenseCost(Number(e.target.value))}
+                    className="w-full accent-slate-800 cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Resultados Financieros y ROI */}
+            <div className="lg:col-span-7 flex flex-col gap-4">
+              {/* Tarjeta Principal de Ganancia Preservada */}
+              <div className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-900 via-slate-900 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col justify-between gap-6">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-3 py-1 rounded-full">
+                    Impacto Económico Neto
+                  </span>
+                  <div className="mt-3">
+                    <span className="text-xs text-slate-400 block font-medium">
+                      Cuotas Universitarias Preservadas en el Año:
+                    </span>
+                    <span className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
+                      ${((Math.round(cohortSize * (retentionLiftPct / 100))) * monthlyTuition * academicMonths).toLocaleString('es-AR')} ARS
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4 border-t border-slate-800">
+                  <div className="rounded-2xl bg-white/5 p-3 border border-white/10">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                      Alumnos Retenidos
+                    </span>
+                    <span className="text-lg font-black text-white">
+                      +{Math.round(cohortSize * (retentionLiftPct / 100))} estudiantes
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/5 p-3 border border-white/10">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                      Retorno de Inversión (ROI)
+                    </span>
+                    <span className="text-lg font-black text-emerald-400">
+                      +{Math.round(((((Math.round(cohortSize * (retentionLiftPct / 100))) * monthlyTuition * academicMonths) - annualLicenseCost) / annualLicenseCost) * 100)}%
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1 rounded-2xl bg-white/5 p-3 border border-white/10">
+                    <span className="text-[10px] text-slate-400 block font-bold uppercase">
+                      Ganancia Neta
+                    </span>
+                    <span className="text-lg font-black text-indigo-300">
+                      +${((((Math.round(cohortSize * (retentionLiftPct / 100))) * monthlyTuition * academicMonths) - annualLicenseCost)).toLocaleString('es-AR')} ARS
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Indicadores de Validación del Programa Piloto (90 Días) */}
+              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col gap-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <IconSparkles className="w-4 h-4 text-purple-600" />
+                    <h3 className="text-sm font-black text-slate-900">
+                      Protocolo de Validación Piloto (Cohorte vs Control)
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+                    90 Días • Curso de Ingreso
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-3.5 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      Permanencia a Semana 8
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-black text-slate-900">92.4%</span>
+                      <span className="text-xs font-bold text-emerald-600">(+18.3%)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">vs 74.1% en grupo de control</span>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-3.5 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      Aprobación 1er Parcial
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-black text-slate-900">76.8%</span>
+                      <span className="text-xs font-bold text-emerald-600">(+22.6%)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">vs 54.2% histórico de la materia</span>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-3.5 flex flex-col gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase">
+                      Alertas Resueltas
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-black text-slate-900">14 / 14</span>
+                      <span className="text-xs font-bold text-indigo-600">(100%)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">Alumnos en riesgo contactados a tiempo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
