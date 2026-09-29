@@ -401,6 +401,17 @@ export async function importStudentRosterAction(
   return { success: true, importedCount: rawRosterCount }
 }
 
+export async function createSingleStudentAction(
+  student: Omit<EnrolledStudentAdmin, 'id' | 'created_at'>
+): Promise<{ success: boolean; student: EnrolledStudentAdmin }> {
+  const newStudent: EnrolledStudentAdmin = {
+    ...student,
+    id: `st_${Date.now()}`,
+    created_at: new Date().toISOString().split('T')[0],
+  }
+  return { success: true, student: newStudent }
+}
+
 export async function updateUserRoleByAdminAction(
   targetUserId: string,
   newRole: 'student' | 'professor' | 'dean' | 'admin'

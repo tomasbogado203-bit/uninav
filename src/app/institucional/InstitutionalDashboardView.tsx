@@ -9,6 +9,7 @@ import {
   updateUserRoleByAdminAction,
   toggleStudentStatusAction,
   importStudentRosterAction,
+  createSingleStudentAction,
 } from './actions'
 import RoleSwitcherPill from '@/components/RoleSwitcherPill'
 import {
@@ -57,6 +58,17 @@ export default function InstitutionalDashboardView({
   const [genderFilter, setGenderFilter] = useState('ALL')
   const [shiftFilter, setShiftFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
+  
+  // Estados para Alta Manual Individual de Alumno
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false)
+  const [newStudentName, setNewStudentName] = useState('')
+  const [newStudentDni, setNewStudentDni] = useState('')
+  const [newStudentBirthYear, setNewStudentBirthYear] = useState<number>(2005)
+  const [newStudentGender, setNewStudentGender] = useState<'M' | 'F' | 'X'>('F')
+  const [newStudentCareer, setNewStudentCareer] = useState(data.career_breakdown[0]?.career || 'Ingeniería en Sistemas de Información')
+  const [newStudentShift, setNewStudentShift] = useState<'Mañana' | 'Tarde' | 'Noche'>('Mañana')
+  const [newStudentStatus, setNewStudentStatus] = useState<'habilitado' | 'becado' | 'pendiente'>('habilitado')
+  const [savingStudent, setSavingStudent] = useState(false)
   
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
@@ -164,6 +176,38 @@ export default function InstitutionalDashboardView({
       setTimeout(() => setStatusMsg(null), 4000)
     } finally {
       setImporting(false)
+    }
+  }
+
+  const handleCreateStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newStudentName.trim() || !newStudentDni.trim()) return
+
+    setSavingStudent(true)
+    try {
+      const res = await createSingleStudentAction({
+        full_name: newStudentName.trim(),
+        dni: newStudentDni.trim(),
+        birth_year: Number(newStudentBirthYear) || 2005,
+        gender: newStudentGender,
+        career_name: newStudentCareer,
+        shift: newStudentShift,
+        enrollment_status: newStudentStatus,
+      })
+
+      if (res.success && res.student) {
+        setStudentsList((prev) => [res.student, ...prev])
+        setStatusMsg(`Estudiante ${newStudentName} incorporado exitosamente al padrón.`)
+        setShowAddStudentModal(false)
+        setNewStudentName('')
+        setNewStudentDni('')
+        setTimeout(() => setStatusMsg(null), 3500)
+      }
+    } catch {
+      setStatusMsg('Error al dar de alta el estudiante.')
+      setTimeout(() => setStatusMsg(null), 3000)
+    } finally {
+      setSavingStudent(false)
     }
   }
 
@@ -860,13 +904,22 @@ export default function InstitutionalDashboardView({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <IconPlus className="w-4 h-4 text-indigo-400" />
+                  <span>+ Nuevo Alumno (Manual)</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setShowImportModal(true)}
-                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  <IconPlus className="w-4 h-4" />
+                  <IconDocument className="w-4 h-4" />
                   <span>Importar Padrón (CSV / Excel)</span>
                 </button>
               </div>
@@ -1040,6 +1093,177 @@ export default function InstitutionalDashboardView({
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Alta Manual Individual de Estudiante */}
+      {showAddStudentModal && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-2xs p-4 overflow-y-auto animate-in fade-in"
+          onClick={() => setShowAddStudentModal(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200 flex flex-col gap-5 text-slate-900 animate-in zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                  Decanato / Secretaría Académica
+                </span>
+                <h3 className="text-base font-black text-slate-900 mt-1">
+                  Alta Individual de Estudiante
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddStudentModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <IconClose className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Registrá y habilitá individualmente a un estudiante en el padrón de la institución para que pueda acceder a las materias y tutoría con su cuenta.
+            </p>
+
+            <form onSubmit={handleCreateStudent} className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Juan Manuel Pérez"
+                    value={newStudentName}
+                    onChange={(e) => setNewStudentName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    DNI / Documento *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: 45.321.678"
+                    value={newStudentDni}
+                    onChange={(e) => setNewStudentDni(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Año de Nacimiento *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1960}
+                    max={2015}
+                    value={newStudentBirthYear}
+                    onChange={(e) => setNewStudentBirthYear(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Género *
+                  </label>
+                  <select
+                    value={newStudentGender}
+                    onChange={(e) => setNewStudentGender(e.target.value as 'M' | 'F' | 'X')}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                  >
+                    <option value="F">Femenino</option>
+                    <option value="M">Masculino</option>
+                    <option value="X">No binario / Otro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Turno de Cursada *
+                  </label>
+                  <select
+                    value={newStudentShift}
+                    onChange={(e) => setNewStudentShift(e.target.value as 'Mañana' | 'Tarde' | 'Noche')}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                  >
+                    <option value="Mañana">Mañana</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noche">Noche</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Carrera *
+                  </label>
+                  <select
+                    value={newStudentCareer}
+                    onChange={(e) => setNewStudentCareer(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                  >
+                    {data.career_breakdown.map((c, i) => (
+                      <option key={i} value={c.career}>
+                        {c.career}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Estado Inicial de Matrícula
+                  </label>
+                  <select
+                    value={newStudentStatus}
+                    onChange={(e) => setNewStudentStatus(e.target.value as 'habilitado' | 'becado' | 'pendiente')}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden bg-white"
+                  >
+                    <option value="habilitado">Habilitado (Activo con acceso total)</option>
+                    <option value="becado">Becado (Licencia Institucional)</option>
+                    <option value="pendiente">Pendiente de Documentación</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStudentModal(false)}
+                  className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingStudent}
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white px-5 py-2.5 text-xs font-bold shadow-md transition-all cursor-pointer"
+                >
+                  {savingStudent ? (
+                    <>
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <IconCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Guardar y Habilitar Alumno</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
