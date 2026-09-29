@@ -297,12 +297,14 @@ export async function getInstitutionalStaffAction(): Promise<InstitutionalStaffM
 export interface EnrolledStudentAdmin {
   id: string
   full_name: string
+  email?: string
   dni: string
   birth_year: number
   gender: 'M' | 'F' | 'X'
   career_name: string
   shift: 'Mañana' | 'Tarde' | 'Noche'
   enrollment_status: 'habilitado' | 'becado' | 'pendiente' | 'suspendido'
+  linked_account: boolean
   created_at: string
 }
 
@@ -311,78 +313,92 @@ export async function getEnrolledStudentsAdminAction(): Promise<EnrolledStudentA
     {
       id: 'st_1',
       full_name: 'Tomás Bogado',
+      email: 't.bogado@alumnos.unam.edu.ar',
       dni: '44.821.902',
       birth_year: 2004,
       gender: 'M',
       career_name: 'Ingeniería en Sistemas de Información',
       shift: 'Noche',
       enrollment_status: 'habilitado',
+      linked_account: true,
       created_at: '2026-03-01',
     },
     {
       id: 'st_2',
       full_name: 'Camila Benítez',
+      email: 'c.benitez@alumnos.unam.edu.ar',
       dni: '45.102.348',
       birth_year: 2005,
       gender: 'F',
       career_name: 'Licenciatura en Administración de Empresas',
       shift: 'Mañana',
       enrollment_status: 'habilitado',
+      linked_account: true,
       created_at: '2026-03-02',
     },
     {
       id: 'st_3',
       full_name: 'Ignacio Gómez',
+      email: 'ignacio.gomez@gmail.com',
       dni: '43.991.205',
       birth_year: 2003,
       gender: 'M',
       career_name: 'Tecnicatura Superior en Desarrollo Web',
       shift: 'Tarde',
       enrollment_status: 'habilitado',
+      linked_account: true,
       created_at: '2026-03-04',
     },
     {
       id: 'st_4',
       full_name: 'Sofía Álvarez',
+      email: 's.alvarez@alumnos.unam.edu.ar',
       dni: '46.012.873',
       birth_year: 2006,
       gender: 'F',
       career_name: 'Ingeniería en Sistemas de Información',
       shift: 'Mañana',
       enrollment_status: 'becado',
+      linked_account: true,
       created_at: '2026-03-05',
     },
     {
       id: 'st_5',
       full_name: 'Lucas Pereyra',
+      email: 'lucas.pereyra@outlook.com',
       dni: '44.230.119',
       birth_year: 2004,
       gender: 'M',
       career_name: 'Contador Público',
       shift: 'Noche',
       enrollment_status: 'pendiente',
+      linked_account: false,
       created_at: '2026-03-08',
     },
     {
       id: 'st_6',
       full_name: 'Valentina Rossi',
+      email: 'valen.rossi@alumnos.unam.edu.ar',
       dni: '45.890.412',
       birth_year: 2005,
       gender: 'F',
       career_name: 'Licenciatura en Marketing Digital',
       shift: 'Mañana',
       enrollment_status: 'habilitado',
+      linked_account: false,
       created_at: '2026-03-10',
     },
     {
       id: 'st_7',
       full_name: 'Mateo Fernández',
+      email: 'mateo.f@gmail.com',
       dni: '43.510.982',
       birth_year: 2003,
       gender: 'M',
       career_name: 'Tecnicatura en Inteligencia Artificial',
       shift: 'Tarde',
       enrollment_status: 'suspendido',
+      linked_account: true,
       created_at: '2026-03-12',
     },
   ]

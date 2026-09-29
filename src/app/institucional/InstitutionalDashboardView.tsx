@@ -62,6 +62,7 @@ export default function InstitutionalDashboardView({
   // Estados para Alta Manual Individual de Alumno
   const [showAddStudentModal, setShowAddStudentModal] = useState(false)
   const [newStudentName, setNewStudentName] = useState('')
+  const [newStudentEmail, setNewStudentEmail] = useState('')
   const [newStudentDni, setNewStudentDni] = useState('')
   const [newStudentBirthYear, setNewStudentBirthYear] = useState<number>(2005)
   const [newStudentGender, setNewStudentGender] = useState<'M' | 'F' | 'X'>('F')
@@ -139,34 +140,40 @@ export default function InstitutionalDashboardView({
         {
           id: `imp_${Date.now()}_1`,
           full_name: 'Federico Navarro',
+          email: 'fede.navarro@alumnos.unam.edu.ar',
           dni: '46.771.209',
           birth_year: 2006,
           gender: 'M',
           career_name: 'Ingeniería en Sistemas de Información',
           shift: 'Mañana',
           enrollment_status: 'habilitado',
+          linked_account: false,
           created_at: 'Hoy',
         },
         {
           id: `imp_${Date.now()}_2`,
           full_name: 'Lucía Morales',
+          email: 'lucia.morales@gmail.com',
           dni: '45.334.811',
           birth_year: 2005,
           gender: 'F',
           career_name: 'Licenciatura en Administración de Empresas',
           shift: 'Noche',
           enrollment_status: 'habilitado',
+          linked_account: false,
           created_at: 'Hoy',
         },
         {
           id: `imp_${Date.now()}_3`,
           full_name: 'Agustín Rivas',
+          email: 'agustin.rivas@hotmail.com',
           dni: '44.908.411',
           birth_year: 2004,
           gender: 'M',
           career_name: 'Tecnicatura Superior en Desarrollo Web',
           shift: 'Tarde',
           enrollment_status: 'becado',
+          linked_account: false,
           created_at: 'Hoy',
         },
       ]
@@ -187,12 +194,14 @@ export default function InstitutionalDashboardView({
     try {
       const res = await createSingleStudentAction({
         full_name: newStudentName.trim(),
+        email: newStudentEmail.trim() || undefined,
         dni: newStudentDni.trim(),
         birth_year: Number(newStudentBirthYear) || 2005,
         gender: newStudentGender,
         career_name: newStudentCareer,
         shift: newStudentShift,
         enrollment_status: newStudentStatus,
+        linked_account: false,
       })
 
       if (res.success && res.student) {
@@ -200,6 +209,7 @@ export default function InstitutionalDashboardView({
         setStatusMsg(`Estudiante ${newStudentName} incorporado exitosamente al padrón.`)
         setShowAddStudentModal(false)
         setNewStudentName('')
+        setNewStudentEmail('')
         setNewStudentDni('')
         setTimeout(() => setStatusMsg(null), 3500)
       }
@@ -1001,8 +1011,25 @@ export default function InstitutionalDashboardView({
                             {st.full_name.charAt(0)}
                           </div>
                           <div>
-                            <div>{st.full_name}</div>
-                            <div className="text-[10px] font-normal text-slate-400">Alta: {st.created_at}</div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span>{st.full_name}</span>
+                              {st.linked_account ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full" title="El alumno ya inició sesión con su cuenta">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                  Cuenta activa
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full" title="Aguardando que el alumno cree su cuenta con su email o DNI">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                  Aguardando registro
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] font-normal text-slate-400 flex items-center gap-1.5 flex-wrap">
+                              <span>{st.email || 'Sin email previo'}</span>
+                              <span>•</span>
+                              <span>Alta: {st.created_at}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -1125,13 +1152,18 @@ export default function InstitutionalDashboardView({
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Registrá y habilitá individualmente a un estudiante en el padrón de la institución para que pueda acceder a las materias y tutoría con su cuenta.
-            </p>
+            {/* Explicación de Vinculación */}
+            <div className="rounded-2xl bg-indigo-50/70 border border-indigo-200/80 p-3.5 flex items-start gap-2.5 text-indigo-950">
+              <IconSparkles className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <div className="text-[11px] leading-relaxed text-slate-700">
+                <strong className="text-indigo-950 font-bold">¿Cómo se vincula la cuenta del alumno?</strong><br />
+                Cuando el estudiante cree su cuenta en UniNav con este <strong>Email</strong> (o valide su <strong>DNI</strong> en el onboarding), el sistema enlazará automáticamente su sesión a este legajo y habilitará las materias de su carrera sin esperas.
+              </div>
+            </div>
 
             <form onSubmit={handleCreateStudent} className="flex flex-col gap-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">
                     Nombre Completo *
                   </label>
@@ -1141,6 +1173,19 @@ export default function InstitutionalDashboardView({
                     placeholder="Ej: Juan Manuel Pérez"
                     value={newStudentName}
                     onChange={(e) => setNewStudentName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Email para Vincular Cuenta
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Ej: j.perez@alumnos.unam.edu.ar"
+                    value={newStudentEmail}
+                    onChange={(e) => setNewStudentEmail(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 focus:border-indigo-600 focus:outline-hidden"
                   />
                 </div>
