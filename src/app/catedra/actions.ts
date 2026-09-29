@@ -171,7 +171,7 @@ export async function getProfessorCommissionsAction(): Promise<CommissionItem[]>
     // Fallback
   }
 
-  // Si no hay comisiones en DB o la tabla aún no se migró en Supabase, devolver comisión de cátedra inicial
+  // Si no hay comisiones en DB o la tabla aún no se migró en Supabase, devolver comisiones de cátedras iniciales
   return [
     {
       id: 'comm_default_1',
@@ -185,6 +185,45 @@ export async function getProfessorCommissionsAction(): Promise<CommissionItem[]>
       student_count: 48,
       document_count: 4,
       telemetry_count: 4,
+    },
+    {
+      id: 'comm_default_2',
+      subject_name: 'Física I (Mecánica Clásica)',
+      name: 'Comisión 201 - Turno Mañana',
+      join_code: 'FIS201M',
+      academic_term: '1° Cuatrimestre 2026',
+      description: 'Cátedra de Física I. Lunes y miércoles de 8 a 12 hs.',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      student_count: 56,
+      document_count: 3,
+      telemetry_count: 3,
+    },
+    {
+      id: 'comm_default_3',
+      subject_name: 'Algoritmos y Programación I',
+      name: 'Comisión 302 - Turno Tarde',
+      join_code: 'ALG302T',
+      academic_term: '1° Cuatrimestre 2026',
+      description: 'Cátedra de Programación en C y Python. Miércoles y viernes de 14 a 18 hs.',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      student_count: 62,
+      document_count: 5,
+      telemetry_count: 2,
+    },
+    {
+      id: 'comm_default_4',
+      subject_name: 'Álgebra y Geometría Analítica',
+      name: 'Comisión 101 - Turno Mañana',
+      join_code: 'ALG101M',
+      academic_term: '1° Cuatrimestre 2026',
+      description: 'Cátedra de Álgebra Lineal. Lunes y jueves de 8 a 12 hs.',
+      is_active: true,
+      created_at: new Date().toISOString(),
+      student_count: 42,
+      document_count: 3,
+      telemetry_count: 3,
     },
   ]
 }

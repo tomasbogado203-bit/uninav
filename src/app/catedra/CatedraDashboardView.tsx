@@ -31,6 +31,7 @@ import {
   IconExternalLink,
   IconBell,
   IconClose,
+  IconChart,
 } from '@/components/icons'
 
 interface CatedraDashboardViewProps {
@@ -302,7 +303,7 @@ export default function CatedraDashboardView({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3 py-1 text-xs font-bold text-purple-300 border border-purple-500/30">
               <IconBook className="w-3.5 h-3.5 text-purple-400" />
-              <span>Espacio de Cátedra & Docencia</span>
+              <span>{userRole === 'dean' || userRole === 'admin' ? 'Supervisión de Cátedras & Auditoría Institucional' : 'Espacio de Cátedra & Docencia'}</span>
             </span>
             <RoleSwitcherPill currentRole={userRole} />
             <span className="text-xs text-slate-400 font-medium">
@@ -311,22 +312,34 @@ export default function CatedraDashboardView({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-            Radar de Cátedra: {userName}
+            {userRole === 'dean' || userRole === 'admin' ? 'Supervisión y Auditoría de Cátedras' : `Radar de Cátedra: ${userName}`}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-            Suite docente integral: telemetría socrática en tiempo real, gestión de bibliografía oficial, padrón de alumnos y diseño de evaluaciones.
+            {userRole === 'dean' || userRole === 'admin'
+              ? 'Auditoría estadística del rendimiento de cátedras, cobertura bibliográfica y actividad socrática en las comisiones de primer año.'
+              : 'Suite docente integral: telemetría socrática en tiempo real, gestión de bibliografía oficial, padrón de alumnos y diseño de evaluaciones.'}
           </p>
         </div>
 
         {/* Acciones de Cabecera */}
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-colors backdrop-blur-xs shadow-2xs cursor-pointer"
-          >
-            <IconChevronLeft className="w-4 h-4 text-purple-300" />
-            <span>Volver al Inicio</span>
-          </Link>
+          {userRole === 'dean' || userRole === 'admin' ? (
+            <Link
+              href="/institucional"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-colors backdrop-blur-xs shadow-2xs cursor-pointer"
+            >
+              <IconChart className="w-4 h-4 text-purple-300" />
+              <span>Centro de Retención & Acreditación</span>
+            </Link>
+          ) : (
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 px-4 py-3 text-xs sm:text-sm font-bold text-white transition-colors backdrop-blur-xs shadow-2xs cursor-pointer"
+            >
+              <IconChevronLeft className="w-4 h-4 text-purple-300" />
+              <span>Volver al Inicio</span>
+            </Link>
+          )}
 
           <button
             type="button"
@@ -338,50 +351,104 @@ export default function CatedraDashboardView({
         </div>
       </div>
 
-      {/* Selector de Comisión & Banner de Código */}
-      {selectedCommission && (
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 font-black text-lg border border-purple-100">
-              {selectedCommission.subject_name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-slate-900">
-                  {selectedCommission.subject_name}
-                </h2>
-                <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
-                  {selectedCommission.name}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {selectedCommission.academic_term} • {selectedCommission.student_count || 48} alumnos inscriptos
-              </p>
-            </div>
+      {/* Resumen Estadístico para Decanato */}
+      {(userRole === 'dean' || userRole === 'admin') && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cátedras Monitoreadas</span>
+            <div className="text-2xl font-black text-slate-900">{commissions.length} Materias</div>
+            <span className="text-[11px] text-emerald-600 font-medium">100% de 1° año cubiertas</span>
           </div>
 
-          {/* Código de Invitación Destacado */}
-          <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-sm border border-slate-800">
-            <div>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
-                Código para Proyectar en Clase
-              </span>
-              <span className="font-mono text-xl font-black tracking-widest text-indigo-400">
-                {selectedCommission.join_code}
-              </span>
+          <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alumnos Inscriptos</span>
+            <div className="text-2xl font-black text-slate-900">
+              {commissions.reduce((acc, c) => acc + (c.student_count || 0), 0)}
             </div>
-            <button
-              type="button"
-              onClick={() => handleCopyCode(selectedCommission.join_code)}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-              title="Copiar código PIN"
-            >
-              {copiedCode === selectedCommission.join_code ? (
-                <IconCheck className="w-4 h-4 text-emerald-400" />
-              ) : (
-                <IconClipboard className="w-4 h-4 text-indigo-300" />
-              )}
-            </button>
+            <span className="text-[11px] text-slate-500">Distribuidos en {commissions.length} comisiones</span>
+          </div>
+
+          <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Adhesión Socrática Promedio</span>
+            <div className="text-2xl font-black text-indigo-600">78.4%</div>
+            <span className="text-[11px] text-indigo-700 font-medium">Consultas activas con citas</span>
+          </div>
+
+          <div className="rounded-2xl bg-white border border-slate-200/80 p-5 shadow-xs flex flex-col gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Alertas Pedagógicas</span>
+            <div className="text-2xl font-black text-amber-600">2 Cátedras</div>
+            <span className="text-[11px] text-amber-700 font-medium">Requieren refuerzo práctico</span>
+          </div>
+        </div>
+      )}
+
+      {/* Selector de Comisión & Banner de Código */}
+      {selectedCommission && (
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs flex flex-col gap-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 font-black text-lg border border-purple-100">
+                {selectedCommission.subject_name.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-black text-slate-900">
+                    {selectedCommission.subject_name}
+                  </h2>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                    {selectedCommission.name}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {selectedCommission.academic_term} • {selectedCommission.student_count || 48} alumnos inscriptos
+                </p>
+              </div>
+            </div>
+
+            {/* Selector de Comisiones si hay múltiples */}
+            {commissions.length > 1 && (
+              <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto">
+                <span className="text-[10px] font-bold text-slate-500 uppercase px-2">Cátedra:</span>
+                <select
+                  value={selectedCommission.id}
+                  onChange={(e) => {
+                    const comm = commissions.find((c) => c.id === e.target.value)
+                    if (comm) handleSelectCommission(comm)
+                  }}
+                  className="text-xs font-bold bg-white rounded-xl px-3 py-1.5 border border-slate-200 text-slate-900 focus:outline-hidden cursor-pointer"
+                >
+                  {commissions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.subject_name} ({c.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Código de Invitación Destacado */}
+            <div className="flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-sm border border-slate-800">
+              <div>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Código para Proyectar en Clase
+                </span>
+                <span className="font-mono text-xl font-black tracking-widest text-indigo-400">
+                  {selectedCommission.join_code}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCopyCode(selectedCommission.join_code)}
+                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                title="Copiar código PIN"
+              >
+                {copiedCode === selectedCommission.join_code ? (
+                  <IconCheck className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <IconClipboard className="w-4 h-4 text-indigo-300" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
