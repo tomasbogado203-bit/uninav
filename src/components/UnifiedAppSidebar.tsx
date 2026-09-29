@@ -82,17 +82,17 @@ export default function UnifiedAppSidebar({
     return pathname.startsWith(href)
   }
 
-  // Enlaces de Navegación Global
+  // Enlaces de Navegación Global por Rol
   const globalNavItems = [
     { label: 'Inicio', icon: IconHome, href: '/', exact: true, show: true },
     { label: 'Mis Materias', icon: IconBook, href: '/materias', exact: true, show: userRole === 'student' },
     { label: 'Libreta de Notas', icon: IconAcademicCap, href: '/calificaciones', exact: false, show: userRole === 'student' },
-    { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false, show: true },
     { label: 'Recursos & Glosario', icon: IconSparkles, href: '/recursos', exact: false, show: userRole === 'student' },
-    { label: 'Lámpara IoT Pomodoro', icon: IconCpu, href: '/iot', exact: false, show: true },
-    { label: 'Guía del Estudiante', icon: IconLightbulb, href: '/tutorial', exact: false, show: true },
-    { label: 'Panel de Cátedra', icon: IconBook, href: '/catedra', exact: false, show: userRole === 'professor' || userRole === 'dean' || userRole === 'admin' },
+    { label: 'Lámpara IoT Pomodoro', icon: IconCpu, href: '/iot', exact: false, show: userRole === 'student' },
+    { label: 'Banco Comunitario', icon: IconUsers, href: '/comunidad', exact: false, show: userRole === 'student' || userRole === 'professor' },
+    { label: userRole === 'professor' ? 'Guía de Cátedra' : 'Guía del Estudiante', icon: IconLightbulb, href: '/tutorial', exact: false, show: userRole === 'student' || userRole === 'professor' },
     { label: 'Centro de Retención', icon: IconBuilding, href: '/institucional', exact: false, show: userRole === 'dean' || userRole === 'admin' },
+    { label: 'Panel de Cátedras', icon: IconBook, href: '/catedra', exact: false, show: userRole === 'professor' || userRole === 'dean' || userRole === 'admin' },
   ].filter((item) => item.show)
 
   // Herramientas del Workspace de la Materia Activa

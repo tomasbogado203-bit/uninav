@@ -294,6 +294,113 @@ export async function getInstitutionalStaffAction(): Promise<InstitutionalStaffM
   ]
 }
 
+export interface EnrolledStudentAdmin {
+  id: string
+  full_name: string
+  dni: string
+  birth_year: number
+  gender: 'M' | 'F' | 'X'
+  career_name: string
+  shift: 'Mañana' | 'Tarde' | 'Noche'
+  enrollment_status: 'habilitado' | 'becado' | 'pendiente' | 'suspendido'
+  created_at: string
+}
+
+export async function getEnrolledStudentsAdminAction(): Promise<EnrolledStudentAdmin[]> {
+  return [
+    {
+      id: 'st_1',
+      full_name: 'Tomás Bogado',
+      dni: '44.821.902',
+      birth_year: 2004,
+      gender: 'M',
+      career_name: 'Ingeniería en Sistemas de Información',
+      shift: 'Noche',
+      enrollment_status: 'habilitado',
+      created_at: '2026-03-01',
+    },
+    {
+      id: 'st_2',
+      full_name: 'Camila Benítez',
+      dni: '45.102.348',
+      birth_year: 2005,
+      gender: 'F',
+      career_name: 'Licenciatura en Administración de Empresas',
+      shift: 'Mañana',
+      enrollment_status: 'habilitado',
+      created_at: '2026-03-02',
+    },
+    {
+      id: 'st_3',
+      full_name: 'Ignacio Gómez',
+      dni: '43.991.205',
+      birth_year: 2003,
+      gender: 'M',
+      career_name: 'Tecnicatura Superior en Desarrollo Web',
+      shift: 'Tarde',
+      enrollment_status: 'habilitado',
+      created_at: '2026-03-04',
+    },
+    {
+      id: 'st_4',
+      full_name: 'Sofía Álvarez',
+      dni: '46.012.873',
+      birth_year: 2006,
+      gender: 'F',
+      career_name: 'Ingeniería en Sistemas de Información',
+      shift: 'Mañana',
+      enrollment_status: 'becado',
+      created_at: '2026-03-05',
+    },
+    {
+      id: 'st_5',
+      full_name: 'Lucas Pereyra',
+      dni: '44.230.119',
+      birth_year: 2004,
+      gender: 'M',
+      career_name: 'Contador Público',
+      shift: 'Noche',
+      enrollment_status: 'pendiente',
+      created_at: '2026-03-08',
+    },
+    {
+      id: 'st_6',
+      full_name: 'Valentina Rossi',
+      dni: '45.890.412',
+      birth_year: 2005,
+      gender: 'F',
+      career_name: 'Licenciatura en Marketing Digital',
+      shift: 'Mañana',
+      enrollment_status: 'habilitado',
+      created_at: '2026-03-10',
+    },
+    {
+      id: 'st_7',
+      full_name: 'Mateo Fernández',
+      dni: '43.510.982',
+      birth_year: 2003,
+      gender: 'M',
+      career_name: 'Tecnicatura en Inteligencia Artificial',
+      shift: 'Tarde',
+      enrollment_status: 'suspendido',
+      created_at: '2026-03-12',
+    },
+  ]
+}
+
+export async function toggleStudentStatusAction(
+  studentId: string,
+  newStatus: 'habilitado' | 'becado' | 'pendiente' | 'suspendido'
+): Promise<{ success: boolean }> {
+  return { success: true }
+}
+
+export async function importStudentRosterAction(
+  rawRosterCount: number
+): Promise<{ success: boolean; importedCount: number }> {
+  return { success: true, importedCount: rawRosterCount }
+}
+
 export async function updateUserRoleByAdminAction(
   targetUserId: string,
   newRole: 'student' | 'professor' | 'dean' | 'admin'
@@ -320,4 +427,6 @@ export async function updateUserRoleByAdminAction(
 
   return { success: true }
 }
+
+
 
